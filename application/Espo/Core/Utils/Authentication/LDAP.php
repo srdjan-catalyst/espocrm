@@ -112,7 +112,7 @@ class LDAP extends Espo
      */
     public function login($username, $password, \Espo\Entities\AuthToken $authToken = null, $params = [], $request)
     {
-        if (!$password) return;
+        if (!($username && $password)) return;
 
         $isPortal = !empty($params['isPortal']);
 

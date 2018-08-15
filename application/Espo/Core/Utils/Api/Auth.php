@@ -108,43 +108,36 @@ class Auth extends \Slim\Middleware
                             return;
                         }
                         if ($isAuthenticated) {
-                            $this->next->call();
-                            return;
+                            return $this->next->call();
                         }
                     }
 
                     $this->auth->useNoAuth();
-                    $this->next->call();
-                    return;
+                    return $this->next->call();
                 }
             }
         } else {
             if (!$this->authRequired) {
                 $this->auth->useNoAuth();
-                $this->next->call();
-                return;
+                return $this->next->call();
             }
         }
 
-        if ($username) {
-            try {
-                $isAuthenticated = $this->auth->login($username, $password, $authenticationMethod);
-            } catch (\Exception $e) {
-                $this->processException($e);
-                return;
-            }
-
-            if ($isAuthenticated) {
-                $this->next->call();
-            } else {
-                $this->processUnauthorized();
-            }
-        } else {
-            if (!$this->isXMLHttpRequest()) {
-                $this->showDialog = true;
-            }
-            $this->processUnauthorized();
+        try {
+            $isAuthenticated = $this->auth->login($username, $password, $authenticationMethod);
+        } catch (\Exception $e) {
+            $this->processException($e);
+            return;
         }
+
+        if ($isAuthenticated) {
+            return $this->next->call();
+        }
+
+        if (!$this->isXMLHttpRequest()) {
+            $this->showDialog = true;
+        }
+        $this->processUnauthorized();
     }
 
     protected function processException(\Exception $e)
