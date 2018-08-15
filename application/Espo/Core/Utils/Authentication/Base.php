@@ -126,5 +126,13 @@ abstract class Base
 
         return $user;
     }
+
+    public function authDetails() {
+        return array (
+            'method' => 'form',
+            'loginUrl' => null,
+            'logoutUrl' => null,
+        );
+    }
 }
 
