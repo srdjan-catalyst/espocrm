@@ -185,6 +185,9 @@ define(
 
         url: 'api/v1',
 
+        loginUrl: null,
+        logoutUrl: null,
+
         auth: null,
 
         baseController: null,
@@ -209,14 +212,52 @@ define(
             this.initAuth();
 
             if (!this.auth) {
-                this.baseController.login();
+                $.ajax({
+                    url: 'App/authMethod',
+                }).done(function (data) {
+                    if (data.method == 'redirect') {
+                        this.loginUrl = data.loginUrl;
+                        this.logoutUrl = data.logoutUrl;
+                    }
+                    this.login();
+                }.bind(this));
             } else {
                 this.initUserData(null, function () {
                     this.onAuth.call(this);
                 }.bind(this));
             }
+        },
 
-            this.on('auth', this.onAuth, this);
+        login: function () {
+            if (this.loginUrl) {
+                $.ajax({
+                    url: 'App/user',
+                    headers: {
+                        'Espo-Authorization': Base64.encode(':'),
+                        'Espo-Authorization-By-Token': false
+                    },
+                    success: function (data) {
+                        this.onLogin({
+                            auth: {
+                                userName: data.user.userName,
+                                token: data.token
+                            },
+                            user: data.user,
+                            preferences: data.preferences,
+                            acl: data.acl,
+                            settings: data.settings,
+                            appParams: data.appParams
+                        });
+                    }.bind(this),
+                    error: function (xhr) {
+                        window.location = this.loginUrl;
+                    }.bind(this),
+                    login: true,
+                });
+                return;
+            }
+
+            this.baseController.login();
         },
 
         onAuth: function () {
@@ -485,20 +526,31 @@ define(
         initAuth: function () {
             this.auth = this.storage.get('user', 'auth') || null;
 
+            this.on('auth', this.onAuth, this);
+
             this.baseController.on('login', function (data) {
-                this.auth = Base64.encode(data.auth.userName  + ':' + data.auth.token);
-                this.storage.set('user', 'auth', this.auth);
-
-                this.setCookieAuth(data.auth.userName, data.auth.token);
-
-                this.initUserData(data, function () {
-                    this.trigger('auth');
-                }.bind(this));
-
+                this.onLogin(data);
             }.bind(this));
 
             this.baseController.on('logout', function () {
                 this.logout();
+                if (this.logoutUrl) {
+                    window.location = this.logoutUrl;
+                    return;
+                }
+
+                this.login();
+            }.bind(this));
+        },
+
+        onLogin: function (data) {
+            this.auth = Base64.encode(data.auth.userName  + ':' + data.auth.token);
+            this.storage.set('user', 'auth', this.auth);
+
+            this.setCookieAuth(data.auth.userName, data.auth.token);
+
+            this.initUserData(data, function () {
+                this.trigger('auth');
             }.bind(this));
         },
 
@@ -521,7 +573,6 @@ define(
             this.preferences.clear();
             this.acl.clear();
             this.storage.clear('user', 'auth');
-            this.doAction({action: 'login'});
 
             this.unsetCookieAuth();
 
