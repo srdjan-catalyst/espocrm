@@ -185,6 +185,7 @@ define(
 
         url: 'api/v1',
 
+        loginMethod: null,
         loginUrl: null,
         logoutUrl: null,
 
@@ -212,8 +213,13 @@ define(
             this.initAuth();
 
             if (!this.auth) {
+                // TODO: Provide selection screen
+                var params = new URLSearchParams(document.location.search.substring(1));
+                this.loginMethod = params.get('login');
+
                 $.ajax({
                     url: 'App/authMethod',
+                    data: { method: this.loginMethod }
                 }).done(function (data) {
                     if (data.method == 'redirect') {
                         this.loginUrl = data.loginUrl;
@@ -233,7 +239,7 @@ define(
                 $.ajax({
                     url: 'App/user',
                     headers: {
-                        'Espo-Authorization': Base64.encode(':'),
+                        'Espo-Authorization': Base64.encode('::' + (this.loginMethod || '')),
                         'Espo-Authorization-By-Token': false
                     },
                     success: function (data) {
@@ -257,6 +263,7 @@ define(
                 return;
             }
 
+            this.baseController.loginMethod = this.loginMethod;
             this.baseController.login();
         },
 

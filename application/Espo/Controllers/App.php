@@ -38,10 +38,10 @@ class App extends \Espo\Core\Controllers\Base
         return $this->getServiceFactory()->create('App')->getUserData();
     }
 
-    public function actionAuthMethod()
+    public function actionAuthMethod($params, $data, $request)
     {
         $auth = new \Espo\Core\Utils\Auth($this->getContainer());
-        return $auth->authDetails();
+        return $auth->authDetails($request->get('method'));
     }
 
     public function postActionDestroyAuthToken($params, $data)

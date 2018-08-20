@@ -60,7 +60,7 @@ class Auth extends \Slim\Middleware
 
         $espoAuthorizationHeader = $request->headers('Http-Espo-Authorization');
         if (isset($espoAuthorizationHeader)) {
-            list($username, $password) = explode(':', base64_decode($espoAuthorizationHeader), 2);
+            list($username, $password, $authenticationMethod) = explode(':', base64_decode($espoAuthorizationHeader), 3);
         } else {
             $hmacAuthorizationHeader = $request->headers('X-Hmac-Authorization');
             if ($hmacAuthorizationHeader) {
@@ -102,7 +102,7 @@ class Auth extends \Slim\Middleware
 
                     if ($username && $password) {
                         try {
-                            $isAuthenticated = $this->auth->login($username, $password);
+                            $isAuthenticated = $this->auth->login($username, $password, $authenticationMethod);
                         } catch (\Exception $e) {
                             $this->processException($e);
                             return;
