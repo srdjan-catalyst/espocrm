@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,13 +33,14 @@ class Meeting extends \Espo\Core\SelectManagers\Base
 {
     protected function accessOnlyOwn(&$result)
     {
-        $this->addJoin('users', $result);
-        $result['whereClause'][] = array(
-            'OR' => array(
-                'usersMiddle.userId' => $this->getUser()->id,
+        $this->setDistinct(true, $result);
+        $this->addJoin(['users', 'usersAccess'], $result);
+        $result['whereClause'][] = [
+            'OR' => [
+                'usersAccessMiddle.userId' => $this->getUser()->id,
                 'assignedUserId' => $this->getUser()->id
-            )
-        );
+            ]
+        ];
     }
 
     protected function accessOnlyTeam(&$result)
@@ -48,25 +49,25 @@ class Meeting extends \Espo\Core\SelectManagers\Base
         $this->addLeftJoin(['teams', 'teamsAccess'], $result);
         $this->addLeftJoin(['users', 'usersAccess'], $result);
 
-        $result['whereClause'][] = array(
-            'OR' => array(
-                'teamsAccess.id' => $this->getUser()->getLinkMultipleIdList('teams'),
-                'usersAccess.id' => $this->getUser()->id,
+        $result['whereClause'][] = [
+            'OR' => [
+                'teamsAccessMiddle.teamId' => $this->getUser()->getLinkMultipleIdList('teams'),
+                'usersAccessMiddle.userId' => $this->getUser()->id,
                 'assignedUserId' => $this->getUser()->id
-            )
-        );
+            ]
+        ];
     }
 
     protected function boolFilterOnlyMy(&$result)
     {
-        $this->addJoin('users', $result);
-        $result['whereClause'][] = array(
-        	'users.id' => $this->getUser()->id,
-            'OR' => array(
-                'usersMiddle.status!=' => 'Declined',
-                'usersMiddle.status=' => null
-            )
-        );
+        $this->addJoin(['users', 'usersFilterOnlyMy'], $result);
+        $result['whereClause'][] = [
+        	'usersFilterOnlyMyMiddle.userId' => $this->getUser()->id,
+            'OR' => [
+                'usersFilterOnlyMyMiddle.status!=' => 'Declined',
+                'usersFilterOnlyMyMiddle.status=' => null
+            ]
+        ];
     }
 
     protected function filterPlanned(&$result)
@@ -91,5 +92,73 @@ class Meeting extends \Espo\Core\SelectManagers\Base
         	'timeZone' => $this->getUserTimeZone()
         ));
     }
-}
 
+    public function transformDateTimeWhereItem(array $item) : ?array
+    {
+        $where = parent::transformDateTimeWhereItem($item);
+
+        if (empty($where)) {
+            return null;
+        }
+        $attribute = null;
+        if (!empty($item['attribute'])) {
+            $attribute = $item['attribute'];
+        }
+
+        if ($attribute != 'dateStart' && $attribute != 'dateEnd') return $where;
+        if (!$this->getSeed()->hasAttribute('dateStartDate')) return $where;
+
+        $type = $item['type'] ?? null;
+
+        if ($type === 'isNull') return $where;
+        if ($type === 'ever') return $where;
+        if ($type === 'isNotNull') return $where;
+
+        $attributeDate = $attribute . 'Date';
+
+        $value = null;
+        if (array_key_exists('value', $item)) {
+            $value = $item['value'];
+            if (is_string($value)) {
+                if (strlen($value) > 11) {
+                    return $where;
+                }
+            } else if (is_array($value)) {
+                foreach ($value as $valueItem) {
+                    if (strlen($valueItem) > 11) {
+                        return $where;
+                    }
+                }
+            }
+        }
+
+        $dateItem = [
+            'attribute' => $attributeDate,
+            'type' => $type,
+        ];
+
+        if (array_key_exists('value', $item)) {
+            $dateItem['value'] = $value;
+        }
+
+        $where = [
+            'type' => 'or',
+            'value' => [
+                $dateItem,
+                [
+                    'type' => 'and',
+                    'value' => [
+                        $where,
+                        [
+                            'type' => 'isNull',
+                            'attribute' => $attributeDate
+                        ]
+                    ]
+
+                ]
+            ]
+        ];
+
+        return $where;
+    }
+}

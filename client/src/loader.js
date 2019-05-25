@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -185,6 +185,11 @@ var Espo = Espo || {classMap:{}};
 
         normalizeClassName: function (name) {
             var normalizedName = name;
+            if (~name.indexOf('.')) {
+                if (name.substr(-3) !== '.js') {
+                    console.warn(name + ': class name should use slashes for a directory separator and hyphen format.');
+                }
+            }
             if (!!/[A-Z]/.exec(name[0])) {
                 if (name.indexOf(':') != -1) {
                     var arr = name.split(':');

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,29 +27,22 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-$phpConfig = $systemHelper->getRecommendationList();
-$smarty->assign('phpConfig', $phpConfig);
+$phpRequirementList = $installer->getSystemRequirementList('php');
+$smarty->assign('phpRequirementList', $phpRequirementList);
 
 $installData = $_SESSION['install'];
-list($host, $port) = explode(':', $installData['host-name']);
+$hostData = explode(':', $installData['host-name']);
 
 $dbConfig = array(
-    'dbHostName' => $host,
-    'dbPort' => $port,
-    'dbName' => $installData['db-name'],
-    'dbUserName' => $installData['db-user-name'],
-    'dbUserPass' => $installData['db-user-password'],
+    'host' => isset($hostData[0]) ? $hostData[0] : '',
+    'port' => isset($hostData[1]) ? $hostData[1] : '',
+    'dbname' => $installData['db-name'],
+    'user' => $installData['db-user-name'],
+    'password' => $installData['db-user-password'],
 );
-$mysqlConfig = $systemHelper->getRecommendationList('mysql', $dbConfig);
 
-$dbConfig['dbHostName'] = $installData['host-name'];
-unset($dbConfig['dbPort'], $dbConfig['dbUserPass']);
+$mysqlRequirementList = $installer->getSystemRequirementList('database', false, ['database' => $dbConfig]);
+$smarty->assign('mysqlRequirementList', $mysqlRequirementList);
 
-foreach ($dbConfig as $name => $value) {
-    $mysqlConfig[$name] = array(
-        'current' => $value,
-        'acceptable' => true,
-    );
-}
-
-$smarty->assign('mysqlConfig', $mysqlConfig);
+$permissionRequirementList = $installer->getSystemRequirementList('permission');
+$smarty->assign('permissionRequirementList', $permissionRequirementList);

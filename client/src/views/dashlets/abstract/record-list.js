@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,13 +85,27 @@ Espo.define('views/dashlets/abstract/record-list', ['views/dashlets/abstract/bas
                 }
 
                 this.collection = collection;
-                collection.sortBy = this.getOption('sortBy') || this.collection.sortBy;
-                collection.asc = this.getOption('asc') || this.collection.asc;
+
+                collection.orderBy = this.getOption('orderBy') || this.getOption('sortBy') || this.collection.orderBy;
+
+                if (this.getOption('orderBy')) {
+                    collection.order = 'asc';
+                }
+
+                if (this.hasOption('asc')) {
+                    collection.order = this.getOption('asc') ? 'asc' : false;
+                }
 
                 if (this.getOption('sortDirection') === 'asc') {
-                    collection.asc = true;
+                    collection.order = 'asc';
                 } else if (this.getOption('sortDirection') === 'desc') {
-                    collection.asc = false;
+                    collection.order = 'desc';
+                }
+
+                if (this.getOption('order') === 'asc') {
+                    collection.order = 'asc';
+                } else if (this.getOption('order') === 'desc') {
+                    collection.order = 'desc';
                 }
 
                 collection.maxSize = this.getOption('displayRecords');
@@ -126,7 +140,7 @@ Espo.define('views/dashlets/abstract/record-list', ['views/dashlets/abstract/bas
                 this.actionList.unshift({
                     name: 'create',
                     html: this.translate('Create ' + this.scope, 'labels', this.scope),
-                    iconHtml: '<span class="glyphicon glyphicon-plus"></span>',
+                    iconHtml: '<span class="fas fa-plus"></span>',
                     url: '#'+this.scope+'/create'
                 });
             }

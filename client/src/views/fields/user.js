@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,13 +92,15 @@ Espo.define('views/fields/user', 'views/fields/link', function (Dep) {
                 var $elemeneTeams = this.$el.find('input.element-teams');
                 $elemeneTeams.autocomplete({
                     serviceUrl: function (q) {
-                        return 'Team?sortBy=name&maxCount=' + this.AUTOCOMPLETE_RESULT_MAX_COUNT;
+                        return 'Team?orderBy=name&maxSize=' + this.getAutocompleteMaxCount() + '&select=id,name';
                     }.bind(this),
                     minChars: 1,
+                    triggerSelectOnValidInput: false,
                     paramName: 'q',
-                       formatResult: function (suggestion) {
-                        return suggestion.name;
-                    },
+                    noCache: true,
+                    formatResult: function (suggestion) {
+                        return this.getHelper().escapeString(suggestion.name);
+                    }.bind(this),
                     transformResult: function (response) {
                         var response = JSON.parse(response);
                         var list = [];
@@ -120,6 +122,7 @@ Espo.define('views/fields/user', 'views/fields/link', function (Dep) {
                     }.bind(this)
                 });
 
+                $elemeneTeams.attr('autocomplete', 'espo-' + this.name);
 
                 this.once('render', function () {
                     $elemeneTeams.autocomplete('dispose');
@@ -167,7 +170,7 @@ Espo.define('views/fields/user', 'views/fields/link', function (Dep) {
             var $container = this.$el.find('.link-teams-container');
             var $el = $('<div />').addClass('link-' + id).addClass('list-group-item');
             $el.html(name + '&nbsp');
-            $el.prepend('<a href="javascript:" class="pull-right" data-id="' + id + '" data-action="clearLinkTeams"><span class="glyphicon glyphicon-remove"></a>');
+            $el.prepend('<a href="javascript:" class="pull-right" data-id="' + id + '" data-action="clearLinkTeams"><span class="fas fa-times"></a>');
             $container.append($el);
 
             return $el;
@@ -195,4 +198,3 @@ Espo.define('views/fields/user', 'views/fields/link', function (Dep) {
 
     });
 });
-

@@ -27,11 +27,15 @@
    "notActualFields":[
       "name"
    ],
+   "validationList": [
+      "required"
+   ],
    "filter": true,
    "linkDefs": {
       "type": "belongsTo",
       "entity": "Attachment",
-      "skipOrmDefs": true
+      "skipOrmDefs": true,
+      "disabled": true
    },
    "personalData": true
 }

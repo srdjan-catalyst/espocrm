@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,35 +32,27 @@ Espo.define('views/email-template/record/detail', 'views/record/detail', functio
 
         duplicateAction: true,
 
-        afterRender: function () {
-            Dep.prototype.afterRender.call(this);
+        setup: function () {
+            Dep.prototype.setup.call(this);
             this.listenToInsertField();
         },
 
         listenToInsertField: function () {
-            var fieldView = this.getFieldView('insertField');
-            if (fieldView) {
-                this.listenTo(fieldView, 'insert-field', function (o) {
-                    var tag = '{' + o.entityType + '.' + o.field + '}';
+            this.listenTo(this.model, 'insert-field', function (o) {
+                var tag = '{' + o.entityType + '.' + o.field + '}';
 
-                    var bodyView = this.getFieldView('body');
+                var bodyView = this.getFieldView('body');
+                if (!bodyView) return;
 
-                    if (this.model.get('isHtml')) {
-                        bodyView.$summernote.summernote('insertText', tag);
-                    } else {
-                        var $body = bodyView.$element;
-                        var text = $body.val();
-                        text += tag;
-                        $body.val(text);
-                    }
-
-                    var bodyView = this.getFieldView('body');
-
-
-                }.bind(this));
-            };
+                if (this.model.get('isHtml')) {
+                    bodyView.$summernote.summernote('insertText', tag);
+                } else {
+                    var $body = bodyView.$element;
+                    var text = $body.val();
+                    text += tag;
+                    $body.val(text);
+                }
+            }, this);
         },
-
     });
-
 });

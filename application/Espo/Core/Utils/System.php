@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,6 +106,10 @@ class System
      */
     public function getPhpBin()
     {
+        if (isset($_SERVER['PHP_PATH']) && !empty($_SERVER['PHP_PATH'])) {
+            return $_SERVER['PHP_PATH'];
+        }
+
         return defined("PHP_BINDIR") ? PHP_BINDIR . DIRECTORY_SEPARATOR . 'php' : 'php';
     }
 
@@ -135,11 +139,16 @@ class System
         return $version;
     }
 
-    /**
-     * Pet process ID
-     *
-     * @return integer
-     */
+    public function getPhpParam($name)
+    {
+        return ini_get($name);
+    }
+
+    public function hasPhpLib($name)
+    {
+        return extension_loaded($name);
+    }
+
     public static function getPid()
     {
         if (function_exists('getmypid')) {
@@ -147,27 +156,19 @@ class System
         }
     }
 
-    /**
-     * Check if process is active
-     *
-     * @param  integer  $pid
-     *
-     * @return boolean
-     */
     public static function isProcessActive($pid)
     {
-        if (empty($pid)) {
-            return false;
-        }
+        if (empty($pid)) return false;
 
-        if (!function_exists('posix_getsid')) {
-            return false;
-        }
+        if (!self::isPosixSupported()) return false;
 
-        if (posix_getsid($pid) === false) {
-            return false;
-        }
+        if (posix_getsid($pid) === false) return false;
 
         return true;
+    }
+
+    public static function isPosixSupported()
+    {
+        return function_exists('posix_getsid');
     }
 }

@@ -1441,6 +1441,7 @@ Text.prototype = {
     var div = D.create('div');
 
     D.setStyles(div, { 'position' : 'absolute', 'top' : '-10000px' });
+    D.setStyles(div, {'top' : '0px', 'left' : '-10000px' }); // EspoCRM fix line
     D.insert(div, '<div style="'+style+'" class="'+className+' flotr-dummy-div">' + text + '</div>');
     D.insert(this.o.element, div);
 
@@ -1722,6 +1723,7 @@ Graph.prototype = {
       context.translate(this.plotOffset.left, this.plotOffset.top);
 
       for (i = 0; i < this.series.length; i++) {
+        this.series[i].index = i; // EspoCRM fix stacked
         if (!this.series[i].hide) this.drawSeries(this.series[i]);
       }
 
@@ -1740,6 +1742,7 @@ Graph.prototype = {
 
     function drawChart (series, typeKey) {
       var options = this.getOptions(series, typeKey);
+      options.index = series.index; // EspoCRM fix stacked
       this[typeKey].draw(options);
     }
 
@@ -2988,8 +2991,7 @@ Flotr.addType('bars', {
     this.translate(context, options.horizontal);
 
     for (i = 0; i < data.length; i++) {
-
-      geometry = this.getBarGeometry(data[i][0], data[i][1], options);
+      geometry = this.getBarGeometry(data[i][0], data[i][1], options, true); // EspoCRM fix stacked
       if (geometry === null) continue;
 
       left    = geometry.left;
@@ -3017,7 +3019,7 @@ Flotr.addType('bars', {
     }
   },
 
-  getBarGeometry : function (x, y, options) {
+  getBarGeometry : function (x, y, options, fillStack) { // EspoCRM fix stacked
 
     var
       horizontal    = options.horizontal,
@@ -3045,8 +3047,24 @@ Flotr.addType('bars', {
     if (stack) {
       stackValue          = yValue > 0 ? stack.positive : stack.negative;
       stackOffset         = stackValue[xValue] || stackOffset;
+
+
+      // EspoCRM fix stacked start
+      if (fillStack) {
+        this.stackData = this.stackData || {};
+        this.stackData[options.index] = this.stackData[options.index] || {};
+        this.stackData[options.index][xValue] = stackOffset;
+      } else {
+        if (this.stackData && Math.round(xValue) == xValue) {
+            stackOffset = this.stackData[options.index][xValue];
+          }
+      }
+      // EspoCRM fix stacked end
+
+      if (fillStack) // EspoCRM fix stacked
       stackValue[xValue]  = stackOffset + yValue;
     }
+
 
     left    = xScale(xValue - bisection);
     right   = xScale(xValue + barWidth - bisection);
@@ -3060,6 +3078,7 @@ Flotr.addType('bars', {
     // if (right < xa.min || left > xa.max || top < ya.min || bottom > ya.max) continue;
 
     return (x === null || y === null) ? null : {
+      bottom: bottom, // EspoCRM fix stacked
       x         : xValue,
       y         : yValue,
       xScale    : xScale,
@@ -3086,11 +3105,20 @@ Flotr.addType('bars', {
       geometry, i;
 
     for (i = data.length; i--;) {
+
       geometry = this.getBarGeometry(data[i][0], data[i][1], options);
+
       if (
         // Height:
         (
           // Positive Bars:
+          // EspoCRM fix stacked start
+          (
+            (options.stacked && !options.horizontal && hitGeometry.yScale(hitGeometry.y) < geometry.bottom && hitGeometry.yScale(hitGeometry.y) > geometry.top)
+            ||
+            (options.stacked && options.horizontal && hitGeometry.yScale(hitGeometry.y) > geometry.bottom && hitGeometry.yScale(hitGeometry.y) < geometry.top)
+          ) || !options.stacked &&
+          // EspoCRM fix stacked end
           (height > 0 && height < geometry.y) ||
           // Negative Bars:
           (height < 0 && height > geometry.y)
@@ -3100,6 +3128,18 @@ Flotr.addType('bars', {
       ) {
         n.x = data[i][0];
         n.y = data[i][1];
+
+        // EspoCRM fix stacked start
+        if (options.stacked) {
+          if (!options.horizontal) {
+            n.y = options.yInverse(geometry.top);
+            n.bottom = geometry.bottom;
+          } else {
+            n.x = options.xInverse(geometry.top);
+            n.bottom = geometry.bottom;
+          }
+        }
+        // EspoCRM fix stacked end
         n.index = i;
         n.seriesIndex = options.index;
       }
@@ -3122,12 +3162,27 @@ Flotr.addType('bars', {
     context.lineWidth = options.lineWidth;
     this.translate(context, options.horizontal);
 
+
     // Draw highlight
     context.beginPath();
     context.moveTo(left, top + height);
+
+    // EspoCRM fix stacked start
+    if (options.stacked) {
+      context.moveTo(left, options.args.bottom);
+    }
+    // EspoCRM fix stacked end
     context.lineTo(left, top);
     context.lineTo(left + width, top);
+    if (!options.stacked) // EspoCRM fix stacked
     context.lineTo(left + width, top + height);
+    // EspoCRM fix stacked start
+    if (options.stacked) {
+      context.lineTo(left + width, options.args.bottom);
+      context.lineTo(left, options.args.bottom);
+    }
+    // EspoCRM fix stacked end
+
     if (options.fill) {
       context.fillStyle = options.fillStyle;
       context.fill();
@@ -4924,6 +4979,11 @@ Flotr.addPlugin('hit', {
         );
       }
       D.hide(this.mouseTrack);
+      // EspoCRM fix start
+      if (this.options && this.options.mouse && this.options.mouse.cursorPointer) {
+        $(this.el).css('cursor', '');
+      }
+      // EspoCRM fix end
       this.prevHit = null;
     }
     octx.restore();
@@ -5124,10 +5184,20 @@ Flotr.addPlugin('hit', {
     });
     if (_.isNull(content) || _.isUndefined(content)) {
       D.hide(mouseTrack);
+      // EspoCRM fix start
+      if (this.options && this.options.mouse && this.options.mouse.cursorPointer) {
+        $(this.el).css('cursor', '');
+      }
+      // EspoCRM fix end
       return;
     } else {
       mouseTrack.innerHTML = content;
       D.show(mouseTrack);
+      // EspoCRM fix start
+      if (this.options && this.options.mouse && this.options.mouse.cursorPointer) {
+        $(this.el).css('cursor', 'pointer'); // EspoCRM fix
+      }
+      // EspoCRM fix end
     }
 
     // Positioning
@@ -5156,7 +5226,7 @@ Flotr.addPlugin('hit', {
           x: (this.plotWidth)/2,
           y: (this.plotHeight)/2
         },
-        radius = (Math.min(this.canvasWidth, this.canvasHeight) * s.pie.sizeRatio) / 2,
+        radius = (Math.min(this.canvasWidth, this.canvasHeight) * s.pie.sizeRatio), // EspoCRM fix line
         bisection = n.sAngle<n.eAngle ? (n.sAngle + n.eAngle) / 2: (n.sAngle + n.eAngle + 2* Math.PI) / 2;
       
       pos += 'bottom:' + (m - top - center.y - Math.sin(bisection) * radius/2 + this.canvasHeight) + 'px;top:auto;';
@@ -5164,6 +5234,51 @@ Flotr.addPlugin('hit', {
 
     // Default
     } else {
+
+      // EspoCRM fix start
+      if (n.mouse.autoPositionHorizontal) {
+        if (n.xaxis.d2p(n.x) > this.plotWidth * 2 / 3) {
+          p = 'w';
+        } else {
+          p = 'e';
+        }
+      }
+      if (n.mouse.autoPositionVertical) {
+        if (this.plotHeight - n.yaxis.d2p(n.y) > this.plotHeight * 3 / 4) {
+          p = 's';
+        } else {
+          p = 'n';
+        }
+        if (this.plotWidth - n.xaxis.d2p(n.x) < 42) {
+          p += 'w;'
+        }
+      }
+      if (n.mouse.autoPositionVerticalHalf) {
+        if (this.plotHeight - n.yaxis.d2p(n.y) > this.plotHeight / 2) {
+          p = 's';
+        } else {
+          p = 'n';
+        }
+        if (n.xaxis.d2p(n.x) > this.plotWidth * 2 / 3) {
+          p += 'w';
+        } else {
+          p += 'e';
+        }
+      }
+      if (n.mouse.autoPositionHorizontalHalf) {
+        if (this.plotHeight - n.yaxis.d2p(n.y) > this.plotHeight * 3 / 4) {
+          p = 's';
+        } else {
+          p = 'n';
+        }
+        if (n.xaxis.d2p(n.x) > this.plotWidth / 2) {
+          p += 'w';
+        } else {
+          p += 'e';
+        }
+      }
+      // EspoCRM fix end
+
       pos += 'top:';
       if (/n/.test(p)) pos += (oTop - m + top + n.yaxis.d2p(n.y) - size.height);
       else             pos += (oTop + m + top + n.yaxis.d2p(n.y));

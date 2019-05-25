@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,12 @@ Espo.define('crm:views/lead/fields/created-opportunity', 'views/fields/link', fu
                 return {
                     'account': {
                         type: 'equals',
-                        field: 'accountId',
+                        attribute: 'accountId',
                         value: this.model.get('createdAccountId'),
-                        valueName: this.model.get('createdAccountName')
+                        data: {
+                            type: 'is',
+                            nameValue: this.model.get('createdAccountName')
+                        }
                     }
                 };
             }

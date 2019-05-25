@@ -10,9 +10,7 @@
     "description": "Descrizione",
     "users": "Utenti",
     "contacts": "Contatti",
-    "leads": "Comando",
     "reminders": "Promemoria",
-    "account": "Account",
     "acceptanceStatus": "Stato accettazione"
   },
   "options": {
@@ -26,7 +24,7 @@
       "Inbound": "in Ingresso"
     },
     "acceptanceStatus": {
-      "None": "Nessun",
+      "None": "Nessuno",
       "Accepted": "Accettato",
       "Declined": "Rifiutato",
       "Tentative": "Provvisorio"
@@ -43,8 +41,6 @@
     "Send Invitations": "Inviare inviti"
   },
   "presetFilters": {
-    "planned": "Pianificato",
-    "held": "Held",
-    "todays": "Today's"
+    "planned": "Pianificato"
   }
 }

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,17 @@ Espo.define('views/admin/layouts/side-panels-detail', 'views/admin/layouts/rows'
 
     return Dep.extend({
 
-        dataAttributeList: ['name', 'style', 'sticked'],
+        dataAttributeList: ['name', 'style', 'sticked', 'dynamicLogicVisible'],
 
         dataAttributesDefs: {
             style: {
                 type: 'enum',
                 options: ['default', 'success', 'danger', 'primary', 'info', 'warning'],
                 translation: 'LayoutManager.options.style'
+            },
+            dynamicLogicVisible: {
+                type: 'base',
+                view: 'views/admin/field-manager/fields/dynamic-logic-conditions'
             },
             sticked: {
                 type: 'bool'
@@ -56,6 +60,9 @@ Espo.define('views/admin/layouts/side-panels-detail', 'views/admin/layouts/rows'
 
         setup: function () {
             Dep.prototype.setup.call(this);
+
+            this.dataAttributesDefs = Espo.Utils.cloneDeep(this.dataAttributesDefs);
+            this.dataAttributesDefs.dynamicLogicVisible.scope = this.scope;
 
             this.wait(true);
             this.loadLayout(function () {
@@ -137,6 +144,8 @@ Espo.define('views/admin/layouts/side-panels-detail', 'views/admin/layouts/rows'
                     }
                     o.index = ('index' in itemData) ? itemData.index : index;
                     this.rowLayout.push(o);
+
+                    this.itemsData[o.name] = Espo.Utils.cloneDeep(o);
                 }
             }, this);
             this.rowLayout.sort(function (v1, v2) {
@@ -158,12 +167,17 @@ Espo.define('views/admin/layouts/side-panels-detail', 'views/admin/layouts/rows'
                 var o = {};
                 var name = $el.attr('data-name');
 
+                var attributes = this.itemsData[name] || {};
+                attributes.name = name;
+
                 this.dataAttributeList.forEach(function (attribute) {
                     if (attribute === 'name') return;
+                    var value = attributes[attribute] || null;
+                    if (value) {
+                        o[attribute] = value;
+                    }
+                }, this);
 
-                    var value = $el.data(Espo.Utils.toDom(attribute)) || null;
-                    o[attribute] = value;
-                });
                 o.index = i;
 
                 layout[name] = o;

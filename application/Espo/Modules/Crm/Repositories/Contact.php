@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,20 +33,6 @@ use Espo\ORM\Entity;
 
 class Contact extends \Espo\Core\ORM\Repositories\RDB
 {
-    public function handleSelectParams(&$params)
-    {
-        parent::handleSelectParams($params);
-
-        if (empty($params['customJoin'])) {
-            $params['customJoin'] = '';
-        }
-
-        $params['customJoin'] .= "
-            LEFT JOIN `account_contact` AS accountContact
-            ON accountContact.contact_id = contact.id AND accountContact.account_id = contact.account_id AND accountContact.deleted = 0
-        ";
-    }
-
     public function afterSave(Entity $entity, array $options = array())
     {
         $result = parent::afterSave($entity, $options);

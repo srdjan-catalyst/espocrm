@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,56 @@ class Email extends \Espo\Core\ORM\Entity
     protected function _hasSubject()
     {
         return $this->has('name');
+    }
+
+    protected function _hasFromName()
+    {
+        return $this->has('fromString');
+    }
+
+    protected function _hasFromAddress()
+    {
+        return $this->has('fromString');
+    }
+
+    protected function _hasReplyToName()
+    {
+        return $this->has('replyToString');
+    }
+
+    protected function _hasReplyToAddress()
+    {
+        return $this->has('replyToString');
+    }
+
+    protected function _getFromName()
+    {
+        if (!$this->has('fromString')) return null;
+        return \Espo\Services\Email::parseFromName($this->get('fromString'));
+    }
+
+    protected function _getFromAddress()
+    {
+        if (!$this->has('fromString')) return null;
+        return \Espo\Services\Email::parseFromAddress($this->get('fromString'));
+    }
+
+    protected function _getReplyToName()
+    {
+        if (!$this->has('replyToString')) return null;
+        $string = $this->get('replyToString');
+        if (!$string) return null;
+        $string = trim(explode(';', $string)[0]);
+        return \Espo\Services\Email::parseFromName($string);
+    }
+
+    protected function _getReplyToAddress()
+    {
+        if (!$this->has('replyToString')) return null;
+        $string = $this->get('replyToString');
+        if (!$string) return null;
+        $string = trim(explode(';', $string)[0]);
+        return \Espo\Services\Email::parseFromAddress($string);
     }
 
     protected function _setIsRead($value)
@@ -135,7 +185,7 @@ class Email extends \Espo\Core\ORM\Entity
         if (!empty($body)) {
             $attachmentList = $this->getInlineAttachments();
             foreach ($attachmentList as $attachment) {
-                $body = str_replace("?entryPoint=attachment&amp;id={$attachment->id}", "cid:{$attachment->id}", $body);
+                $body = str_replace("\"?entryPoint=attachment&amp;id={$attachment->id}\"", "\"cid:{$attachment->id}\"", $body);
             }
         }
 
@@ -146,12 +196,15 @@ class Email extends \Espo\Core\ORM\Entity
 
     public function getInlineAttachments()
     {
-        $attachmentList = array();
+        $attachmentList = [];
+        $idList = [];
         $body = $this->get('body');
         if (!empty($body)) {
             if (preg_match_all("/\?entryPoint=attachment&amp;id=([^&=\"']+)/", $body, $matches)) {
                 if (!empty($matches[1]) && is_array($matches[1])) {
-                    foreach($matches[1] as $id) {
+                    foreach ($matches[1] as $id) {
+                        if (in_array($id, $idList)) continue;
+                        $idList[] = $id;
                         $attachment = $this->entityManager->getEntity('Attachment', $id);
                         if ($attachment) {
                             $attachmentList[] = $attachment;

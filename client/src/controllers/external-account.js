@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('controllers/external-account', 'controller', function (Dep) {
+define('controllers/external-account', 'controller', function (Dep) {
 
     return Dep.extend({
 
         defaultAction: 'list',
 
-        list: function (options) {
+        actionList: function (options) {
             this.collectionFactory.create('ExternalAccount', function (collection) {
                 collection.once('sync', function () {
                     this.main('ExternalAccount.Index', {
@@ -43,7 +43,7 @@ Espo.define('controllers/external-account', 'controller', function (Dep) {
             }, this);
         },
 
-        edit: function (options) {
+        actionEdit: function (options) {
             var id = options.id;
 
             this.collectionFactory.create('ExternalAccount', function (collection) {

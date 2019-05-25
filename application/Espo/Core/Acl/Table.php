@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -180,6 +180,15 @@ class Table
             }
         }
         return 'no';
+    }
+
+    public function getHighestLevel($action)
+    {
+        if (in_array($action, $this->booleanActionList)) {
+            return 'yes';
+        } else {
+            return 'all';
+        }
     }
 
     private function load()
@@ -554,7 +563,7 @@ class Table
 
     protected function applyAdditional(&$table, &$fieldTable, &$valuePermissionLists)
     {
-        if ($this->getUser()->get('isPortalUser')) {
+        if ($this->getUser()->isPortal()) {
             foreach ($this->getScopeList() as $scope) {
                 $table->$scope = false;
                 unset($fieldTable->$scope);

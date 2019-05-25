@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,11 +67,9 @@ class Record extends Base
     public function actionRead($params, $data, $request)
     {
         $id = $params['id'];
-        $entity = $this->getRecordService()->readEntity($id);
+        $entity = $this->getRecordService()->read($id);
 
-        if (empty($entity)) {
-            throw new NotFound();
-        }
+        if (!$entity) throw new NotFound();
 
         return $entity->getValueMap();
     }
@@ -83,6 +81,8 @@ class Record extends Base
 
     public function actionCreate($params, $data, $request)
     {
+        if (!is_object($data)) throw new BadRequest();
+
         if (!$request->isPost()) {
             throw new BadRequest();
         }
@@ -93,7 +93,7 @@ class Record extends Base
 
         $service = $this->getRecordService();
 
-        if ($entity = $service->createEntity($data)) {
+        if ($entity = $service->create($data)) {
             return $entity->getValueMap();
         }
 
@@ -102,6 +102,8 @@ class Record extends Base
 
     public function actionUpdate($params, $data, $request)
     {
+        if (!is_object($data)) throw new BadRequest();
+
         if (!$request->isPut() && !$request->isPatch()) {
             throw new BadRequest();
         }
@@ -112,7 +114,7 @@ class Record extends Base
 
         $id = $params['id'];
 
-        if ($entity = $this->getRecordService()->updateEntity($id, $data)) {
+        if ($entity = $this->getRecordService()->update($id, $data)) {
             return $entity->getValueMap();
         }
 
@@ -125,40 +127,30 @@ class Record extends Base
             throw new Forbidden();
         }
 
-        $where = $request->get('where');
-        $offset = $request->get('offset');
-        $maxSize = $request->get('maxSize');
-        $asc = $request->get('asc', 'true') === 'true';
-        $sortBy = $request->get('sortBy');
-        $q = $request->get('q');
-        $textFilter = $request->get('textFilter');
-
-        $maxSizeLimit = $this->getConfig()->get('recordListMaxSizeLimit', self::MAX_SIZE_LIMIT);
-        if (empty($maxSize)) {
-            $maxSize = $maxSizeLimit;
-        }
-        if (!empty($maxSize) && $maxSize > $maxSizeLimit) {
-            throw new Forbidden("Max should should not exceed " . $maxSizeLimit . ". Use offset and limit.");
-        }
-
-        $params = array(
-            'where' => $where,
-            'offset' => $offset,
-            'maxSize' => $maxSize,
-            'asc' => $asc,
-            'sortBy' => $sortBy,
-            'q' => $q,
-            'textFilter' => $textFilter
-        );
-
+        $params = [];
         $this->fetchListParamsFromRequest($params, $request, $data);
 
-        $result = $this->getRecordService()->findEntities($params);
+        $maxSizeLimit = $this->getConfig()->get('recordListMaxSizeLimit', self::MAX_SIZE_LIMIT);
+        if (empty($params['maxSize'])) {
+            $params['maxSize'] = $maxSizeLimit;
+        }
+        if (!empty($params['maxSize']) && $params['maxSize'] > $maxSizeLimit) {
+            throw new Forbidden("Max size should should not exceed " . $maxSizeLimit . ". Use offset and limit.");
+        }
 
-        return array(
-            'total' => $result['total'],
-            'list' => isset($result['collection']) ? $result['collection']->getValueMapList() : $result['list']
-        );
+        $result = $this->getRecordService()->find($params);
+
+        if (is_array($result)) {
+            return [
+                'total' => $result['total'],
+                'list' => isset($result['collection']) ? $result['collection']->getValueMapList() : $result['list']
+            ];
+        }
+
+        return [
+            'total' => $result->total,
+            'list' => isset($result->collection) ? $result->collection->getValueMapList() : $result->list
+        ];
     }
 
     public function getActionListKanban($params, $data, $request)
@@ -167,33 +159,16 @@ class Record extends Base
             throw new Forbidden();
         }
 
-        $where = $request->get('where');
-        $offset = $request->get('offset');
-        $maxSize = $request->get('maxSize');
-        $asc = $request->get('asc', 'true') === 'true';
-        $sortBy = $request->get('sortBy');
-        $q = $request->get('q');
-        $textFilter = $request->get('textFilter');
+        $params = [];
+        $this->fetchListParamsFromRequest($params, $request, $data);
 
         $maxSizeLimit = $this->getConfig()->get('recordListMaxSizeLimit', self::MAX_SIZE_LIMIT);
-        if (empty($maxSize)) {
-            $maxSize = $maxSizeLimit;
+        if (empty($params['maxSize'])) {
+            $params['maxSize'] = $maxSizeLimit;
         }
-        if (!empty($maxSize) && $maxSize > $maxSizeLimit) {
-            throw new Forbidden("Max should should not exceed " . $maxSizeLimit . ". Use offset and limit.");
+        if (!empty($params['maxSize']) && $params['maxSize'] > $maxSizeLimit) {
+            throw new Forbidden("Max size should should not exceed " . $maxSizeLimit . ". Use offset and limit.");
         }
-
-        $params = array(
-            'where' => $where,
-            'offset' => $offset,
-            'maxSize' => $maxSize,
-            'asc' => $asc,
-            'sortBy' => $sortBy,
-            'q' => $q,
-            'textFilter' => $textFilter
-        );
-
-        $this->fetchListParamsFromRequest($params, $request, $data);
 
         $result = $this->getRecordService()->getListKanban($params);
 
@@ -206,19 +181,7 @@ class Record extends Base
 
     protected function fetchListParamsFromRequest(&$params, $request, $data)
     {
-        if ($request->get('primaryFilter')) {
-            $params['primaryFilter'] = $request->get('primaryFilter');
-        }
-        if ($request->get('boolFilterList')) {
-            $params['boolFilterList'] = $request->get('boolFilterList');
-        }
-        if ($request->get('filterList')) {
-            $params['filterList'] = $request->get('filterList');
-        }
-
-        if ($request->get('select')) {
-            $params['select'] = explode(',', $request->get('select'));
-        }
+        \Espo\Core\Utils\ControllerUtil::fetchListParamsFromRequest($params, $request, $data);
     }
 
     public function actionListLinked($params, $data, $request)
@@ -226,40 +189,30 @@ class Record extends Base
         $id = $params['id'];
         $link = $params['link'];
 
-        $where = $request->get('where');
-        $offset = $request->get('offset');
-        $maxSize = $request->get('maxSize');
-        $asc = $request->get('asc', 'true') === 'true';
-        $sortBy = $request->get('sortBy');
-        $q = $request->get('q');
-        $textFilter = $request->get('textFilter');
-
-        $maxSizeLimit = $this->getConfig()->get('recordListMaxSizeLimit', self::MAX_SIZE_LIMIT);
-        if (empty($maxSize)) {
-            $maxSize = $maxSizeLimit;
-        }
-        if (!empty($maxSize) && $maxSize > $maxSizeLimit) {
-            throw new Forbidden("Max should should not exceed " . $maxSizeLimit . ". Use offset and limit.");
-        }
-
-        $params = array(
-            'where' => $where,
-            'offset' => $offset,
-            'maxSize' => $maxSize,
-            'asc' => $asc,
-            'sortBy' => $sortBy,
-            'q' => $q,
-            'textFilter' => $textFilter
-        );
-
+        $params = [];
         $this->fetchListParamsFromRequest($params, $request, $data);
 
-        $result = $this->getRecordService()->findLinkedEntities($id, $link, $params);
+        $maxSizeLimit = $this->getConfig()->get('recordListMaxSizeLimit', self::MAX_SIZE_LIMIT);
+        if (empty($params['maxSize'])) {
+            $params['maxSize'] = $maxSizeLimit;
+        }
+        if (!empty($params['maxSize']) && $params['maxSize'] > $maxSizeLimit) {
+            throw new Forbidden("Max size should should not exceed " . $maxSizeLimit . ". Use offset and limit.");
+        }
 
-        return array(
-            'total' => $result['total'],
-            'list' => isset($result['collection']) ? $result['collection']->getValueMapList() : $result['list']
-        );
+        $result = $this->getRecordService()->findLinked($id, $link, $params);
+
+        if (is_array($result)) {
+            return [
+                'total' => $result['total'],
+                'list' => isset($result['collection']) ? $result['collection']->getValueMapList() : $result['list']
+            ];
+        }
+
+        return (object) [
+            'total' => $result->total,
+            'list' => isset($result->collection) ? $result->collection->getValueMapList() : $result->list
+        ];
     }
 
     public function actionDelete($params, $data, $request)
@@ -270,7 +223,7 @@ class Record extends Base
 
         $id = $params['id'];
 
-        if ($this->getRecordService()->deleteEntity($id)) {
+        if ($this->getRecordService()->delete($id)) {
             return true;
         }
         throw new Error();
@@ -278,6 +231,8 @@ class Record extends Base
 
     public function actionExport($params, $data, $request)
     {
+        if (!is_object($data)) throw new BadRequest();
+
         if (!$request->isPost()) {
             throw new BadRequest();
         }
@@ -319,9 +274,9 @@ class Record extends Base
             $params['format'] = $data->format;
         }
 
-        return array(
+        return [
             'id' => $this->getRecordService()->export($params)
-        );
+        ];
     }
 
     public function actionMassUpdate($params, $data, $request)
@@ -337,6 +292,10 @@ class Record extends Base
             throw new BadRequest();
         }
 
+        if ($this->getAcl()->get('massUpdatePermission') !== 'yes') {
+            throw new Forbidden();
+        }
+
         $params = array();
         if (property_exists($data, 'where') && !empty($data->byWhere)) {
             $params['where'] = json_decode(json_encode($data->where), true);
@@ -349,33 +308,26 @@ class Record extends Base
 
         $attributes = $data->attributes;
 
-        $idsUpdated = $this->getRecordService()->massUpdate($attributes, $params);
+        $idsUpdated = $this->getRecordService()->massUpdate($params, $attributes);
 
         return $idsUpdated;
     }
 
-    public function actionMassDelete($params, $data, $request)
+    public function postActionMassDelete($params, $data, $request)
     {
-        if (!$request->isPost()) {
-            throw new BadRequest();
-        }
         if (!$this->getAcl()->check($this->name, 'delete')) {
             throw new Forbidden();
         }
 
-        $params = array();
-        if (property_exists($data, 'where') && !empty($data->byWhere)) {
-            $where = json_decode(json_encode($data->where), true);
-            $params['where'] = $where;
-            if (property_exists($data, 'selectData')) {
-                $params['selectData'] = json_decode(json_encode($data->selectData), true);
+        $actionParams = $this->getMassActionParamsFromData($data);
+
+        if (array_key_exists('where', $actionParams)) {
+            if ($this->getAcl()->get('massUpdatePermission') !== 'yes') {
+                throw new Forbidden();
             }
         }
-        if (property_exists($data, 'ids')) {
-            $params['ids'] = $data->ids;
-        }
 
-        return $this->getRecordService()->massRemove($params);
+        return $this->getRecordService()->massDelete($actionParams);
     }
 
     public function actionCreateLink($params, $data, $request)
@@ -402,7 +354,7 @@ class Record extends Base
                 $selectData = json_decode(json_encode($data->selectData), true);
             }
 
-            return $this->getRecordService()->linkEntityMass($id, $link, $where, $selectData);
+            return $this->getRecordService()->massLink($id, $link, $where, $selectData);
         } else {
             $foreignIdList = array();
             if (isset($data->id)) {
@@ -416,7 +368,7 @@ class Record extends Base
 
             $result = false;
             foreach ($foreignIdList as $foreignId) {
-                if ($this->getRecordService()->linkEntity($id, $link, $foreignId)) {
+                if ($this->getRecordService()->link($id, $link, $foreignId)) {
                     $result = true;
                 }
             }
@@ -453,7 +405,7 @@ class Record extends Base
 
         $result = false;
         foreach ($foreignIdList as $foreignId) {
-            if ($this->getRecordService()->unlinkEntity($id, $link, $foreignId)) {
+            if ($this->getRecordService()->unlink($id, $link, $foreignId)) {
                 $result = $result || true;
             }
         }
@@ -548,5 +500,40 @@ class Record extends Base
         }
 
         return $this->getRecordService()->massUnfollow($params);
+    }
+
+    protected function getMassActionParamsFromData($data)
+    {
+        $params = [];
+        if (property_exists($data, 'where') && !empty($data->byWhere)) {
+            $where = json_decode(json_encode($data->where), true);
+            $params['where'] = $where;
+            if (property_exists($data, 'selectData')) {
+                $params['selectData'] = json_decode(json_encode($data->selectData), true);
+            }
+        }
+        if (property_exists($data, 'ids')) {
+            $params['ids'] = $data->ids;
+        }
+
+        return $params;
+    }
+
+    public function postActionMassRecalculateFormula($params, $data, $request)
+    {
+        if (!$this->getUser()->isAdmin()) throw new Forbidden();
+        if (!$this->getAcl()->check($this->name, 'edit')) throw new Forbidden();
+
+        return $this->getRecordService()->massRecalculateFormula($this->getMassActionParamsFromData($data));
+    }
+
+    public function postActionRestoreDeleted($params, $data, $request)
+    {
+        if (!$this->getUser()->isAdmin()) throw new Forbidden();
+
+        $id = $data->id ?? null;
+        if (!$id) throw new Forbidden();
+
+        return $this->getRecordService()->restoreDeleted($id);
     }
 }

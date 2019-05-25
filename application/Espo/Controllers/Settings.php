@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,23 +35,12 @@ use \Espo\Core\Exceptions\BadRequest;
 
 class Settings extends \Espo\Core\Controllers\Base
 {
+
     protected function getConfigData()
     {
-        if ($this->getUser()->id == 'system') {
-            $data = $this->getConfig()->getData();
-        } else {
-            $data = $this->getConfig()->getData($this->getUser()->isAdmin());
-        }
+        $data = $this->getServiceFactory()->create('Settings')->getConfigData();
 
-        $fieldDefs = $this->getMetadata()->get('entityDefs.Settings.fields');
-
-        foreach ($fieldDefs as $field => $d) {
-            if ($d['type'] === 'password') {
-                unset($data[$field]);
-            }
-        }
-
-        $data['jsLibs'] = $this->getMetadata()->get('app.jsLibs');
+        $data->jsLibs = $this->getMetadata()->get('app.jsLibs');
 
         return $data;
     }
@@ -76,23 +65,7 @@ class Settings extends \Espo\Core\Controllers\Base
             throw new BadRequest();
         }
 
-        if (
-            (isset($data->useCache) && $data->useCache !== $this->getConfig()->get('useCache'))
-            ||
-            (isset($data->aclStrictMode) && $data->aclStrictMode !== $this->getConfig()->get('aclStrictMode'))
-        ) {
-            $this->getContainer()->get('dataManager')->clearCache();
-        }
-
-        $this->getConfig()->setData($data, $this->getUser()->isAdmin());
-        $result = $this->getConfig()->save();
-        if ($result === false) {
-            throw new Error('Cannot save settings');
-        }
-
-        if (isset($data->defaultCurrency) || isset($data->baseCurrency) || isset($data->currencyRates)) {
-            $this->getContainer()->get('dataManager')->rebuildDatabase([]);
-        }
+        $this->getServiceFactory()->create('Settings')->setConfigData($data);
 
         return $this->getConfigData();
     }

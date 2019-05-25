@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('views/modal', 'view', function (Dep) {
+define('views/modal', 'view', function (Dep) {
 
     return Dep.extend({
 
@@ -35,6 +35,8 @@ Espo.define('views/modal', 'view', function (Dep) {
         className: 'dialog',
 
         header: false,
+
+        headerHtml: null,
 
         dialog: null,
 
@@ -45,6 +47,8 @@ Espo.define('views/modal', 'view', function (Dep) {
         backdrop: 'static',
 
         buttonList: [],
+
+        dropdownItemList: [],
 
         // TODO remove it as depricated
         buttons: [],
@@ -59,16 +63,7 @@ Espo.define('views/modal', 'view', function (Dep) {
 
         events: {
             'click .action': function (e) {
-                var $target = $(e.currentTarget);
-                var action = $target.data('action');
-                var data = $target.data();
-                if (action) {
-                    var method = 'action' + Espo.Utils.upperCaseFirst(action);
-                    if (typeof this[method] == 'function') {
-                        e.preventDefault();
-                        this[method].call(this, data);
-                    }
-                }
+                Espo.Utils.handleAction(this, e);
             }
         },
 
@@ -77,12 +72,14 @@ Espo.define('views/modal', 'view', function (Dep) {
             var containerSelector = this.containerSelector = '#' + id;
 
             this.header = this.options.header || this.header;
+            this.headerHtml = this.options.headerHtml || this.headerHtml;
 
             this.options = this.options || {};
 
             this.setSelector(this.containerSelector);
 
             this.buttonList = Espo.Utils.cloneDeep(this.buttonList);
+            this.dropdownItemList = Espo.Utils.cloneDeep(this.dropdownItemList);
 
             // TODO remove it as depricated
             this.buttons = Espo.Utils.cloneDeep(this.buttons);
@@ -95,53 +92,21 @@ Espo.define('views/modal', 'view', function (Dep) {
                 $(containerSelector).remove();
                 $('<div />').css('display', 'none').attr('id', id).addClass('modal-container').appendTo('body');
 
-                var buttonListExt = [];
-
-                // TODO remove it as depricated
-                this.buttons.forEach(function (item) {
-                    var o = Espo.Utils.clone(item);
-                    if (!('text' in o) && ('label' in o)) {
-                        o.text = this.getLanguage().translate(o.label);
-                    }
-                    buttonListExt.push(o);
-                }, this);
-
-
-                this.buttonList.forEach(function (item) {
-                    var o = {};
-
-                    if (typeof item === 'string') {
-                        o.name = item;
-                    } else if (typeof item === 'object') {
-                        o = item;
-                    } else {
-                        return;
-                    }
-
-                    var text = o.text;
-                    if (!o.text) {
-                        if ('label' in o) {
-                            o.text = this.translate(o.label, 'labels', this.scope)
-                        } else {
-                            o.text = this.translate(o.name, 'modalActions', this.scope);
-                        }
-                    }
-                    o.onClick = o.onClick || (this['action' + Espo.Utils.upperCaseFirst(o.name)] || function () {}).bind(this);
-
-                    buttonListExt.push(o);
-                }, this);
 
                 var modalBodyDiffHeight = 92;
                 if (this.getThemeManager().getParam('modalBodyDiffHeight') !== null) {
                     modalBodyDiffHeight = this.getThemeManager().getParam('modalBodyDiffHeight');
                 }
 
+                var headerHtml = this.headerHtml || this.header;
+
                 this.dialog = new Espo.Ui.Dialog({
                     backdrop: this.backdrop,
-                    header: this.header,
+                    header: headerHtml,
                     container: containerSelector,
                     body: '',
-                    buttons: buttonListExt,
+                    buttonList: this.getDialogButtonList(),
+                    dropdownItemList: this.getDialogDropdownItemList(),
                     width: this.width,
                     keyboard: !this.escapeDisabled,
                     fitHeight: this.fitHeight,
@@ -151,6 +116,7 @@ Espo.define('views/modal', 'view', function (Dep) {
                     footerAtTheTop: this.getThemeManager().getParam('modalFooterAtTheTop'),
                     fullHeight: this.getThemeManager().getParam('modalFullHeight'),
                     screenWidthXs: this.getThemeManager().getParam('screenWidthXs'),
+                    fixedHeaderHeight: this.fixedHeaderHeight,
                     onRemove: function () {
                         this.onDialogClose();
                     }.bind(this)
@@ -169,6 +135,75 @@ Espo.define('views/modal', 'view', function (Dep) {
                 }
                 $(containerSelector).remove();
             });
+        },
+
+        getDialogButtonList: function () {
+            var buttonListExt = [];
+
+            // TODO remove it as depricated
+            this.buttons.forEach(function (item) {
+                var o = Espo.Utils.clone(item);
+                if (!('text' in o) && ('label' in o)) {
+                    o.text = this.getLanguage().translate(o.label);
+                }
+                buttonListExt.push(o);
+            }, this);
+
+
+            this.buttonList.forEach(function (item) {
+                var o = {};
+                if (typeof item === 'string') {
+                    o.name = item;
+                } else if (typeof item === 'object') {
+                    o = item;
+                } else {
+                    return;
+                }
+                var text = o.text;
+                if (!o.text) {
+                    if ('label' in o) {
+                        o.text = this.translate(o.label, 'labels', this.scope)
+                    } else {
+                        o.text = this.translate(o.name, 'modalActions', this.scope);
+                    }
+                }
+                o.onClick = o.onClick || (this['action' + Espo.Utils.upperCaseFirst(o.name)] || function () {}).bind(this);
+                buttonListExt.push(o);
+            }, this);
+
+            return buttonListExt;
+        },
+
+        getDialogDropdownItemList: function () {
+            var dropdownItemListExt = [];
+            this.dropdownItemList.forEach(function (item) {
+                var o = {};
+                if (typeof item === 'string') {
+                    o.name = item;
+                } else if (typeof item === 'object') {
+                    o = item;
+                } else {
+                    return;
+                }
+                var text = o.text;
+                if (!o.text) {
+                    if ('label' in o) {
+                        o.text = this.translate(o.label, 'labels', this.scope)
+                    } else {
+                        o.text = this.translate(o.name, 'modalActions', this.scope);
+                    }
+                }
+                o.onClick = o.onClick || (this['action' + Espo.Utils.upperCaseFirst(o.name)] || function () {}).bind(this);
+                dropdownItemListExt.push(o);
+            }, this);
+
+            return dropdownItemListExt;
+        },
+
+        updateDialog: function () {
+            if (!this.dialog) return;
+            this.dialog.buttonList = this.getDialogButtonList();
+            this.dialog.dropdownItemList = this.getDialogDropdownItemList();
         },
 
         onDialogClose: function () {
@@ -210,24 +245,60 @@ Espo.define('views/modal', 'view', function (Dep) {
             this.$el.find('footer button[data-name="'+name+'"]').removeClass('disabled').removeAttr('disabled');
         },
 
-        addButton: function (o, toBeginnig, doNotReRender) {
+        addButton: function (o, position, doNotReRender) {
             var index = -1;
             this.buttonList.forEach(function (item, i) {
-                if (item.name === o.name) {
-                    index = i;
-                }
+                if (item.name === o.name) index = i;
             }, this);
             if (~index) return;
 
-            if (toBeginnig) {
+            if (position === true) {
                 this.buttonList.unshift(o);
+            } else if (typeof position === 'string') {
+                index = -1;
+                this.buttonList.forEach(function (item, i) {
+                    if (item.name === position) index = i;
+                }, this);
+                if (~index) {
+                    this.buttonList.splice(index, 0, o);
+                } else {
+                    this.buttonList.push(o);
+                }
             } else {
                 this.buttonList.push(o);
             }
 
             if (!doNotReRender && this.isRendered()) {
-                this.reRender();
+                this.reRenderFooter();
             }
+        },
+
+        addDropdownItem: function (o, toBeginning, doNotReRender) {
+            var method = toBeginning ? 'unshift' : 'push';
+            if (!o) {
+                this.dropdownItemList[method](false);
+                return;
+            }
+            var name = o.name;
+            if (!name) return;
+            for (var i in this.dropdownItemList) {
+                if (this.dropdownItemList[i].name == name) {
+                    return;
+                }
+            }
+            this.dropdownItemList[method](o);
+
+            if (!doNotReRender && this.isRendered()) {
+                this.reRenderFooter();
+            }
+        },
+
+        reRenderFooter: function () {
+            if (!this.dialog) return;
+            this.updateDialog();
+            var html = this.dialog.getFooterHtml();
+            this.$el.find('footer.modal-footer').html(html);
+            this.dialog.initButtonEvents();
         },
 
         removeButton: function (name, doNotReRender) {
@@ -239,6 +310,17 @@ Espo.define('views/modal', 'view', function (Dep) {
             }, this);
             if (~index) {
                 this.buttonList.splice(index, 1);
+            }
+
+            for (var i in this.dropdownItemList) {
+                if (this.dropdownItemList[i].name == name) {
+                    this.dropdownItemList.splice(i, 1);
+                    break;
+                }
+            }
+
+            if (this.isRendered()) {
+                this.$el.find('.modal-footer [data-name="'+name+'"]').remove();
             }
 
             if (!doNotReRender && this.isRendered()) {
@@ -263,6 +345,57 @@ Espo.define('views/modal', 'view', function (Dep) {
             if (!this.isRendered()) return;
             this.$el.find('footer button[data-name="'+name+'"]').addClass('hidden');
         },
+
+        showActionItem: function (name) {
+            this.buttonList.forEach(function (d) {
+                if (d.name !== name) return;
+                d.hidden = false;
+            }, this);
+            this.dropdownItemList.forEach(function (d) {
+                if (d.name !== name) return;
+                d.hidden = false;
+            }, this);
+
+            if (!this.isRendered()) return;
+            this.$el.find('footer button[data-name="'+name+'"]').removeClass('hidden');
+            this.$el.find('footer li > a[data-name="'+name+'"]').parent().removeClass('hidden');
+
+            if (!this.isDropdownItemListEmpty()) {
+                this.$el.find('footer .main-btn-group > .btn-group').removeClass('hidden');
+            }
+        },
+
+        hideActionItem: function (name) {
+            this.buttonList.forEach(function (d) {
+                if (d.name !== name) return;
+                d.hidden = true;
+            }, this);
+            this.dropdownItemList.forEach(function (d) {
+                if (d.name !== name) return;
+                d.hidden = true;
+            }, this);
+
+            if (!this.isRendered()) return;
+
+            this.$el.find('footer button[data-name="'+name+'"]').addClass('hidden');
+            this.$el.find('footer li > a[data-name="'+name+'"]').parent().addClass('hidden');
+
+            if (this.isDropdownItemListEmpty()) {
+                this.$el.find('footer .main-btn-group > .btn-group').addClass('hidden');
+            }
+        },
+
+        isDropdownItemListEmpty: function () {
+            if (this.dropdownItemList.length === 0) {
+                return true;
+            }
+            var isEmpty = true;
+            this.dropdownItemList.forEach(function (item) {
+                if (!item.hidden) {
+                    isEmpty = false;
+                }
+            }, this);
+            return isEmpty;
+        },
     });
 });
-

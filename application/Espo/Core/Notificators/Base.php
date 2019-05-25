@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,12 +35,12 @@ use \Espo\ORM\Entity;
 
 class Base implements Injectable
 {
-    protected $dependencies = array(
+    protected $dependencyList = [
         'user',
         'entityManager',
-    );
+    ];
 
-    protected $injections = array();
+    protected $injections = [];
 
     public static $order = 9;
 
@@ -62,12 +62,12 @@ class Base implements Injectable
 
     protected function addDependency($name)
     {
-        $this->dependencies[] = $name;
+        $this->dependencyList[] = $name;
     }
 
     public function getDependencyList()
     {
-        return $this->dependencies;
+        return $this->dependencyList;
     }
 
     protected function getInjection($name)
@@ -82,15 +82,15 @@ class Base implements Injectable
 
     protected function getEntityManager()
     {
-        return $this->injections['entityManager'];
+        return $this->getInjection('entityManager');
     }
 
     protected function getUser()
     {
-        return $this->injections['user'];
+        return $this->getInjection('user');
     }
 
-    public function process(Entity $entity)
+    public function process(Entity $entity, array $options = [])
     {
         if ($entity->hasLinkMultipleField('assignedUsers')) {
             $userIdList = $entity->getLinkMultipleIdList('assignedUsers');

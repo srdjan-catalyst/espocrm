@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,10 @@ Espo.define('views/notification/panel', 'view', function (Dep) {
                 this.collection = collection;
                 collection.maxSize = this.getConfig().get('notificationsMaxSize') || 5;
                 this.wait(false);
+
+                this.listenTo(this.collection, 'sync', function () {
+                    this.trigger('collection-fetched');
+                }, this);
             }, this);
 
             this.navbarPanelHeightSpace = this.getThemeManager().getParam('navbarPanelHeightSpace') || 100;

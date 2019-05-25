@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-return array (
-    'database' => array (
+return [
+    'database' => [
         'driver' => 'pdo_mysql',
         'host' => 'localhost',
         'port' => '',
@@ -36,7 +36,7 @@ return array (
         'dbname' => '',
         'user' => '',
         'password' => '',
-    ),
+    ],
     'useCache' => true,
     'recordsPerPage' => 20,
     'recordsPerPageSmall' => 5,
@@ -72,10 +72,12 @@ return array (
         'es_ES',
         'hr_HR',
         'hu_HU',
+        'fa_IR',
         'fr_FR',
         'id_ID',
         'it_IT',
         'lt_LT',
+        'lv_LV',
         'nb_NO',
         'nl_NL',
         'tr_TR',
@@ -90,21 +92,19 @@ return array (
         'zh_CN'
     ],
     'language' => 'en_US',
-    'logger' =>
-    array (
+    'logger' => [
         'path' => 'data/logs/espo.log',
         'level' => 'WARNING', /** DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY */
         'rotation' => true,
         'maxFileNumber' => 30,
-    ),
+    ],
     'authenticationMethod' => 'Espo',
-    'globalSearchEntityList' =>
-    array (
+    'globalSearchEntityList' => [
         'Account',
         'Contact',
         'Lead',
         'Opportunity',
-    ),
+    ],
     'tabList' => ["Account", "Contact", "Lead", "Opportunity", "Case", "Email", "Calendar", "Meeting", "Call", "Task", "_delimiter_", "Document", "Campaign", "KnowledgeBaseArticle", "Stream", "User"],
     'quickCreateList' => ["Account", "Contact", "Lead", "Opportunity", "Meeting", "Call", "Task", "Case", "Email"],
     'exportDisabled' => false,
@@ -118,6 +118,7 @@ return array (
     "portalStreamEmailNotifications" => true,
     'streamEmailNotificationsEntityList' => ['Case'],
     'streamEmailNotificationsTypeList' => ['Post', 'Status', 'EmailReceived'],
+    'emailNotificationsDelay' => 30,
     'emailMessageMaxSize' => 10,
     'notificationsCheckInterval' => 10,
     'disabledCountQueryEntityList' => ['Email'],
@@ -127,8 +128,8 @@ return array (
     'restrictedMode' => false,
     'theme' => 'HazyblueVertical',
     'massEmailMaxPerHourCount' => 100,
-    'personalEmailMaxPortionSize' => 10,
-    'inboundEmailMaxPortionSize' => 20,
+    'personalEmailMaxPortionSize' => 50,
+    'inboundEmailMaxPortionSize' => 50,
     'authTokenLifetime' => 0,
     'authTokenMaxIdleTime' => 120,
     'userNameRegularExpression' => '[^a-z0-9\-@_\.\s]',
@@ -160,7 +161,6 @@ return array (
     'calendarEntityList' => ['Meeting', 'Call', 'Task'],
     'activitiesEntityList' => ['Meeting', 'Call'],
     'historyEntityList' => ['Meeting', 'Call', 'Email'],
-    'lastViewedCount' => 20,
     'cleanupJobPeriod' => '1 month',
     'cleanupActionHistoryPeriod' => '15 days',
     'cleanupAuthTokenPeriod' => '1 month',
@@ -168,12 +168,16 @@ return array (
     'currencyDecimalPlaces' => 2,
     'aclStrictMode' => false,
     'aclAllowDeleteCreated' => false,
+    'aclAllowDeleteCreatedThresholdPeriod' => '24 hours',
     'inlineAttachmentUploadMaxSize' => 20,
     'textFilterUseContainsForVarchar' => false,
     'tabColorsDisabled' => false,
     'massPrintPdfMaxCount' => 50,
     'emailKeepParentTeamsEntityList' => ['Case'],
     'recordListMaxSizeLimit' => 200,
+    'noteDeleteThresholdPeriod' => '1 month',
+    'noteEditThresholdPeriod' => '7 days',
+    'emailForceUseExternalClient' => false,
+    'useWebSocket' => false,
     'isInstalled' => false
-);
-
+];

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -206,7 +206,7 @@ class Manager
 
         $res = (file_put_contents($fullPath, $data, $flags) !== FALSE);
         if ($res && function_exists('opcache_invalidate')) {
-            opcache_invalidate($fullPath);
+            @opcache_invalidate($fullPath);
         }
 
         return $res;
@@ -466,6 +466,9 @@ class Manager
 
             if (file_exists($sourceFile) && is_file($sourceFile)) {
                 $res &= copy($sourceFile, $destFile);
+                if (function_exists('opcache_invalidate')) {
+                    @opcache_invalidate($destFile);
+                }
             }
         }
 
@@ -558,6 +561,9 @@ class Manager
             }
 
             if (file_exists($filePath) && is_file($filePath)) {
+                if (function_exists('opcache_invalidate')) {
+                    @opcache_invalidate($filePath, true);
+                }
                 $result &= unlink($filePath);
             }
         }
@@ -589,7 +595,7 @@ class Manager
             }
         }
 
-        if ($removeWithDir) {
+        if ($removeWithDir && $this->isDirEmpty($dirPath)) {
             $result &= $this->rmdir($dirPath);
         }
 
@@ -891,6 +897,20 @@ class Manager
     }
 
     /**
+     * Check if $path is writable
+     *
+     * @param  string | array  $path
+     *
+     * @return boolean
+     */
+    public function isReadable($path)
+    {
+        $existFile = $this->getExistsPath($path);
+
+        return is_readable($existFile);
+    }
+
+    /**
      * Get exists path. Ex. if check /var/www/espocrm/custom/someFile.php and this file doesn't extist, result will be /var/www/espocrm/custom
      *
      * @param  string | array $path
@@ -908,4 +928,3 @@ class Manager
         return $fullPath;
     }
 }
-

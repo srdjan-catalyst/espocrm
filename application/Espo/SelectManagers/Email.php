@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,20 +33,48 @@ class Email extends \Espo\Core\SelectManagers\Base
 {
     protected $textFilterUseContainsAttributeList = ['name'];
 
-    public function getSelectParams(array $params, $withAcl = false, $checkWherePermission = false)
+    public function applyAdditional(array $params, array &$result)
     {
-        $result = parent::getSelectParams($params, $withAcl, $checkWherePermission);
+        parent::applyAdditional($params, $result);
 
-        if (!empty($params['folderId'])) {
-            $this->applyFolder($params['folderId'], $result);
+        $folderId = $params['folderId'] ?? null;
+
+        if ($folderId) {
+            $this->applyFolder($folderId, $result);
         }
 
-        $this->addUsersJoin($result);
+        if (empty($params['textFilter']) && !empty($result['orderBy']) && $result['orderBy'] === 'dateSent') {
+            $skipIndex = false;
+            if (isset($params['where'])) {
+                foreach ($params['where'] as $item) {
+                    if ($item['type'] === 'textFilter') {
+                        $skipIndex = true;
+                    }
+                }
+            }
+            if ($folderId === 'important' || $folderId === 'drafts') {
+                $skipIndex = true;
+            }
+            if (!$skipIndex && $this->hasLinkJoined('teams', $result)) {
+                $skipIndex = true;
+            }
+            if (!$skipIndex) {
+                $result['useIndexList'] = ['dateSent'];
+            }
+        }
+
+        if ($folderId === 'drafts') {
+            $result['useIndexList'] = ['createdById'];
+        }
+
+        if ($folderId !== 'drafts') {
+            $this->addUsersJoin($result);
+        }
 
         return $result;
     }
 
-    public function applyFolder($folderId, &$result)
+    public function applyFolder(?string $folderId, array &$result)
     {
         switch ($folderId) {
             case 'all':
@@ -71,33 +99,37 @@ class Email extends \Espo\Core\SelectManagers\Base
         }
     }
 
-    public function addUsersJoin(&$result)
+    public function addUsersJoin(array &$result)
     {
         if (!$this->hasJoin('users', $result) && !$this->hasLeftJoin('users', $result)) {
             $this->addLeftJoin('users', $result);
-            $this->setJoinCondition('users', array(
-                'userId' => $this->getUser()->id
-            ), $result);
         }
+
+        $this->setJoinCondition('users', [
+            'userId' => $this->getUser()->id
+        ], $result);
 
         $this->addUsersColumns($result);
     }
 
     protected function applyEmailFolder($folderId, &$result)
     {
-        $result['whereClause'][] = array(
+        $result['whereClause'][] = [
             'usersMiddle.inTrash' => false,
             'usersMiddle.folderId' => $folderId
-        );
+        ];
         $this->boolFilterOnlyMy($result);
     }
 
     protected function boolFilterOnlyMy(&$result)
     {
-        $this->addJoin('users', $result);
-        $result['whereClause'][] = array(
+        if (!$this->hasJoin('users', $result) && !$this->hasLeftJoin('users', $result)) {
+            $this->addJoin('users', $result);
+        }
+
+        $result['whereClause'][] = [
             'usersMiddle.userId' => $this->getUser()->id
-        );
+        ];
 
         $this->addUsersColumns($result);
     }
@@ -119,28 +151,28 @@ class Email extends \Espo\Core\SelectManagers\Base
         foreach ($eaList as $ea) {
             $idList[] = $ea->id;
         }
-        $d = array(
+        $group = [
             'usersMiddle.inTrash=' => false,
             'usersMiddle.folderId' => null,
-            array(
+            [
                 'status' => ['Archived', 'Sent']
-            )
-        );
+            ]
+        ];
         if (!empty($idList)) {
-            $d['fromEmailAddressId!='] = $idList;
-            $d[] = array(
-                'OR' => array(
+            $group['fromEmailAddressId!='] = $idList;
+            $group[] = [
+                'OR' => [
                     'status' => 'Archived',
                     'createdById!=' => $this->getUser()->id
-                )
-            );
+                ]
+            ];
         } else {
-            $d[] = array(
+            $group[] = [
                 'status' => 'Archived',
                 'createdById!=' => $this->getUser()->id
-            );
+            ];
         }
-        $result['whereClause'][] = $d;
+        $result['whereClause'][] = $group;
 
         $this->boolFilterOnlyMy($result);
     }
@@ -159,42 +191,42 @@ class Email extends \Espo\Core\SelectManagers\Base
             $idList[] = $ea->id;
         }
 
-        $result['whereClause'][] = array(
-            'OR' => array(
+        $result['whereClause'][] = [
+            'OR' => [
                 'fromEmailAddressId=' => $idList,
-                array(
+                [
                     'status' => 'Sent',
                     'createdById' => $this->getUser()->id
-                )
-            ),
-            array(
+                ]
+            ],
+            [
                 'status!=' => 'Draft'
-            ),
+            ],
             'usersMiddle.inTrash=' => false
-        );
+        ];
     }
 
     protected function filterTrash(&$result)
     {
-        $result['whereClause'][] = array(
+        $result['whereClause'][] = [
             'usersMiddle.inTrash=' => true
-        );
+        ];
         $this->boolFilterOnlyMy($result);
     }
 
     protected function filterDrafts(&$result)
     {
-        $result['whereClause'][] = array(
+        $result['whereClause'][] = [
             'status' => 'Draft',
             'createdById' => $this->getUser()->id
-        );
+        ];
     }
 
     protected function filterArchived(&$result)
     {
-        $result['whereClause'][] = array(
+        $result['whereClause'][] = [
             'status' => 'Archived'
-        );
+        ];
     }
 
     protected function accessOnlyOwn(&$result)
@@ -210,15 +242,19 @@ class Email extends \Espo\Core\SelectManagers\Base
     protected function accessOnlyTeam(&$result)
     {
         $this->setDistinct(true, $result);
-        $this->addLeftJoin(['teams', 'teamsAccess'], $result);
-        $this->addLeftJoin(['users', 'usersAccess'], $result);
 
-        $result['whereClause'][] = array(
-            'OR' => array(
-                'teamsAccess.id' => $this->getUser()->getLinkMultipleIdList('teams'),
-                'usersAccess.id' => $this->getUser()->id
-            )
-        );
+        $this->addLeftJoin(['teams', 'teamsAccess'], $result);
+
+        if (!$this->hasJoin('users', $result) && !$this->hasLeftJoin('users', $result)) {
+            $this->addLeftJoin(['users', 'users'], $result);
+        }
+
+        $result['whereClause'][] = [
+            'OR' => [
+                'teamsAccessMiddle.teamId' => $this->getUser()->getLinkMultipleIdList('teams'),
+                'usersMiddle.userId' => $this->getUser()->id,
+            ]
+        ];
     }
 
     protected function accessPortalOnlyAccount(&$result)
@@ -226,26 +262,26 @@ class Email extends \Espo\Core\SelectManagers\Base
         $this->setDistinct(true, $result);
         $this->addLeftJoin(['users', 'usersAccess'], $result);
 
-        $d = array(
+        $orGroup = [
             'usersAccess.id' => $this->getUser()->id
-        );
+        ];
 
         $accountIdList = $this->getUser()->getLinkMultipleIdList('accounts');
         if (count($accountIdList)) {
-            $d['accountId'] = $accountIdList;
+            $orGroup['accountId'] = $accountIdList;
         }
 
         $contactId = $this->getUser()->get('contactId');
         if ($contactId) {
-            $d[] = array(
+            $orGroup[] = [
                 'parentId' => $contactId,
                 'parentType' => 'Contact'
-            );
+            ];
         }
 
-        $result['whereClause'][] = array(
-            'OR' => $d
-        );
+        $result['whereClause'][] = [
+            'OR' => $orGroup
+        ];
     }
 
     protected function accessPortalOnlyContact(&$result)
@@ -253,24 +289,24 @@ class Email extends \Espo\Core\SelectManagers\Base
         $this->setDistinct(true, $result);
         $this->addLeftJoin(['users', 'usersAccess'], $result);
 
-        $d = array(
+        $orGroup = [
             'usersAccess.id' => $this->getUser()->id
-        );
+        ];
 
         $contactId = $this->getUser()->get('contactId');
         if ($contactId) {
-            $d[] = array(
+            $orGroup[] = [
                 'parentId' => $contactId,
                 'parentType' => 'Contact'
-            );
+            ];
         }
 
-        $result['whereClause'][] = array(
-            'OR' => $d
-        );
+        $result['whereClause'][] = [
+            'OR' => $orGroup
+        ];
     }
 
-    protected function applyAdditionalToTextFilterGroup($textFilter, &$group, &$result)
+    protected function applyAdditionalToTextFilterGroup(string $textFilter, array &$group, array &$result)
     {
         if (strlen($textFilter) >= self::MIN_LENGTH_FOR_CONTENT_SEARCH) {
             $emailAddressId = $this->getEmailAddressIdByValue($textFilter);
@@ -286,9 +322,9 @@ class Email extends \Espo\Core\SelectManagers\Base
     {
         $pdo = $this->getEntityManager()->getPDO();
 
-        $emailAddress = $this->getEntityManager()->getRepository('EmailAddress')->where(array(
+        $emailAddress = $this->getEntityManager()->getRepository('EmailAddress')->where([
             'lower' => strtolower($value)
-        ))->findOne();
+        ])->findOne();
 
         $emailAddressId = null;
         if ($emailAddress) {
@@ -314,27 +350,26 @@ class Email extends \Espo\Core\SelectManagers\Base
     }
 
 
-    public function whereEmailAddress($value, &$result)
+    public function whereEmailAddress(string $value, array &$result)
     {
-        $d = array();
+        $orItem = [];
 
         $emailAddressId = $this->getEmailAddressIdByValue($value);
 
         if ($emailAddressId) {
             $this->leftJoinEmailAddress($result);
 
-            $d['fromEmailAddressId'] = $emailAddressId;
-            $d['emailEmailAddress.emailAddressId'] = $emailAddressId;
-            $result['whereClause'][] = array(
-                'OR' => $d
-            );
+            $orItem['fromEmailAddressId'] = $emailAddressId;
+            $orItem['emailEmailAddress.emailAddressId'] = $emailAddressId;
+            $result['whereClause'][] = [
+                'OR' => $orItem
+            ];
         } else {
             if (empty($result['customWhere'])) {
                 $result['customWhere'] = '';
             }
             $result['customWhere'] .= ' AND 0';
         }
-
     }
 
     protected function getWherePartIsNotRepliedIsTrue()
@@ -401,4 +436,3 @@ class Email extends \Espo\Core\SelectManagers\Base
         );
     }
 }
-

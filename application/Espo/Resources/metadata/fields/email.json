@@ -4,6 +4,10 @@
          "name":"required",
          "type":"bool",
          "default":false
+      },
+      {
+         "name":"audited",
+         "type":"bool"
       }
    ],
    "actualFields":[
@@ -18,10 +22,19 @@
          "type": "bool",
          "notStorable": true,
          "layoutDetailDisabled": true,
+         "mergeDisabled": true,
+         "foreignAccessDisabled": true,
          "customizationDefaultDisabled": true,
          "customizationReadOnlyDisabled": true
       }
    },
+   "validationList": [
+      "required",
+      "emailAddress"
+   ],
+   "mandatoryValidationList": [
+      "emailAddress"
+   ],
    "notCreatable": true,
    "filter": true,
    "fieldDefs":{

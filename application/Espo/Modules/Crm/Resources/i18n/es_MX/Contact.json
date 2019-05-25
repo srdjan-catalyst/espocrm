@@ -2,7 +2,6 @@
   "fields": {
     "name": "Nombre",
     "emailAddress": "Correo electrónico",
-    "title": "Título",
     "accountRole": "Título",
     "account": "Cuenta",
     "accounts": "Cuentas",
@@ -13,19 +12,20 @@
     "opportunityRole": "Rol de Oportunidad",
     "description": "Descripción",
     "campaign": "Campaña",
-    "targetLists": "Listas de Objetivos",
-    "targetList": "Lista de Objetivos",
+    "targetLists": "Listas de Intereses",
+    "targetList": "Lista de Intereses",
     "portalUser": "Usuario del Portal",
     "originalLead": "Referencia Original",
     "acceptanceStatus": "Estatus de Aprobación",
     "accountIsInactive": "Cuenta Inactiva",
     "acceptanceStatusMeetings": "Estatus de Aceptación (Presentaciones)",
-    "acceptanceStatusCalls": "Estátus de Aceptación (Llamadas)"
+    "acceptanceStatusCalls": "Estátus de Aceptación (Llamadas)",
+    "title": "Título de la Cuenta Primaria"
   },
   "links": {
     "opportunities": "Oportunidades",
     "cases": "Casos",
-    "targetLists": "Listas de Objetivos",
+    "targetLists": "Listas de Intereses",
     "campaignLogRecords": "Registrar Campaña",
     "campaign": "Campaña",
     "account": "Cuenta (Primaria)",
@@ -41,7 +41,6 @@
   },
   "options": {
     "opportunityRole": {
-      "": "--Ninguno--",
       "Decision Maker": "Tomador de Desiciones",
       "Evaluator": "Evaluador",
       "Influencer": "Factor de Influencia"

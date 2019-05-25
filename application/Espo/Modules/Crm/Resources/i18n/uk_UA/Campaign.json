@@ -4,8 +4,8 @@
     "description": "Опис",
     "status": "Статус",
     "type": "Тип",
-    "startDate": "Дата Початку",
-    "endDate": "Дата Закінчення",
+    "startDate": "Дата початку",
+    "endDate": "Дата закінчення",
     "targetLists": "Цільові списки",
     "excludingTargetLists": "За винятком цільових списків",
     "sentCount": "Відправлено",
@@ -13,13 +13,20 @@
     "clickedCount": "Клікнуто",
     "optedOutCount": "Відмовлено",
     "bouncedCount": "Відшито",
+    "optedInCount": "Підписаний",
     "hardBouncedCount": "Жорстко відшито",
     "softBouncedCount": "М'яко відшито",
     "leadCreatedCount": "Ліди створені",
     "revenue": "Виручка",
     "revenueConverted": "Дохід (в перерахунку)",
     "budget": "Бюджет",
-    "budgetConverted": "Бюджет (конвертований)"
+    "budgetConverted": "Бюджет (конвертований)",
+    "budgetCurrency": "Валюта бюджету",
+    "contactsTemplate": "Шаблон контактів",
+    "leadsTemplate": "Шаблон лідів",
+    "accountsTemplate": "Шаблон аккаунтів",
+    "usersTemplate": "Шаблон користувачів",
+    "mailMergeOnlyWithAddress": "Пропустити записи без заповненої адреси"
   },
   "links": {
     "targetLists": "Цільові списки",
@@ -28,9 +35,13 @@
     "contacts": "Контакти",
     "leads": "Ліди",
     "opportunities": "Угоди",
-    "campaignLogRecords": "Лоґ",
+    "campaignLogRecords": "Лог",
     "massEmails": "Масові розсилки",
-    "trackingUrls": "Відстежувані URLs"
+    "trackingUrls": "Відстежувані URLs",
+    "contactsTemplate": "Шаблон контактів",
+    "leadsTemplate": "Шаблон лідів",
+    "accountsTemplate": "Шаблон аккаунтів",
+    "usersTemplate": "Шаблон користувачів"
   },
   "options": {
     "type": {
@@ -54,12 +65,14 @@
     "Statistics": "Статистика",
     "hard": "жорстко",
     "soft": "м'яко",
-    "Unsubscribe": "Відписати",
+    "Unsubscribe": "Відписатися",
     "Mass Emails": "Масові розсилки",
     "Email Templates": "Шаблони електронної пошти",
     "Unsubscribe again": "Відписатися знову",
     "Subscribe again": "Підписатися знову",
-    "Create Target List": "Створити Цільовий список"
+    "Create Target List": "Створити цільовий список",
+    "Mail Merge": "Злиття листів",
+    "Generate Mail Merge PDF": "Згенерувати PDF-злиття"
   },
   "presetFilters": {
     "active": "Активні"

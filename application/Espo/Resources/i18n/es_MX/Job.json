@@ -6,15 +6,15 @@
     "failedAttempts": "Intentos Fallidos",
     "serviceName": "Servicio",
     "methodName": "Método",
-    "scheduledJob": "Tarea Programada",
+    "scheduledJob": "Tarea Agendada",
     "data": "Datos",
     "method": "Método (obsoleto)",
-    "scheduledJobJob": "Nombre del Trabajo Programado"
+    "scheduledJobJob": "Nombre del Trabajo Agendado"
   },
   "options": {
     "status": {
       "Pending": "Pendiente",
-      "Success": "Exitoso",
+      "Success": "Correcto",
       "Running": "en ejecución...",
       "Failed": "Falló"
     }

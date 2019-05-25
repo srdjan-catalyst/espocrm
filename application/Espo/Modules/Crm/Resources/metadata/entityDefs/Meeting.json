@@ -9,22 +9,30 @@
             "type": "enum",
             "options": ["Planned", "Held", "Not Held"],
             "default": "Planned",
-            "view": "views/fields/enum-styled",
             "style": {
                 "Held": "success"
             },
             "audited": true
         },
         "dateStart": {
-            "type": "datetime",
+            "type": "datetimeOptional",
+            "view": "crm:views/meeting/fields/date-start",
             "required": true,
             "default": "javascript: return this.dateTime.getNow(15);",
             "audited": true
         },
         "dateEnd": {
-            "type": "datetime",
+            "type": "datetimeOptional",
+            "view": "crm:views/meeting/fields/date-end",
             "required": true,
             "after": "dateStart"
+        },
+        "isAllDay": {
+            "type": "bool",
+            "readOnly": true,
+            "layoutListDisabled": true,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true
         },
         "duration": {
             "type": "duration",
@@ -57,8 +65,15 @@
             "type": "enum",
             "notStorable": true,
             "options": ["None", "Accepted", "Tentative", "Declined"],
+            "style": {
+                "Accepted": "success",
+                "Declined": "danger",
+                "Tentative": "warning"
+            },
             "layoutDetailDisabled": true,
             "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
+            "exportDisabled": true,
             "where": {
                 "=": {
                     "leftJoins": ["users", "contacts", "leads"],
@@ -89,6 +104,7 @@
             "columns": {
                 "status": "acceptanceStatus"
             },
+            "additionalAttributeList": ["columns"],
             "orderBy": "name"
         },
         "contacts": {
@@ -99,6 +115,7 @@
             "columns": {
                 "status": "acceptanceStatus"
             },
+            "additionalAttributeList": ["columns"],
             "orderBy": "name"
         },
         "leads": {
@@ -109,6 +126,7 @@
             "columns": {
                 "status": "acceptanceStatus"
             },
+            "additionalAttributeList": ["columns"],
             "orderBy": "name"
         },
         "createdAt": {
@@ -204,8 +222,8 @@
         }
     },
     "collection": {
-        "sortBy": "dateStart",
-        "asc": false
+        "orderBy": "dateStart",
+        "order": "desc"
     },
     "indexes": {
         "dateStartStatus": {

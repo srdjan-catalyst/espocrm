@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,7 +120,9 @@ Espo.define('views/dashlets/options/base', ['views/modal', 'views/record/detail'
                 }
             });
 
-            this.header = this.getLanguage().translate('Dashlet Options') + ': ' + this.getLanguage().translate(this.name, 'dashlets');
+            this.header =
+                this.getLanguage().translate('Dashlet Options') + ': ' +
+                Handlebars.Utils.escapeExpression(this.getLanguage().translate(this.name, 'dashlets'));
         },
 
         setupBeforeFinal: function () {},
@@ -137,7 +139,9 @@ Espo.define('views/dashlets/options/base', ['views/modal', 'views/record/detail'
             var valid = true;
             this.fieldList.forEach(function (field) {
                 var fieldView = this.getView('record').getFieldView(field);
-                valid = !fieldView.validate() && valid;
+                if (fieldView && fieldView.isEditMode() && !fieldView.disabled && !fieldView.readOnly) {
+                    valid = !fieldView.validate() && valid;
+                }
             }, this);
 
             if (!valid) {
@@ -164,7 +168,7 @@ Espo.define('views/dashlets/options/base', ['views/modal', 'views/record/detail'
             return {};
         },
 
-        getFieldView: function () {
+        getFieldView: function (name) {
             return (this.getFieldViews(true) || {})[name] || null;
         },
 

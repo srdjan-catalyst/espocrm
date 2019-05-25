@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,40 +55,40 @@ class BelongsTo extends Base
         }
 
         if (!empty($linkParams['noJoin'])) {
-            $fieldNameDefs = array(
+            $fieldNameDefs = [
                 'type' => 'varchar',
                 'notStorable' => true,
                 'relation' => $linkName,
                 'foreign' => $this->getForeignField('name', $foreignEntityName),
-            );
+            ];
         } else {
-            $fieldNameDefs = array(
+            $fieldNameDefs = [
                 'type' => 'foreign',
                 'relation' => $linkName,
                 'foreign' => $foreign,
                 'notStorable' => false
-            );
+            ];
         }
 
-        $data = array (
-            $entityName => array (
-                'fields' => array(
-                    $linkName.'Id' => array(
+        $data = [
+            $entityName => [
+                'fields' => [
+                    $linkName.'Id' => [
                         'type' => 'foreignId',
                         'index' => $index
-                    )
-                ),
-                'relations' => array(
-                    $linkName => array(
+                    ]
+                ],
+                'relations' => [
+                    $linkName => [
                         'type' => 'belongsTo',
                         'entity' => $foreignEntityName,
                         'key' => $linkName.'Id',
                         'foreignKey' => 'id',
                         'foreign' => $foreignLinkName
-                    )
-                )
-            )
-        );
+                    ]
+                ]
+            ]
+        ];
 
         if (!$noForeignName) {
             $data[$entityName]['fields'][$linkName.'Name'] = $fieldNameDefs;

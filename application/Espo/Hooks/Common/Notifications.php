@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,11 @@ class Notifications extends \Espo\Core\Hooks\Base
         return $this->getContainer()->get('serviceFactory');
     }
 
+    protected function getNotificatorFactory()
+    {
+        return $this->getContainer()->get('notificatorFactory');
+    }
+
     protected function checkHasStream($entityType)
     {
         if (!array_key_exists($entityType, $this->hasStreamCache)) {
@@ -58,33 +63,13 @@ class Notifications extends \Espo\Core\Hooks\Base
     protected function getNotificator($entityType)
     {
         if (empty($this->notifatorsHash[$entityType])) {
-            $normalizedName = Util::normilizeClassName($entityType);
-
-            $className = '\\Espo\\Custom\\Notificators\\' . $normalizedName;
-            if (!class_exists($className)) {
-                $moduleName = $this->getMetadata()->getScopeModuleName($entityType);
-                if ($moduleName) {
-                    $className = '\\Espo\\Modules\\' . $moduleName . '\\Notificators\\' . $normalizedName;
-                } else {
-                    $className = '\\Espo\\Notificators\\' . $normalizedName;
-                }
-                if (!class_exists($className)) {
-                    $className = '\\Espo\\Core\\Notificators\\Base';
-                }
-            }
-
-            $notificator = new $className();
-            $dependencies = $notificator->getDependencyList();
-            foreach ($dependencies as $name) {
-                $notificator->inject($name, $this->getContainer()->get($name));
-            }
-
+            $notificator = $this->getNotificatorFactory()->create($entityType);
             $this->notifatorsHash[$entityType] = $notificator;
         }
         return $this->notifatorsHash[$entityType];
     }
 
-    public function afterSave(Entity $entity, array $options = array())
+    public function afterSave(Entity $entity, array $options = [])
     {
         if (!empty($options['silent']) || !empty($options['noNotifications'])) {
             return;
@@ -95,12 +80,12 @@ class Notifications extends \Espo\Core\Hooks\Base
         if (!$this->checkHasStream($entityType) || $entity->hasLinkMultipleField('assignedUsers')) {
             if (in_array($entityType, $this->getConfig()->get('assignmentNotificationsEntityList', []))) {
                 $notificator = $this->getNotificator($entityType);
-                $notificator->process($entity);
+                $notificator->process($entity, $options);
             }
         }
     }
 
-    public function beforeRemove(Entity $entity, array $options = array())
+    public function beforeRemove(Entity $entity, array $options = [])
     {
         if (!empty($options['silent']) || !empty($options['noNotifications'])) {
             return;
@@ -150,6 +135,4 @@ class Notifications extends \Espo\Core\Hooks\Base
         }
         return $this->streamService;
     }
-
 }
-

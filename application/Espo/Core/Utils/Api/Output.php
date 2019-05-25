@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +33,18 @@ class Output
 {
     private $slim;
 
-    protected $errorDesc = array(
+    protected $errorDescriptions = [
         400 => 'Bad Request',
         401 => 'Unauthorized',
         403 => 'Forbidden',
         404 => 'Page Not Found',
         409 => 'Conflict',
         500 => 'Internal Server Error',
-    );
+    ];
+
+    protected $allowedStatusCodeList = [
+        200, 201, 400, 401, 403, 404, 409, 500
+    ];
 
     protected $ignorePrintXStatusReasonExceptionClassNameList = [
         'PDOException'
@@ -56,11 +60,6 @@ class Output
         return $this->slim;
     }
 
-    /**
-    * Output the result
-    *
-    * @param mixed $data - JSON
-    */
     public function render($data = null)
     {
         if (is_array($data)) {
@@ -72,45 +71,68 @@ class Output
         echo $data;
     }
 
-    public function processError($message = 'Error', $code = 500, $isPrint = false, $exception = null)
+    public function processError(string $message = 'Error', int $statusCode = 500, bool $toPrint = false, $exception = null)
     {
         $currentRoute = $this->getSlim()->router()->getCurrentRoute();
 
         if (isset($currentRoute)) {
             $inputData = $this->getSlim()->request()->getBody();
             $inputData = $this->clearPasswords($inputData);
-            $GLOBALS['log']->error('API ['.$this->getSlim()->request()->getMethod().']:'.$currentRoute->getPattern().', Params:'.print_r($currentRoute->getParams(), true).', InputData: '.$inputData.' - '.$message);
+
+            $routePattern = $currentRoute->getPattern();
+            $routeParams = $currentRoute->getParams();
+            $method = $this->getSlim()->request()->getMethod();
+
+            $logMessage = "API ($statusCode) ";
+            $logMessageItemList = [];
+            if ($message) $logMessageItemList[] = $message;
+            $logMessageItemList[] .= "$method " . $_SERVER['REQUEST_URI'];
+            if ($inputData) $logMessageItemList[] = "Input data: " . $inputData;
+            if ($routePattern) $logMessageItemList[] = "Route pattern: ". $routePattern;
+            if (!empty($routeParams)) $logMessageItemList[] = "Route params: ". print_r($routeParams, true);
+
+            $logMessage .= implode("; ", $logMessageItemList);
+
+            $GLOBALS['log']->log('debug', $logMessage);
         }
 
-        $this->displayError($message, $code, $isPrint, $exception);
+        $this->displayError($message, $statusCode, $toPrint, $exception);
     }
 
-    /**
-    * Output the error and stop app execution
-    *
-    * @param string $text
-    * @param int $statusCode
-    *
-    * @return void
-    */
-    public function displayError($text, $statusCode = 500, $isPrint = false, $exception = null)
+    public function displayError(string $text, int $statusCode = 500, bool $toPrint = false, $exception = null)
     {
-        $GLOBALS['log']->error('Display Error: '.$text.', Code: '.$statusCode.' URL: '.$_SERVER['REQUEST_URI']);
+        $logLevel = 'error';
+        if ($exception && !empty($exception->logLevel)) {
+            $logLevel = $exception->logLevel;
+        }
+        $logMessageItemList = [];
+        if ($text) $logMessageItemList[] = "{$text}";
+        if (!empty($this->slim)) {
+            $logMessageItemList[] = $this->getSlim()->request()->getMethod() . ' ' .$_SERVER['REQUEST_URI'];
+        }
+        $logMessage = "($statusCode) " . implode("; ", $logMessageItemList);
+
+        $GLOBALS['log']->log($logLevel, $logMessage);
 
         ob_clean();
 
-        if (!empty( $this->slim)) {
+        if (!empty($this->slim)) {
             $toPrintXStatusReason = true;
             if ($exception && in_array(get_class($exception), $this->ignorePrintXStatusReasonExceptionClassNameList)) {
                 $toPrintXStatusReason = false;
             }
+
+            if (!in_array($statusCode, $this->allowedStatusCodeList)) {
+                $statusCode = 500;
+            }
+
             $this->getSlim()->response()->setStatus($statusCode);
             if ($toPrintXStatusReason) {
                 $this->getSlim()->response()->headers->set('X-Status-Reason', $text);
             }
 
-            if ($isPrint) {
-                $status = $this->getCodeDesc($statusCode);
+            if ($toPrint) {
+                $status = $this->getCodeDescription($statusCode);
                 $status = isset($status) ? $statusCode.' '.$status : 'HTTP '.$statusCode;
                 $this->getSlim()->printError($text, $status);
             }
@@ -122,28 +144,15 @@ class Output
         }
     }
 
-    /**
-     * Get status code desription
-     *
-     * @param  int $statusCode
-     * @return string | null
-     */
-    protected function getCodeDesc($statusCode)
+    protected function getCodeDescription($statusCode)
     {
-        if (isset($this->errorDesc[$statusCode])) {
-            return $this->errorDesc[$statusCode];
+        if (isset($this->errorDescriptions[$statusCode])) {
+            return $this->errorDescriptions[$statusCode];
         }
 
         return null;
     }
 
-    /**
-     * Clear passwords for inputData
-     *
-     * @param  string $inputData
-     *
-     * @return string
-     */
     protected function clearPasswords($inputData)
     {
         return preg_replace('/"(.*?password.*?)":".*?"/i', '"$1":"*****"', $inputData);

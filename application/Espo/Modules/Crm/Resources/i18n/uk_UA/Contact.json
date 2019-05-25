@@ -3,7 +3,6 @@
     "name": "Ім'я",
     "emailAddress": "Емейл",
     "title": "Посада",
-    "accountRole": "Посада",
     "account": "Контрагент",
     "accounts": "Контрагенти",
     "phoneNumber": "Телефон",
@@ -11,25 +10,30 @@
     "doNotCall": "Не дзвонити",
     "address": "Адреса",
     "opportunityRole": "Роль угоди",
+    "accountRole": "Посада",
     "description": "Опис",
     "campaign": "Кампанія",
     "targetLists": "Цільові списки",
     "targetList": "Цільовий список",
     "portalUser": "Користувач порталів",
-    "originalLead": "Початковий Лід",
-    "acceptanceStatus": "Ухвалення статусу"
+    "originalLead": "Початковий лід",
+    "acceptanceStatus": "Ухвалення статусу",
+    "accountIsInactive": "Неактивний акаунт",
+    "acceptanceStatusMeetings": "Статус підтвердження (Зустрічі)",
+    "acceptanceStatusCalls": "Статус підтвердження (Дзвінки)"
   },
   "links": {
     "opportunities": "Угоди",
     "cases": "Звернення",
     "targetLists": "Цільові списки",
-    "campaignLogRecords": "Лоґ кампанії",
+    "campaignLogRecords": "Лог кампанії",
     "campaign": "Кампанія",
     "account": "Контрагент (основний)",
     "accounts": "Контрагенти",
     "casesPrimary": "Звернення (Основні)",
+    "tasksPrimary": "Завдання (розширено)",
     "portalUser": "Користувач порталу",
-    "originalLead": "Початковий Лід",
+    "originalLead": "Початковий лід",
     "documents": "Документи"
   },
   "labels": {
@@ -37,7 +41,7 @@
   },
   "options": {
     "opportunityRole": {
-      "": "--Немає--",
+      "": "",
       "Decision Maker": "Приймає рішення",
       "Evaluator": "Оцінює",
       "Influencer": "Впливає"
@@ -45,6 +49,7 @@
   },
   "presetFilters": {
     "portalUsers": "Користувачі порталів",
-    "notPortalUsers": "Не користувачів порталу"
+    "notPortalUsers": "Не користувачів порталу",
+    "accountActive": "Активний"
   }
 }

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ Espo.define('crm:views/task/fields/date-end', 'views/fields/datetime-optional', 
         data: function () {
             var data = Dep.prototype.data.call(this);
 
-            if (!~['Completed', 'Canceled'].indexOf(this.model.get('status'))) {
+            if (this.model.get('status') && !~['Completed', 'Canceled'].indexOf(this.model.get('status'))) {
                 if (this.mode == 'list' || this.mode == 'detail') {
                     if (!this.isDate()) {
                         var value = this.model.get(this.name);
@@ -77,4 +77,3 @@ Espo.define('crm:views/task/fields/date-end', 'views/fields/datetime-optional', 
 
     });
 });
-

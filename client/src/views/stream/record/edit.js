@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -117,10 +117,10 @@ Espo.define('views/stream/record/edit', 'views/record/base', function (Dep) {
             this.seed = this.model.clone();
 
             if (this.options.interactiveMode) {
-                this.events['focus textarea[name="post"]'] = function (e) {
+                this.events['focus textarea[data-name="post"]'] = function (e) {
                     this.enablePostingMode();
                 };
-                this.events['keypress textarea[name="post"]'] = function (e) {
+                this.events['keypress textarea[data-name="post"]'] = function (e) {
                     if ((e.keyCode == 10 || e.keyCode == 13) && e.ctrlKey) {
                         this.post();
                     } else if (e.keyCode == 9) {
@@ -185,7 +185,7 @@ Espo.define('views/stream/record/edit', 'views/record/base', function (Dep) {
             if (!this.postingMode) {
                 $('body').off('click.stream-create-post');
                 $('body').on('click.stream-create-post', function (e) {
-                    if ($.contains(window.document.body, e.target) && !$.contains(this.$el.get(0), e.target) && !$(e.target).closest('.modal-dialog').size()) {
+                    if ($.contains(window.document.body, e.target) && !$.contains(this.$el.get(0), e.target) && !$(e.target).closest('.modal-dialog').length) {
                         if (this.getFieldView('post') && this.getFieldView('post').$element.val() == '') {
                             if (!(this.model.get('attachmentsIds') || []).length) {
                                 this.disablePostingMode();

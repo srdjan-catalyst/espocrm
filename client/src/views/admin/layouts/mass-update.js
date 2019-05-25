@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,6 +92,8 @@ Espo.define('views/admin/layouts/mass-update', 'views/admin/layouts/rows', funct
 
                     for (var i in this.rowLayout) {
                         this.rowLayout[i].label = this.getLanguage().translate(this.rowLayout[i].name, 'fields', this.scope);
+
+                        this.itemsData[this.rowLayout[i].name] = Espo.Utils.cloneDeep(this.rowLayout[i]);
                     }
 
                     callback();
@@ -118,9 +120,12 @@ Espo.define('views/admin/layouts/mass-update', 'views/admin/layouts/rows', funct
             if (this.ignoreTypeList.indexOf(model.getFieldParam(name, 'type')) != -1) {
                 return false;
             }
+
+            var layoutList = model.getFieldParam(name, 'layoutAvailabilityList');
+            if (layoutList && !~layoutList.indexOf(this.type)) return;
+
             return !model.getFieldParam(name, 'disabled') && !model.getFieldParam(name, 'layoutMassUpdateDisabled') && !model.getFieldParam(name, 'readOnly');
         }
 
     });
 });
-

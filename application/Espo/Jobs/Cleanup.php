@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ use \Espo\Core\Exceptions;
 
 class Cleanup extends \Espo\Core\Jobs\Base
 {
-    protected $cleanupJobPeriod = '1 month';
+    protected $cleanupJobPeriod = '10 days';
 
     protected $cleanupActionHistoryPeriod = '15 days';
 
@@ -42,8 +42,6 @@ class Cleanup extends \Espo\Core\Jobs\Base
     protected $cleanupAuthLogPeriod = '2 months';
 
     protected $cleanupNotificationsPeriod = '2 months';
-
-    protected $cleanupRemovedNotesPeriod = '2 months';
 
     protected $cleanupAttachmentsPeriod = '15 days';
 
@@ -55,13 +53,14 @@ class Cleanup extends \Espo\Core\Jobs\Base
 
     protected $cleanupDeletedRecordsPeriod = '3 months';
 
+    protected $cleanupWebhookQueuePeriod = '10 days';
+
     public function run()
     {
         $this->cleanupJobs();
         $this->cleanupScheduledJobLog();
         $this->cleanupAttachments();
         $this->cleanupEmails();
-        $this->cleanupNotes();
         $this->cleanupNotifications();
         $this->cleanupActionHistory();
         $this->cleanupAuthToken();
@@ -69,6 +68,7 @@ class Cleanup extends \Espo\Core\Jobs\Base
         $this->cleanupUpgradeBackups();
         $this->cleanupUniqueIds();
         $this->cleanupDeletedRecords();
+        $this->cleanupWebhookQueue();
     }
 
     protected function cleanupJobs()
@@ -76,7 +76,10 @@ class Cleanup extends \Espo\Core\Jobs\Base
         $pdo = $this->getEntityManager()->getPDO();
 
         $query = "DELETE FROM `job` WHERE DATE(modified_at) < ".$pdo->quote($this->getCleanupJobFromDate())." AND status <> 'Pending'";
+        $sth = $pdo->prepare($query);
+        $sth->execute();
 
+        $query = "DELETE FROM `job` WHERE DATE(modified_at) < ".$pdo->quote($this->getCleanupJobFromDate())." AND status = 'Pending' AND deleted = 1";
         $sth = $pdo->prepare($query);
         $sth->execute();
     }
@@ -205,25 +208,25 @@ class Cleanup extends \Espo\Core\Jobs\Base
         }
 
         if ($this->getConfig()->get('cleanupOrphanAttachments')) {
-            $collection = $this->getEntityManager()->getRepository('Attachment')->where(array(
-                array(
-                    'role' => 'Attachment'
-                ),
-                'OR' => array(
-                    array(
+            $collection = $this->getEntityManager()->getRepository('Attachment')->where([
+                [
+                    'role' => 'Attachment',
+                ],
+                'OR' => [
+                    [
                         'parentId' => null,
                         'parentType!=' => null,
-                        'relatedType=' => null
-                    ),
-                    array(
+                        'relatedType=' => null,
+                    ],
+                    [
                         'parentType' => null,
                         'relatedId' => null,
-                        'relatedType!=' => null
-                    )
-                ),
+                        'relatedType!=' => null,
+                    ]
+                ],
                 'createdAt<' => $datetime->format('Y-m-d H:i:s'),
-                'createdAt>' => '2017-05-10 00:00:00'
-            ))->limit(0, 5000)->find();
+                'createdAt>' => '2018-01-01 00:00:00',
+            ])->limit(0, 5000)->find();
 
             foreach ($collection as $e) {
                 $this->getEntityManager()->removeEntity($e);
@@ -315,31 +318,6 @@ class Cleanup extends \Espo\Core\Jobs\Base
         }
     }
 
-    protected function cleanupNotes()
-    {
-        $pdo = $this->getEntityManager()->getPDO();
-
-        $period = '-' . $this->getConfig()->get('cleanupRemovedNotesPeriod', $this->cleanupRemovedNotesPeriod);
-        $datetime = new \DateTime();
-        $datetime->modify($period);
-
-        $sql = "SELECT * FROM `note` WHERE deleted = 1 AND DATE(created_at) < ".$pdo->quote($datetime->format('Y-m-d'));
-        $sth = $pdo->prepare($sql);
-        $sth->execute();
-        while ($row = $sth->fetch(\PDO::FETCH_ASSOC)) {
-            $id = $row['id'];
-            $attachments = $this->getEntityManager()->getRepository('Attachment')->where(array(
-                'parentId' => $id,
-                'parentType' => 'Note'
-            ))->find();
-            foreach ($attachments as $attachment) {
-                $this->getEntityManager()->removeEntity($attachment);
-            }
-            $sqlDel = "DELETE FROM `note` WHERE deleted = 1 AND id = ".$pdo->quote($id);
-            $pdo->query($sqlDel);
-        }
-    }
-
     protected function cleanupNotifications()
     {
         $pdo = $this->getEntityManager()->getPDO();
@@ -378,16 +356,87 @@ class Cleanup extends \Espo\Core\Jobs\Base
         }
     }
 
+    protected function cleanupDeletedEntity(\Espo\ORM\Entity $e)
+    {
+        $scope = $e->getEntityType();
+
+        if (!$e->get('deleted')) return;
+
+        $repository = $this->getEntityManager()->getRepository($scope);
+        $repository->deleteFromDb($e->id);
+
+        $query = $this->getEntityManager()->getQuery();
+
+        foreach ($e->getRelationList() as $relation) {
+            if ($e->getRelationType($relation) !== 'manyMany') continue;;
+            try {
+                $relationName = $e->getRelationParam($relation, 'relationName');
+                $relationTable = $query->toDb($relationName);
+
+                $midKey = $e->getRelationParam($relation, 'midKeys')[0];
+
+                $where = [];
+                $where[$midKey] = $e->id;
+
+                $conditions = $e->getRelationParam($relation, 'conditions');
+                if (!empty($conditions)) {
+                    foreach ($conditions as $key => $value) {
+                        $where[$key] = $value;
+                    }
+                }
+
+                $partList = [];
+                foreach ($where as $key => $value) {
+                    $partList[] = $query->toDb($key) . ' = ' . $query->quote($value);
+                }
+                if (empty($partList)) continue;
+
+                $sql = "DELETE FROM `{$relationTable}` WHERE " . implode(' AND ', $partList);
+
+                $this->getEntityManager()->getPDO()->query($sql);
+            } catch (\Exception $e) {}
+        }
+
+        $noteList = $this->getEntityManager()->getRepository('Note')->where([
+            'OR' => [
+                [
+                    'relatedType' => $scope,
+                    'relatedId' => $e->id
+                ],
+                [
+                    'parentType' => $scope,
+                    'parentId' => $e->id
+                ]
+            ]
+        ])->find(['withDeleted' => true]);
+        foreach ($noteList as $note) {
+            $this->getEntityManager()->removeEntity($note);
+            $note->set('deleted', true);
+            $this->cleanupDeletedEntity($note);
+        }
+
+        if ($scope === 'Note') {
+            $attachmentList = $this->getEntityManager()->getRepository('Attachment')->where([
+                'parentId' => $e->id,
+                'parentType' => 'Note'
+            ])->find();
+            foreach ($attachmentList as $attachment) {
+                $this->getEntityManager()->removeEntity($attachment);
+                $this->getEntityManager()->getRepository('Attachment')->deleteFromDb($attachment->id);
+            }
+        }
+    }
+
     protected function cleanupDeletedRecords()
     {
         if (!$this->getConfig()->get('cleanupDeletedRecords')) return;
-        $datetime = new \DateTime('-' . $this->cleanupDeletedRecordsPeriod);
+        $period = '-' . $this->getConfig()->get('cleanupDeletedRecordsPeriod', $this->cleanupDeletedRecordsPeriod);
+        $datetime = new \DateTime($period);
 
         $scopeList = array_keys($this->getMetadata()->get(['scopes']));
         foreach ($scopeList as $scope) {
             if (!$this->getMetadata()->get(['scopes', $scope, 'entity'])) continue;
             if ($scope === 'Attachment') continue;
-            if (!$this->getMetadata()->get(['entityDefs', $scope, 'fields', 'modifiedAt'])) continue;
 
             if (!$this->getEntityManager()->hasRepository($scope)) continue;
             $repository = $this->getEntityManager()->getRepository($scope);
@@ -397,14 +446,44 @@ class Cleanup extends \Espo\Core\Jobs\Base
             if (!method_exists($repository, 'select')) continue;
             if (!method_exists($repository, 'deleteFromDb')) continue;
 
-            $deletedEntityList = $repository->select(['id', 'deleted'])->where([
+            $whereClause = [
                 'deleted' => 1,
-                'modifiedAt<' => $datetime->format('Y-m-d H:i:s')
-            ])->find(['withDeleted' => true]);
+            ];
+
+            if ($this->getMetadata()->get(['entityDefs', $scope, 'fields', 'modifiedAt'])) {
+                $whereClause['modifiedAt<'] = $datetime->format('Y-m-d H:i:s');
+            } else if ($this->getMetadata()->get(['entityDefs', $scope, 'fields', 'createdAt'])) {
+                $whereClause['createdAt<'] = $datetime->format('Y-m-d H:i:s');
+            }
+
+            $deletedEntityList = $repository->select(['id', 'deleted'])->where($whereClause)->find(['withDeleted' => true]);
             foreach ($deletedEntityList as $e) {
-                if (!$e->get('deleted')) continue;
-                $repository->deleteFromDb($e->id);
+                $this->cleanupDeletedEntity($e);
             }
         }
+    }
+
+    protected function cleanupWebhookQueue()
+    {
+        $pdo = $this->getEntityManager()->getPDO();
+
+        $period = '-' . $this->getConfig()->get('cleanupWebhookQueuePeriod', $this->cleanupWebhookQueuePeriod);
+        $datetime = new \DateTime();
+        $datetime->modify($period);
+        $from = $datetime->format('Y-m-d H:i:s');
+
+        $query = "
+            DELETE FROM `webhook_queue_item`
+            WHERE
+                DATE(created_at) < ".$pdo->quote($from)." AND
+                (status <> 'Pending' OR deleted = 1)
+        ";
+        $pdo->query($query);
+
+        $query = "
+            DELETE FROM `webhook_event_queue_item`
+            WHERE DATE(created_at) < ".$pdo->quote($from)." AND (is_processed = 1 OR deleted = 1)
+        ";
+        $pdo->query($query);
     }
 }

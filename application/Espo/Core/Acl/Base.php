@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,15 +36,21 @@ use \Espo\ORM\Entity;
 
 class Base implements Injectable
 {
-    protected $dependencies = array(
+    protected $dependencyList = [
         'config',
         'entityManager',
-        'aclManager'
-    );
+        'aclManager',
+    ];
+
+    protected $dependencies = []; // for backward compatibility
 
     protected $scope;
 
-    protected $injections = array();
+    protected $injections = [];
+
+    protected $ownerUserIdAttribute = null;
+
+    protected $allowDeleteCreatedThresholdPeriod = '24 hours';
 
     public function inject($name, $object)
     {
@@ -75,12 +81,12 @@ class Base implements Injectable
 
     protected function addDependency($name)
     {
-        $this->dependencies[] = $name;
+        $this->dependencyList[] = $name;
     }
 
     public function getDependencyList()
     {
-        return $this->dependencies;
+        return array_merge($this->dependencyList, $this->dependencies);
     }
 
     protected function getConfig()
@@ -265,15 +271,26 @@ class Base implements Injectable
                     &&
                     $entity->has('createdById') && $entity->get('createdById') == $user->id
                 ) {
+                    $isDeletedAllowed = false;
                     if (!$entity->has('assignedUserId')) {
-                        return true;
+                        $isDeletedAllowed = true;
                     } else {
                         if (!$entity->get('assignedUserId')) {
-                            return true;
+                            $isDeletedAllowed = true;
+                        } else if ($entity->get('assignedUserId') == $entity->get('createdById')) {
+                            $isDeletedAllowed = true;
                         }
-                        if ($entity->get('assignedUserId') == $entity->get('createdById')) {
-                            return true;
+                    }
+
+                    if ($isDeletedAllowed) {
+                        $createdAt = $entity->get('createdAt');
+                        if ($createdAt) {
+                            $deleteThresholdPeriod = $this->getConfig()->get('aclAllowDeleteCreatedThresholdPeriod', $this->allowDeleteCreatedThresholdPeriod);
+                            if (\Espo\Core\Utils\DateTime::isAfterThreshold($createdAt, $deleteThresholdPeriod)) {
+                                return false;
+                            }
                         }
+                        return true;
                     }
                 }
             }
@@ -281,5 +298,23 @@ class Base implements Injectable
 
         return false;
     }
-}
 
+    public function getOwnerUserIdAttribute(Entity $entity)
+    {
+        if ($this->ownerUserIdAttribute) {
+            return $this->ownerUserIdAttribute;
+        }
+
+        if ($entity->hasLinkMultipleField('assignedUsers')) {
+            return 'assignedUsersIds';
+        }
+
+        if ($entity->hasAttribute('assignedUserId')) {
+            return 'assignedUserId';
+        }
+
+        if ($entity->hasAttribute('createdById')) {
+            return 'createdById';
+        }
+    }
+}

@@ -18,12 +18,9 @@
     "twitter": "твиттер",
     "forum": "форум",
     "Installation Guide": "Инструкция по установке",
-    "admin": "admin",
-    "localhost": "localhost",
-    "port": "3306",
+    "admin": "админ",
     "Locale": "Локаль",
     "Outbound Email Configuration": "Настройка исходящей эл. почты",
-    "SMTP": "SMTP",
     "Start": "Начать",
     "Back": "Назад",
     "Next": "Далее",
@@ -33,12 +30,9 @@
     "Test settings": "Проверка соединения",
     "Database Settings Description": "Введите информацию для подключения к базе данных MySQL (имя сервера, имя пользователя и пароль). Вы можете указать порт сервера, например localhost:3306.",
     "Install": "Установить",
-    "SetupConfirmation page title": "Рекомендуемые настройки",
-    "PHP Configuration": "Рекомендуемые настройки PHP",
-    "MySQL Configuration": "Конфигурация MySQL",
     "Configuration Instructions": "Инструкции по конфигурации",
     "phpVersion": "Версия PHP",
-    "mysqlVersion": "Версия MySQL",
+    "requiredMysqlVersion": "Версия MySQL",
     "dbHostName": "Сервер БД",
     "dbName": "Имя БД",
     "dbUserName": "Имя пользователя БД",
@@ -82,7 +76,7 @@
     "Bad init Permission": "Запрещен доступ к директории \"{*}\". Пожалуйста, установите права 775 для \"{*}\" или просто выполните эту команду в терминале <pre><b>{C}</b></pre>\n\tОперация не разрешена? Попробуйте это: {CSU}",
     "Some errors occurred!": "Произошло несколько ошибок!",
     "phpVersion": "Установленная версия PHP не поддерживается EspoCRM, обновите РНР по крайней мере до версии {MinVersion}",
-    "mysqlVersion": "Установленная версия MySQL не поддерживается EspoCRM, обновите MySQL по крайней мере до версии {minVersion}",
+    "requiredMysqlVersion": "Установленная версия MySQL не поддерживается EspoCRM, обновите MySQL по крайней мере до версии {minVersion}",
     "The PHP extension was not found...": "Ошибка PHP: расширение <b>{extName}</b> не найдено.",
     "All Settings correct": "Все настройки верны",
     "Failed to connect to database": "Не удалось подключиться к базе данных",
@@ -95,7 +89,6 @@
     "buildDatabase error": "ошибка buildDatabase",
     "createUser error": "ошибка createUser",
     "checkAjaxPermission error": "ошибка checkAjaxPermission",
-    "Ajax failed": "Сбой Ajax",
     "Cannot create user": "Не удается создать пользователя",
     "Permission denied": "Доступ запрещен",
     "Permission denied to": "Доступ запрещен",
@@ -109,10 +102,6 @@
     "mysqlSettingError": "Для EspoCRM требуется, чтобы значением \"{NAME}\" являлось {VALUE}"
   },
   "options": {
-    "db driver": {
-      "mysqli": "MySQLi",
-      "pdo_mysql": "PDO MySQL"
-    },
     "modRewriteInstruction": {
       "apache": {
         "windows": "<br> <pre>1. Найдите файл httpd.conf (как правило, вы можете найти его в папке conf, config или в папке с похожим названием)<br>\n2. Внутри файла httpd.conf раскомментируйте строку LoadModule rewrite_module modules/mod_rewrite.so (удалите знак '#' в начале строки)<br>\n3. Также убедитесь что раскомментирована строка ClearModuleList и что строка AddModule mod_rewrite.c не закомментирована.\n</pre>",

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,12 +89,16 @@ Espo.define('views/import/step1', 'view', function (Dep) {
                     {key: "YYYY.MM.DD", value: '2017.12.27'}
                 ],
                 timeFormatDataList: [
-                    {key: "HH:mm", value: '23:00'},
                     {key: "HH:mm:ss", value: '23:00:00'},
+                    {key: "HH:mm", value: '23:00'},
                     {key: "hh:mm a", value: '11:00 pm'},
                     {key: "hh:mma", value: '11:00pm'},
                     {key: "hh:mm A", value: '11:00 PM'},
-                    {key: "hh:mmA", value: '11:00PM'}
+                    {key: "hh:mmA", value: '11:00PM'},
+                    {key: "hh:mm:ss a", value: '11:00:00 pm'},
+                    {key: "hh:mm:ssa", value: '11:00:00pm'},
+                    {key: "hh:mm:ss A", value: '11:00:00 PM'},
+                    {key: "hh:mm:ssA", value: '11:00:00PM'},
                 ],
                 timezoneList: this.getMetadata().get(['entityDefs', 'Settings', 'fields', 'timeZone', 'options'])
             };
@@ -107,7 +111,7 @@ Espo.define('views/import/step1', 'view', function (Dep) {
                 delimiter: ',',
                 textQualifier: '"',
                 dateFormat: 'YYYY-MM-DD',
-                timeFormat: 'HH:mm',
+                timeFormat: 'HH:mm:ss',
                 timezone: 'UTC',
                 decimalMark: '.',
                 personNameFormat: 'f l',
@@ -136,6 +140,7 @@ Espo.define('views/import/step1', 'view', function (Dep) {
             this.formData.personNameFormat = $('#import-person-name-format').val();
             this.formData.skipDuplicateChecking = $('#skip-duplicate-checking').get(0).checked;
             this.formData.idleMode = $('#import-idle-mode').get(0).checked;
+            this.formData.silentMode = $('#import-silent-mode').get(0).checked;
 
             this.getParentView().formData = this.formData;
             this.getParentView().changeStep(2);
@@ -145,6 +150,8 @@ Espo.define('views/import/step1', 'view', function (Dep) {
             $('#import-header-row').get(0).checked = this.formData.headerRow || false;
 
             $('#import-idle-mode').get(0).checked = this.formData.idleMode || false;
+
+            $('#import-silent-mode').get(0).checked = this.formData.silentMode || false;
 
             $('#skip-duplicate-checking').get(0).checked = this.formData.skipDuplicateChecking || false;
 

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,22 +33,24 @@ use \Espo\Core\Exceptions\Error;
 
 class Espo extends Base
 {
-    public function login($username, $password, \Espo\Entities\AuthToken $authToken = null)
+    public function login($username, $password, \Espo\Entities\AuthToken $authToken = null, $params = [], $request)
     {
+        if (!$password) return;
+
         if ($authToken) {
             $hash = $authToken->get('hash');
         } else {
             $hash = $this->getPasswordHash()->hash($password);
         }
 
-        $user = $this->getEntityManager()->getRepository('User')->findOne(array(
-            'whereClause' => array(
+        $user = $this->getEntityManager()->getRepository('User')->findOne([
+            'whereClause' => [
                 'userName' => $username,
-                'password' => $hash
-            )
-        ));
+                'password' => $hash,
+                'type!=' => ['api', 'system']
+            ]
+        ]);
 
         return $user;
     }
 }
-

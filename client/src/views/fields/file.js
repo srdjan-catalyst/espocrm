@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ Espo.define('views/fields/file', 'views/fields/link', function (Dep) {
             'image/jpeg',
             'image/png',
             'image/gif',
+            'image/webp',
         ],
 
         defaultType: false,
@@ -69,16 +70,6 @@ Espo.define('views/fields/file', 'views/fields/link', function (Dep) {
                     this.uploadFile(files[0]);
                     $file.replaceWith($file.clone(true));
                 }
-            },
-            'click a[data-action="showImagePreview"]': function (e) {
-                var id = $(e.currentTarget).data('id');
-                this.createView('preview', 'views/modals/image-preview', {
-                    id: id,
-                    model: this.model,
-                    name: this.nameHash[id]
-                }, function (view) {
-                    view.render();
-                });
             },
             'click a[data-action="showImagePreview"]': function (e) {
                 e.preventDefault();
@@ -247,11 +238,8 @@ Espo.define('views/fields/file', 'views/fields/link', function (Dep) {
             name = Handlebars.Utils.escapeExpression(name);
             var preview = name;
 
-            switch (type) {
-                case 'image/png':
-                case 'image/jpeg':
-                case 'image/gif':
-                    preview = '<a data-action="showImagePreview" data-id="' + id + '" href="' + this.getImageUrl(id) + '"><img src="'+this.getBasePath()+'?entryPoint=image&size='+this.previewSize+'&id=' + id + '" class="image-preview"></a>';
+            if (~this.previewTypeList.indexOf(type)) {
+                preview = '<a data-action="showImagePreview" data-id="' + id + '" href="' + this.getImageUrl(id) + '"><img src="'+this.getBasePath()+'?entryPoint=image&size='+this.previewSize+'&id=' + id + '" class="image-preview"></a>';
             }
             return preview;
         },
@@ -260,11 +248,8 @@ Espo.define('views/fields/file', 'views/fields/link', function (Dep) {
             name = Handlebars.Utils.escapeExpression(name);
             var preview = name;
 
-            switch (type) {
-                case 'image/png':
-                case 'image/jpeg':
-                case 'image/gif':
-                    preview = '<img src="' + this.getImageUrl(id, 'small') + '" title="' + name + '">';
+            if (~this.previewTypeList.indexOf(type)) {
+                preview = '<img src="' + this.getImageUrl(id, 'small') + '" title="' + name + '">';
             }
 
             return preview;
@@ -285,7 +270,7 @@ Espo.define('views/fields/file', 'views/fields/link', function (Dep) {
                 if (this.showPreview && ~this.previewTypeList.indexOf(type)) {
                     string = '<div class="attachment-preview">' + this.getDetailPreview(name, type, id) + '</div>';
                 } else {
-                    string = '<span class="glyphicon glyphicon-paperclip small"></span> <a href="'+ this.getDownloadUrl(id) +'" target="_BLANK">' + Handlebars.Utils.escapeExpression(name) + '</a>';
+                    string = '<span class="fas fa-paperclip text-soft small"></span> <a href="'+ this.getDownloadUrl(id) +'" target="_BLANK">' + Handlebars.Utils.escapeExpression(name) + '</a>';
                 }
                 return string;
             }
@@ -419,7 +404,7 @@ Espo.define('views/fields/file', 'views/fields/link', function (Dep) {
 
             var self = this;
 
-            var removeLink = '<a href="javascript:" class="remove-attachment pull-right"><span class="glyphicon glyphicon-remove"></span></a>';
+            var removeLink = '<a href="javascript:" class="remove-attachment pull-right"><span class="fas fa-times"></span></a>';
 
             var preview = name;
             if (this.showPreview && id) {

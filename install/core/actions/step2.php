@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,10 +37,7 @@ $fields = array(
         'default' => $config->get('database.dbname', ''),
     ),
     'host-name' => array(
-        'default' => $config->get('database.host', ''),
-    ),
-    'port' => array(
-        'default' => $config->get('database.port', ''),
+        'default' => $config->get('database.host', '') . ($config->get('database.port') ? ':' . $config->get('database.port') : ''),
     ),
     'db-user-name' => array(
         'default' => $config->get('database.user', ''),

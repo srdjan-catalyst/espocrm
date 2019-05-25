@@ -5,7 +5,6 @@
     "title": "Titel",
     "isAdmin": "Er Admin",
     "defaultTeam": "Standard Team",
-    "emailAddress": "Email",
     "phoneNumber": "Telefon",
     "roles": "Roller",
     "portals": "Portaler",
@@ -16,21 +15,21 @@
     "passwordConfirm": "Bekræft Kodeord",
     "newPassword": "Nyt Kodeord",
     "newPasswordConfirm": "Bekræft Nyt Kodeord",
-    "avatar": "Avatar",
     "isActive": "Er Aktiv",
     "isPortalUser": "Er Portalbruger",
     "contact": "Kontakt",
     "accounts": "Konti",
     "account": "Konto (Primær)",
     "sendAccessInfo": "Send Email med info om  Adgang til Bruger",
-    "portal": "Portal",
     "gender": "Køn",
     "position": "Position i Teamet",
-    "ipAddress": "IP Address",
-    "passwordPreview": "Password Preview"
+    "isSuperAdmin": "Er Super-admin",
+    "lastAccess": "Sidst adgang",
+    "apiKey": "API Nøgle",
+    "secretKey": "Sikkerhedsnøgle",
+    "authMethod": "godkendelsesmetode"
   },
   "links": {
-    "teams": "Teams",
     "roles": "Roller",
     "notes": "Notater",
     "portals": "Portaler",
@@ -38,7 +37,8 @@
     "contact": "Kontakt",
     "accounts": "Konti",
     "account": "Konto (Primær)",
-    "tasks": "Opgaver"
+    "tasks": "Opgaver",
+    "defaultTeam": "Standard Team"
   },
   "labels": {
     "Create User": "Opret Bruger",
@@ -52,9 +52,9 @@
     "Email Address": "Emailadresse",
     "External Accounts": "Eksterne Konti",
     "Email Accounts": "Emailkonti",
-    "Portal": "Portal",
     "Create Portal User": "Opret Portalbruger",
-    "Proceed w/o Contact": "Forsæt uden Kontakt"
+    "Proceed w/o Contact": "Forsæt uden Kontakt",
+    "Generate New API Key": "Generer ny API nøgle"
   },
   "tooltips": {
     "defaultTeam": "Alle poster oprettet af denne bruger bliver som standard relateret til dette team.",
@@ -68,9 +68,6 @@
   },
   "messages": {
     "passwordWillBeSent": "Kodeord sendes til brugers emailadresse.",
-    "accountInfoEmailSubject": "EspoCRM Info om Brugeradgang.",
-    "accountInfoEmailBody": "Dine Logindetaljer:\n\nBrugernavn: {userName}\nKodeord: {password}\n\n{siteUrl}",
-    "passwordChangeLinkEmailSubject": "Anmodning om Ændring af Kodeord",
     "passwordChanged": "Kodeordet er ændret",
     "userCantBeEmpty": "Brugernavn kan ikke være tomt.",
     "wrongUsernamePasword": "Forkert brugernavn/kodeord",
@@ -80,7 +77,7 @@
     "uniqueLinkHasBeenSent": "Den unikke URL er sendt til den angivne emailadresse.",
     "passwordChangedByRequest": "Kodeordet er ændret.",
     "setupSmtpBefore": "Det er nødvendigt af udfylde <a href=\"{url}\">SMTP indstillinger</a> for at systemet kan sende kodeordet i en email.",
-    "passwordChangeLinkEmailBody": "You can change your password by following this link {link}. This unique URL will be expired soon."
+    "userNameExists": "Brugernavn eksisterer allerede"
   },
   "boolFilters": {
     "onlyMyTeam": "Kun Mit Team"
@@ -93,8 +90,14 @@
     "gender": {
       "": "Ikke Sat",
       "Male": "Hankøn",
-      "Female": "Kunkøn",
-      "Neutral": "Neutral"
+      "Female": "Kunkøn"
+    },
+    "type": {
+      "regular": "Regulær",
+      "super-admin": "Super-admin"
+    },
+    "authMethod": {
+      "ApiKey": "API Nøgle"
     }
   }
 }

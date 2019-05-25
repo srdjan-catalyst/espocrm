@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ Espo.define('views/user/modals/access', 'views/modal', function (Dep) {
                         delete scopeData[field];
                     }
 
-                    if (this.getMetadata().get(['entityDefs', scope, 'fields', field, 'readOnly'])) {
+                    if (scopeData[field] && this.getMetadata().get(['entityDefs', scope, 'fields', field, 'readOnly'])) {
                         if (scopeData[field].edit === 'no' && scopeData[field].read === 'yes') {
                             delete scopeData[field];
                         }
@@ -89,9 +89,8 @@ Espo.define('views/user/modals/access', 'views/modal', function (Dep) {
                 final: true
             });
 
-            this.header = this.translate('Access');
+            this.headerHtml = this.translate('Access');
         }
 
     });
 });
-

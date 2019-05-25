@@ -15,18 +15,33 @@
     {{/if}}
 {{/unless}}
 <div class="list list-expanded">
-    {{#if showEditLink}}
-    <a href="#{{scope}}" class="small pull-right action manage-categories-link" data-action="manageCategories" title="{{translate 'Manage Categories' scope=scope}}"><span class="glyphicon glyphicon-th-list"></span></a>
-    {{/if}}
-
-    {{#if hasExpandedToggler}}
-        <a href="javascript:" title="{{translate 'Collapse'}}" class="small pull-right category-expanded-toggle-link action{{#unless isExpanded}} hidden{{/unless}}" data-action="collapse"><span class="glyphicon glyphicon-folder-open"></span></a>
-        <a href="javascript:" title="{{translate 'Expand'}}" class="small pull-right category-expanded-toggle-link action{{#if isExpanded}} hidden{{/if}}" data-action="expand""><span class="glyphicon glyphicon-folder-close"></span></a>
+    {{#if showRootMenu}}
+    <div class="btn-group pull-right">
+        <a href="javascript:" class="small dropdown-toggle btn-link" data-toggle="dropdown">
+            <span class="fas fa-ellipsis-h"></span>
+        </a>
+        <ul class="dropdown-menu">
+            {{#if hasExpandedToggler}}
+            <li class="{{#unless isExpanded}}hidden{{/unless}}">
+                <a href="javascript:" class="category-expanded-toggle-link action" data-action="collapse">{{translate 'Collapse'}}</a>
+            </li>
+            <li class="{{#if isExpanded}}hidden{{/if}}">
+                <a href="javascript:" class="category-expanded-toggle-link action" data-action="expand"">{{translate 'Expand'}}</a>
+            </li>
+            {{/if}}
+            {{#if showEditLink}}
+            <li>
+                <a href="#{{scope}}" class="action manage-categories-link" data-action="manageCategories">{{translate 'Manage Categories' scope=scope}}</a>
+            </li>
+            {{/if}}
+        </ul>
+    </div>
     {{/if}}
 
     {{#if showRoot}}
-    <span class="small text-primary glyphicon glyphicon-book"></span>
-    <a href="#{{scope}}" class="action link{{#if rootIsSelected}} text-bold{{/if}}" data-action="selectRoot">{{rootName}}</a>
+    <div class="root-item">
+    <a href="#{{scope}}" class="action link{{#if rootIsSelected}} text-bold{{/if}}" data-action="selectRoot">{{rootName}}{{#if isExpanded}} <span class="fas fa-level-down-alt fa-sm"></span>{{/if}}</a>
+    </div>
     {{/if}}
 
     <ul class="list-group list-group-tree list-group-no-border">
@@ -37,15 +52,10 @@
     {{/each}}
     {{#unless createDisabled}}
     <li class="list-group-item">
-        <div style="margin-left: 2px;">
-            <a href="javascript:" data-action="create" class="action small" title="{{translate 'Add'}}"><span class="glyphicon glyphicon-plus"></span></a>
+        <div>
+            <a href="javascript:" data-action="create" class="action small" title="{{translate 'Add'}}"><span class="fas fa-plus"></span></a>
         </div>
     </li>
     {{/unless}}
     </ul>
 </div>
-
-
-
-
-

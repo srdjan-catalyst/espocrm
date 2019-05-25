@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 
 namespace Espo\Modules\Crm\Jobs;
 
+use Espo\Core\CronManager;
+
 use \Espo\Core\Exceptions\Error;
 
 class CheckEmailAccounts extends \Espo\Core\Jobs\Base
@@ -44,7 +46,7 @@ class CheckEmailAccounts extends \Espo\Core\Jobs\Base
 
         if (!$entity) {
             throw new Error("Job CheckEmailAccounts '".$targetId."': EmailAccount does not exist.", -1);
-        };
+        }
 
         if ($entity->get('status') !== 'Active') {
             throw new Error("Job CheckEmailAccounts '".$targetId."': EmailAccount is not active.", -1);
@@ -67,30 +69,30 @@ class CheckEmailAccounts extends \Espo\Core\Jobs\Base
         ])->find();
 
         foreach ($collection as $entity) {
-            $running = $this->getEntityManager()->getRepository('Job')->where(array(
+            $running = $this->getEntityManager()->getRepository('Job')->where([
                 'scheduledJobId' => $scheduledJob->id,
-                'status' => 'Running',
+                'status' => [CronManager::RUNNING, CronManager::READY],
                 'targetType' => 'EmailAccount',
                 'targetId' => $entity->id
-            ))->findOne();
+            ])->findOne();
             if ($running) continue;
 
-            $countPending = $this->getEntityManager()->getRepository('Job')->where(array(
+            $countPending = $this->getEntityManager()->getRepository('Job')->where([
                 'scheduledJobId' => $scheduledJob->id,
-                'status' => 'Pending',
+                'status' => CronManager::PENDING,
                 'targetType' => 'EmailAccount',
                 'targetId' => $entity->id
-            ))->count();
+            ])->count();
             if ($countPending > 1) continue;
 
             $jobEntity = $this->getEntityManager()->getEntity('Job');
-            $jobEntity->set(array(
+            $jobEntity->set([
                 'name' => $scheduledJob->get('name'),
                 'scheduledJobId' => $scheduledJob->id,
                 'executeTime' => $executeTime,
                 'targetType' => 'EmailAccount',
                 'targetId' => $entity->id
-            ));
+            ]);
             $this->getEntityManager()->saveEntity($jobEntity);
         }
 

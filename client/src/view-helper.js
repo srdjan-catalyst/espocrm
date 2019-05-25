@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('view-helper', [], function () {
+define('view-helper', [], function () {
 
     var ViewHelper = function (options) {
         this.urlRegex = /(^|[^\(])(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
@@ -79,6 +79,10 @@ Espo.define('view-helper', [], function () {
                 return text.replace(/<\/?[^>]+(>|$)/g, '');
             }
             return text;
+        },
+
+        escapeString: function (text) {
+            return Handlebars.Utils.escapeExpression(text);
         },
 
         getAvatarHtml: function (id, size, width, additionalClassName) {
@@ -217,7 +221,8 @@ Espo.define('view-helper', [], function () {
 
                 text = marked(text);
 
-                text = text.replace('[#see-more-text]', ' <a href="javascript:" data-action="seeMoreText">' + self.language.translate('See more')) + '</a>';
+                text = text.replace(/<a href="mailto:(.*)"/gm, '<a href="javascript:" data-email-address="$1" data-action="mailTo"');
+
                 return new Handlebars.SafeString(text);
             }.bind(this));
 
@@ -300,7 +305,7 @@ Espo.define('view-helper', [], function () {
             var html = '';
 
             if (color) {
-                var $span = $('<span class="color-icon glyphicon glyphicon-stop">');
+                var $span = $('<span class="color-icon fas fa-square-full">');
                 $span.css('color', color);
                 if (additionalClassName) {
                     $span.addClass(additionalClassName);
@@ -317,5 +322,4 @@ Espo.define('view-helper', [], function () {
     });
 
     return ViewHelper;
-
 });

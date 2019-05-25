@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,15 +87,14 @@ class Stream extends \Espo\Core\Hooks\Base
         if ($this->checkHasStream($entity)) {
             $this->getStreamService()->unfollowAllUsersFromEntity($entity);
         }
+
         $query = $this->getEntityManager()->getQuery();
         $sql = "
             UPDATE `note`
-            SET `deleted` = 1
+            SET `deleted` = 1, `modified_at` = '".date('Y-m-d H:i:s')."'
             WHERE
                 (
                     (related_id = ".$query->quote($entity->id)." AND related_type = ".$query->quote($entity->getEntityType()) .")
-                OR
-                    (parent_id = ".$query->quote($entity->id)." AND parent_type = ".$query->quote($entity->getEntityType()) .")
                 )
         ";
         $this->getEntityManager()->getPDO()->query($sql);
@@ -178,7 +177,7 @@ class Stream extends \Espo\Core\Hooks\Base
         return $userIdList;
     }
 
-    public function afterSave(Entity $entity, array $options = array())
+    public function afterSave(Entity $entity, array $options = [])
     {
         $entityType = $entity->getEntityType();
 
@@ -202,6 +201,8 @@ class Stream extends \Espo\Core\Hooks\Base
 
                 if (
                     !$this->getUser()->isSystem()
+                    &&
+                    !$this->getUser()->isApi()
                     &&
                     $createdById
                     &&
@@ -256,15 +257,16 @@ class Stream extends \Espo\Core\Hooks\Base
 
                 if (!empty($autofollowUserIdList)) {
                     $job = $this->getEntityManager()->getEntity('Job');
-                    $job->set(array(
+                    $job->set([
                         'serviceName' => 'Stream',
                         'methodName' => 'afterRecordCreatedJob',
-                        'data' => array(
+                        'data' => [
                             'userIdList' => $autofollowUserIdList,
                             'entityType' => $entity->getEntityType(),
                             'entityId' => $entity->id
-                        )
-                    ));
+                        ],
+                        'queue' => 'q1'
+                    ]);
                     $this->getEntityManager()->saveEntity($job);
                 }
             } else {
@@ -335,14 +337,15 @@ class Stream extends \Espo\Core\Hooks\Base
                     )
                 ) {
                     $job = $this->getEntityManager()->getEntity('Job');
-                    $job->set(array(
+                    $job->set([
                         'serviceName' => 'Stream',
                         'methodName' => 'controlFollowersJob',
-                        'data' => array(
+                        'data' => [
                             'entityType' => $entity->getEntityType(),
                             'entityId' => $entity->id
-                        )
-                    ));
+                        ],
+                        'queue' => 'q1'
+                    ]);
                     $this->getEntityManager()->saveEntity($job);
                 }
             }

@@ -13,10 +13,13 @@
     },
     "defaultSidePanelFieldLists": {
         "detail": [
-            "avatar"
+            "avatar",
+            "createdAt",
+            "lastAccess"
         ],
         "detailSmall": [
-            "avatar"
+            "avatar",
+            "createdAt"
         ],
         "edit": [
             "avatar"
@@ -61,5 +64,6 @@
     "boolFilterList": [],
     "selectDefaultFilters": {
         "filter": "activePortal"
-    }
+    },
+    "iconClass": "far fa-user-circle"
 }

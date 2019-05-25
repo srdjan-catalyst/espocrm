@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,9 +51,17 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
             'click .navbar-collapse.in a.nav-link': function (e) {
                 var $a = $(e.currentTarget);
                 var href = $a.attr('href');
-                if (href && href != '#') {
+                if (href) {
                     this.$el.find('.navbar-collapse.in').collapse('hide');
                 }
+            },
+            'click a.nav-link': function (e) {
+                if (this.isSideMenuOpened) {
+                    this.closeSideMenu();
+                }
+            },
+            'click a.navbar-brand.nav-link': function (e) {
+                this.$el.find('.navbar-collapse.in').collapse('hide');
             },
             'click a[data-action="quick-create"]': function (e) {
                 e.preventDefault();
@@ -62,6 +70,9 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
             },
             'click a.minimizer': function () {
                 this.switchMinimizer();
+            },
+            'click a.side-menu-button': function () {
+                this.switchSideMenu();
             },
             'click a.action': function (e) {
                 var $el = $(e.currentTarget);
@@ -76,9 +87,50 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
             }
         },
 
+        isMinimized: function () {
+            return this.$body.hasClass('minimized');
+        },
+
+        switchSideMenu: function () {
+            if (!this.isMinimized()) return;
+
+            if (this.isSideMenuOpened) {
+                this.closeSideMenu();
+            } else {
+                this.openSideMenu();
+            }
+        },
+
+        openSideMenu: function () {
+            this.isSideMenuOpened = true;
+            this.$body.addClass('side-menu-opened');
+
+            this.$sideMenuBackdrop = $('<div>').addClass('side-menu-backdrop');
+            this.$sideMenuBackdrop.click(function () {
+                this.closeSideMenu();
+            }.bind(this));
+            this.$sideMenuBackdrop.appendTo(this.$body);
+
+            this.$sideMenuBackdrop2 = $('<div>').addClass('side-menu-backdrop');
+            this.$sideMenuBackdrop2.click(function () {
+                this.closeSideMenu();
+            }.bind(this));
+            this.$sideMenuBackdrop2.appendTo(this.$navbarRightContainer);
+        },
+
+        closeSideMenu: function () {
+            this.isSideMenuOpened = false;
+            this.$body.removeClass('side-menu-opened');
+            this.$sideMenuBackdrop.remove();
+            this.$sideMenuBackdrop2.remove();
+        },
+
         switchMinimizer: function () {
-            var $body = $('body');
-            if ($body.hasClass('minimized')) {
+            var $body = this.$body;
+            if (this.isMinimized()) {
+                if (this.isSideMenuOpened) {
+                    this.closeSideMenu();
+                }
                 $body.removeClass('minimized');
                 this.getStorage().set('state', 'siteLayoutState', 'expanded');
             } else {
@@ -97,12 +149,17 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
             if (!companyLogoId) {
                 return this.getBasePath() + (this.getThemeManager().getParam('logo') || 'client/img/logo.png');
             }
-            return this.getBasePath() + '?entryPoint=LogoImage&t=' + companyLogoId;
+            return this.getBasePath() + '?entryPoint=LogoImage&id='+companyLogoId;
         },
 
         getTabList: function () {
             var tabList = this.getPreferences().get('useCustomTabList') ? this.getPreferences().get('tabList') : this.getConfig().get('tabList');
-            return tabList || [];
+            tabList = Espo.Utils.clone(tabList || []);
+
+            if (this.getThemeManager().getParam('navbarIsVertical')) {
+                tabList.unshift('Home');
+            }
+            return tabList;
         },
 
         getQuickCreateList: function () {
@@ -142,9 +199,7 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                 el: this.options.el + ' .notifications-badge-container'
             });
 
-
             this.setupGlobalSearch();
-
 
             this.setupTabDefsList();
 
@@ -170,150 +225,175 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
             }
         },
 
-        adjust: function () {
-            var $window = $(window);
-
-            var navbarIsVertical = this.getThemeManager().getParam('navbarIsVertical');
-            var navbarStaticItemsHeight = this.getThemeManager().getParam('navbarStaticItemsHeight') || 0;
-
+        adjustHorizontal: function () {
             var smallScreenWidth = this.getThemeManager().getParam('screenWidthXs');
 
-            if (!navbarIsVertical) {
-                var $tabs = this.$el.find('ul.tabs');
-                var $moreDropdown = $tabs.find('li.more');
-                var $more = $tabs.find('li.more > ul');
+            var $window = $(window);
 
-                $window.on('resize.navbar', function() {
-                    updateWidth();
+            var $tabs = this.$el.find('ul.tabs');
+            var $moreDropdown = $tabs.find('li.more');
+            var $more = $tabs.find('li.more > ul');
+
+            $window.on('resize.navbar', function() {
+                updateWidth();
+            });
+
+            var hideOneTab = function () {
+                var count = $tabs.children().length;
+                if (count <= 1) return;
+                var $one = $tabs.children().eq(count - 2);
+                $one.prependTo($more);
+            };
+            var unhideOneTab = function () {
+                var $one = $more.children().eq(0);
+                if ($one.length) {
+                    $one.insertBefore($moreDropdown);
+                }
+            };
+
+            var $navbar = $('#navbar .navbar');
+
+            if (window.innerWidth >= smallScreenWidth) {
+                $tabs.children('li').each(function (i, li) {
+                    hideOneTab();
+                });
+                $navbar.css('max-height', 'unset');
+                $navbar.css('overflow', 'visible');
+            }
+
+            var navbarHeight = this.getThemeManager().getParam('navbarHeight') || 43;
+            var navbarBaseWidth = this.getThemeManager().getParam('navbarBaseWidth') || 556;
+
+            var tabCount = this.tabList.length;
+
+            var navbarNeededHeight = navbarHeight + 1;
+
+            $moreDd = $('#nav-more-tabs-dropdown');
+            $moreLi = $moreDd.closest('li');
+
+            var updateWidth = function () {
+                var windowWidth = window.innerWidth;
+                var moreWidth = $moreLi.width();
+
+                $more.children('li.not-in-more').each(function (i, li) {
+                    unhideOneTab();
                 });
 
-                var hideOneTab = function () {
-                    var count = $tabs.children().size();
-                    if (count <= 1) return;
-                    var $one = $tabs.children().eq(count - 2);
-                    $one.prependTo($more);
-                };
-                var unhideOneTab = function () {
-                    var $one = $more.children().eq(0);
-                    if ($one.size()) {
-                        $one.insertBefore($moreDropdown);
+                if (windowWidth < smallScreenWidth) {
+                    return;
+                }
+
+                $navbar.css('max-height', navbarHeight + 'px');
+                $navbar.css('overflow', 'hidden');
+
+                $more.parent().addClass('hidden');
+
+                var headerWidth = this.$el.width();
+
+                var maxWidth = headerWidth - navbarBaseWidth - moreWidth;
+                var width = $tabs.width();
+
+                var i = 0;
+                while (width > maxWidth) {
+                    hideOneTab();
+                    width = $tabs.width();
+                    i++;
+                    if (i >= tabCount) {
+                        setTimeout(function () {
+                            updateWidth();
+                        }, 100);
+                        break;
                     }
-                };
+                }
 
-                var tabCount = this.tabList.length;
-                var $navbar = $('#navbar .navbar');
-                var navbarNeededHeight = (this.getThemeManager().getParam('navbarHeight') || 43) + 1;
+                $navbar.css('max-height', 'unset');
+                $navbar.css('overflow', 'visible');
 
-                $moreDd = $('#nav-more-tabs-dropdown');
-                $moreLi = $moreDd.closest('li');
+                if ($more.children().length > 0) {
+                    $moreDropdown.removeClass('hidden');
+                }
+            }.bind(this);
 
-                var navbarBaseWidth = this.getThemeManager().getParam('navbarBaseWidth') || 516;
-
-                var updateWidth = function () {
-                    var windowWidth = $(window.document).width();
-                    var windowWidth = window.innerWidth;
-                    var moreWidth = $moreLi.width();
-
-                    $more.children('li.not-in-more').each(function (i, li) {
-                        unhideOneTab();
-                    });
-
-                    if (windowWidth < smallScreenWidth) {
-                        return;
-                    }
-
-                    $more.parent().addClass('hidden');
-
-                    var headerWidth = this.$el.width();
-
-                    var maxWidth = headerWidth - navbarBaseWidth - moreWidth;
-                    var width = $tabs.width();
-
-                    var i = 0;
-                    while (width > maxWidth) {
-                        hideOneTab();
-                        width = $tabs.width();
-                        i++;
-                        if (i >= tabCount) {
-                            setTimeout(function () {
-                                updateWidth();
-                            }, 100);
-                            break;
-                        }
-                    }
-
-                    if ($more.children().size() > 0) {
-                        $moreDropdown.removeClass('hidden');
-                    }
-                }.bind(this);
-
-                var processUpdateWidth = function (isRecursive) {
-                    if ($navbar.height() > navbarNeededHeight) {
+            var processUpdateWidth = function (isRecursive) {
+                if ($navbar.height() > navbarNeededHeight) {
+                    updateWidth();
+                    setTimeout(function () {
+                        processUpdateWidth(true);
+                    }, 200);
+                } else {
+                    if (!isRecursive) {
                         updateWidth();
                         setTimeout(function () {
                             processUpdateWidth(true);
-                        }, 200);
-                    } else {
-                        if (!isRecursive) {
-                            setTimeout(function () {
-                                processUpdateWidth(true);
-                            }, 10);
-                        }
-                        setTimeout(function () {
-                            processUpdateWidth(true);
-                        }, 1000);
+                        }, 10);
                     }
-                };
-
-                if ($navbar.height() <= navbarNeededHeight && $more.children().size() === 0) {
-                    $more.parent().addClass('hidden');
+                    setTimeout(function () {
+                        processUpdateWidth(true);
+                    }, 1000);
                 }
+            };
 
-                processUpdateWidth();
-
-            } else {
-                var $tabs = this.$el.find('ul.tabs');
-
-                var minHeight = $tabs.height() + navbarStaticItemsHeight;
-
-                var $more = $tabs.find('li.more > ul');
-
-                if ($more.children().size() === 0) {
-                    $more.parent().addClass('hidden');
-                }
-
-                $('body').css('minHeight', minHeight + 'px');
-
-                $window.on('scroll.navbar', function () {
-                    $tabs.scrollTop($window.scrollTop());
-                    $more.scrollTop($window.scrollTop());
-                }.bind(this));
-
-                var updateSizeForVertical = function () {
-                    var windowHeight = window.innerHeight;
-                    var windowWidth = window.innerWidth;
-
-                    if (windowWidth < smallScreenWidth) {
-                        $tabs.css('height', 'auto');
-                        $more.css('max-height', '');
-                    } else {
-                        $tabs.css('height', (windowHeight - navbarStaticItemsHeight) + 'px');
-                        $more.css('max-height', windowHeight + 'px');
-                    }
-
-                }.bind(this);
-
-                $(window).on('resize.navbar', function() {
-                    updateSizeForVertical();
-                });
-                updateSizeForVertical();
+            if ($navbar.height() <= navbarNeededHeight && $more.children().length === 0) {
+                $more.parent().addClass('hidden');
             }
+
+            processUpdateWidth();
+        },
+
+        adjustVertical: function () {
+            var smallScreenWidth = this.getThemeManager().getParam('screenWidthXs');
+            var navbarStaticItemsHeight = this.getThemeManager().getParam('navbarStaticItemsHeight') || 73;
+
+            var $window = $(window);
+
+            var $tabs = this.$el.find('ul.tabs');
+
+            var minHeight = $tabs.height() + navbarStaticItemsHeight;
+
+            var $more = $tabs.find('li.more > ul');
+
+            if ($more.children().length === 0) {
+                $more.parent().addClass('hidden');
+            }
+
+            $('body').css('minHeight', minHeight + 'px');
+
+            $window.on('scroll.navbar', function () {
+                $tabs.scrollTop($window.scrollTop());
+                $more.scrollTop($window.scrollTop());
+            }.bind(this));
+
+            var updateSizeForVertical = function () {
+                var windowHeight = window.innerHeight;
+                var windowWidth = window.innerWidth;
+
+                if (windowWidth < smallScreenWidth) {
+                    $tabs.css('height', 'auto');
+                    $more.css('max-height', '');
+                } else {
+                    $tabs.css('height', (windowHeight - navbarStaticItemsHeight) + 'px');
+                    $more.css('max-height', windowHeight + 'px');
+                }
+            }.bind(this);
+
+            $(window).on('resize.navbar', function() {
+                updateSizeForVertical();
+            });
+            updateSizeForVertical();
+
+            this.$el.find('.notifications-badge-container').insertAfter(this.$el.find('.quick-create-container'));
         },
 
         afterRender: function () {
+            this.$body = $('body');
+
             this.selectTab(this.getRouter().getLast().controller);
 
             var layoutState = this.getStorage().get('state', 'siteLayoutState');
+            if (!layoutState) {
+                layoutState = $(window).width() > 1320 ? 'expanded' : 'collapsed';
+            }
+
             var layoutMinimized = false;
             if (layoutState === 'collapsed') {
                 layoutMinimized = true;
@@ -324,6 +404,17 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                 $body.addClass('minimized');
             }
             this.$navbar = this.$el.find('> .navbar');
+            this.$navbarRightContainer = this.$navbar.find('> .navbar-body > .navbar-right-container');
+
+            var handlerClassName = this.getThemeManager().getParam('navbarAdjustmentHandler');
+            if (handlerClassName) {
+                require(handlerClassName, function (Handler) {
+                    var handler = new Handler(this);
+                    handler.process();
+                }.bind(this));
+            }
+
+            if (this.getThemeManager().getParam('skipDefaultNavbarAdjustment')) return;
 
             if (this.getThemeManager().getParam('navbarIsVertical')) {
                 var process = function () {
@@ -335,11 +426,11 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                     }
                     if (this.getThemeManager().isUserTheme()) {
                         setTimeout(function () {
-                            this.adjust();
+                            this.adjustVertical();
                         }.bind(this), 10);
                         return;
                     }
-                    this.adjust();
+                    this.adjustVertical();
                 }.bind(this);
                 process();
             } else {
@@ -352,11 +443,11 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                     }
                     if (this.getThemeManager().isUserTheme()) {
                         setTimeout(function () {
-                            this.adjust();
+                            this.adjustHorizontal();
                         }.bind(this), 10);
                         return;
                     }
-                    this.adjust();
+                    this.adjustHorizontal();
                 }.bind(this);
                 process();
             }
@@ -366,7 +457,7 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
             if (this.currentTab != name) {
                 this.$el.find('ul.tabs li.active').removeClass('active');
                 if (name) {
-                    this.$el.find('ul.tabs  li[data-name="' + name + '"]').addClass('active');
+                    this.$el.find('ul.tabs li[data-name="' + name + '"]').addClass('active');
                 }
                 this.currentTab = name;
             }
@@ -387,7 +478,18 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                     moreIsMet = true;
                     return;
                 }
-                var label = this.getLanguage().translate(tab, 'scopeNamesPlural');
+
+                var label;
+                var link;
+
+                if (tab == 'Home') {
+                    label = this.getLanguage().translate(tab);
+                    link = '#';
+                } else {
+                    label = this.getLanguage().translate(tab, 'scopeNamesPlural');
+                    link = '#' + tab;
+                }
+
                 var color = null;
                 if (!colorsDisabled) {
                     var color = this.getMetadata().get(['clientDefs', tab, 'color']);
@@ -401,7 +503,7 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                 }
 
                 var o = {
-                    link: '#' + tab,
+                    link: link,
                     label: label,
                     shortLabel: shortLabel,
                     name: tab,
@@ -410,7 +512,7 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                     iconClass: iconClass
                 };
                 if (color && !iconClass) {
-                    o.colorIconClass = 'color-icon glyphicon glyphicon-stop';
+                    o.colorIconClass = 'color-icon fas fa-square-full';
                 }
                 tabDefsList.push(o);
             }, this);
@@ -457,23 +559,14 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                     divider: true
                 },
                 {
-                    link: '#clearCache',
-                    label: this.getLanguage().translate('Clear Local Cache')
-                },
-                {
-                    divider: true
-                },
-                {
                     link: '#About',
                     label: this.getLanguage().translate('About')
                 },
                 {
-                    link: '#logout',
+                    action: 'logout',
                     label: this.getLanguage().translate('Log Out')
                 }
             ]);
-
-
 
             return list;
         },
@@ -488,6 +581,10 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
                 });
                 view.render();
             });
+        },
+
+        actionLogout: function () {
+            this.getRouter().logout();
         },
 
         actionShowLastViewed: function () {
@@ -510,5 +607,3 @@ Espo.define('views/site/navbar', 'view', function (Dep) {
     });
 
 });
-
-

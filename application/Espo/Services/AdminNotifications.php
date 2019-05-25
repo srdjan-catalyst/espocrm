@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,7 +108,6 @@ class AdminNotifications extends \Espo\Core\Services\Base
             $extensionName = $row['name'];
 
             $latestRelease = $this->getLatestRelease($url, [
-                'response' => 'latestRelease',
                 'name' => $extensionName,
             ]);
 
@@ -160,15 +159,16 @@ class AdminNotifications extends \Espo\Core\Services\Base
      *
      * @return array|null
      */
-    protected function getLatestRelease($url = null, array $requestData = ['response' => 'latestRelease'])
+    protected function getLatestRelease($url = null, array $requestData = [], $urlPath = 'release/latest')
     {
         if (function_exists('curl_version')) {
             $ch = curl_init();
 
             $requestUrl = $url ? trim($url) : base64_decode('aHR0cHM6Ly9zLmVzcG9jcm0uY29tLw==');
             $requestUrl = (substr($requestUrl, -1) == '/') ? $requestUrl : $requestUrl . '/';
+            $requestUrl .= empty($requestData) ? $urlPath . '/' : $urlPath . '/?' . http_build_query($requestData);
 
-            curl_setopt($ch, CURLOPT_URL, $requestUrl . '?' . http_build_query($requestData));
+            curl_setopt($ch, CURLOPT_URL, $requestUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
 

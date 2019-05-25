@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,29 +31,44 @@ namespace Espo\Entities;
 
 class User extends \Espo\Core\Entities\Person
 {
-    public function isAdmin()
-    {
-        return $this->get('isAdmin');
-    }
-
-    public function isSystem()
-    {
-        return $this->id === 'system';
-    }
-
     public function isActive()
     {
         return $this->get('isActive');
     }
 
+    public function isAdmin()
+    {
+        return $this->get('type') === 'admin' || $this->isSystem() || $this->isSuperAdmin();
+    }
+
     public function isPortal()
     {
-        return $this->isPortalUser();
+        return $this->get('type') === 'portal';
     }
 
     public function isPortalUser()
     {
-        return $this->get('isPortalUser');
+        return $this->isPortal();
+    }
+
+    public function isRegular()
+    {
+        return $this->get('type') === 'regular' || ($this->has('type') && !$this->get('type'));
+    }
+
+    public function isApi()
+    {
+        return $this->get('type') === 'api';
+    }
+
+    public function isSystem()
+    {
+        return $this->get('type') === 'system';
+    }
+
+    public function isSuperAdmin()
+    {
+        return $this->get('type') === 'super-admin';
     }
 
     public function getTeamIdList()
@@ -73,5 +88,26 @@ class User extends \Espo\Core\Entities\Person
                 $this->set('accountName', $contact->get('accountName'));
             }
         }
+    }
+
+    protected function _getName()
+    {
+        if (!array_key_exists('name', $this->valuesContainer) || !$this->valuesContainer['name']) {
+            if ($this->get('userName')) {
+                return $this->get('userName');
+            }
+        }
+        return $this->valuesContainer['name'];
+    }
+
+    protected function _hasName()
+    {
+        if (array_key_exists('name', $this->valuesContainer)) {
+            return true;
+        }
+        if ($this->has('userName')) {
+            return true;
+        }
+        return false;
     }
 }

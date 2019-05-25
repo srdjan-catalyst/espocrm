@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,12 +31,6 @@ namespace Espo\Core\Utils;
 
 class Config
 {
-    /**
-     * Path of default config file
-     *
-     * @access private
-     * @var string
-     */
     private $defaultConfigPath = 'application/Espo/Core/defaults/config.php';
 
     private $systemConfigPath = 'application/Espo/Core/defaults/systemConfig.php';
@@ -45,13 +39,7 @@ class Config
 
     private $cacheTimestamp = 'cacheTimestamp';
 
-    /**
-     * Array of admin items
-     *
-     * @access protected
-     * @var array
-     */
-    protected $adminItems = array();
+    protected $adminItems = [];
 
     protected $associativeArrayAttributeList = [
         'currencyRates',
@@ -61,21 +49,16 @@ class Config
     ];
 
 
-    /**
-     * Contains content of config
-     *
-     * @access private
-     * @var array
-     */
     private $data;
 
-    private $changedData = array();
-    private $removeData = array();
+    private $changedData = [];
+
+    private $removeData = [];
 
     private $fileManager;
 
 
-    public function __construct(\Espo\Core\Utils\File\Manager $fileManager) //TODO
+    public function __construct(\Espo\Core\Utils\File\Manager $fileManager)
     {
         $this->fileManager = $fileManager;
     }
@@ -228,11 +211,6 @@ class Config
         return $this->getFileManager()->getPhpContents($this->defaultConfigPath);
     }
 
-    /**
-     * Return an Object of all configs
-     * @param  boolean $reload
-     * @return array()
-     */
     protected function loadConfig($reload = false)
     {
         if (!$reload && isset($this->data) && !empty($this->data)) {
@@ -249,50 +227,25 @@ class Config
         return $this->data;
     }
 
+    public function getAllData()
+    {
+        return (object) $this->loadConfig();
+    }
 
-    /**
-     * Get config acording to restrictions for a user
-     *
-     * @param $isAdmin
-     * @return array
-     */
     public function getData($isAdmin = null)
     {
         $data = $this->loadConfig();
 
-        $restrictedConfig = $data;
-        foreach($this->getRestrictItems($isAdmin) as $name) {
-            if (isset($restrictedConfig[$name])) {
-                unset($restrictedConfig[$name]);
-            }
-        }
-
-        return $restrictedConfig;
+        return $data;
     }
 
-
-    /**
-     * Set JSON data acording to restrictions for a user
-     *
-     * @param $isAdmin
-     * @return bool
-     */
-    public function setData($data, $isAdmin = null)
+    public function setData($data)
     {
-        $restrictItems = $this->getRestrictItems($isAdmin);
-
         if (is_object($data)) {
             $data = get_object_vars($data);
         }
 
-        $values = array();
-        foreach ($data as $key => $item) {
-            if (!in_array($key, $restrictItems)) {
-                $values[$key] = $item;
-            }
-        }
-
-        return $this->set($values);
+        return $this->set($data);
     }
 
     /**
@@ -303,9 +256,9 @@ class Config
      */
     public function updateCacheTimestamp($onlyValue = false)
     {
-        $timestamp = array(
-            $this->cacheTimestamp => time(),
-        );
+        $timestamp = [
+            $this->cacheTimestamp => time()
+        ];
 
         if ($onlyValue) {
             return $timestamp;
@@ -314,45 +267,29 @@ class Config
         return $this->set($timestamp);
     }
 
-    /**
-     * Get admin items
-     *
-     * @return object
-     */
-    protected function getRestrictItems($onlySystemItems = null)
+    public function getAdminOnlyItemList()
     {
-        $data = $this->loadConfig();
-
-        if ($onlySystemItems) {
-            return $data['systemItems'];
-        }
-
-        if (empty($this->adminItems)) {
-            $this->adminItems = array_merge($data['systemItems'], $data['adminItems']);
-        }
-
-        if ($onlySystemItems === false) {
-            return $this->adminItems;
-        }
-
-        return array_merge($this->adminItems, $data['userItems']);
+        return $this->get('adminItems', []);
     }
 
-
-    /**
-     * Check if an item is allowed to get and save
-     *
-     * @param $name
-     * @param $isAdmin
-     * @return bool
-     */
-    protected function isAllowed($name, $isAdmin = false)
+    public function getSuperAdminOnlyItemList()
     {
-        if (in_array($name, $this->getRestrictItems($isAdmin))) {
-            return false;
-        }
+        return $this->get('superAdminItems', []);
+    }
 
-        return true;
+    public function getSystemOnlyItemList()
+    {
+        return $this->get('systemItems', []);
+    }
+
+    public function getSuperAdminOnlySystemItemList()
+    {
+        return $this->get('superAdminSystemItems', []);
+    }
+
+    public function getUserOnlyItemList()
+    {
+        return $this->get('userItems', []);
     }
 
     public function getSiteUrl()

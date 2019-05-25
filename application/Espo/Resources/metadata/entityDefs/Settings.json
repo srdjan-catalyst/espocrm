@@ -40,6 +40,11 @@
             "options": [0, 1],
             "default": 0
         },
+        "fiscalYearShift": {
+            "type": "enumInt",
+            "default": 0,
+            "view": "views/settings/fields/fiscal-year-shift"
+        },
         "thousandSeparator": {
             "type": "varchar",
             "default": ",",
@@ -209,6 +214,11 @@
             "type": "bool",
             "tooltip": true
         },
+        "ldapPortalUserLdapAuth": {
+            "type": "bool",
+            "default": false,
+            "tooltip": true
+        },
         "ldapCreateEspoUser": {
             "type": "bool",
             "default": true,
@@ -259,9 +269,24 @@
             "tooltip": true,
             "entity": "Team"
         },
+        "ldapPortalUserPortals": {
+            "type": "linkMultiple",
+            "tooltip": true,
+            "entity": "Portal"
+        },
+        "ldapPortalUserRoles": {
+            "type": "linkMultiple",
+            "tooltip": true,
+            "entity": "PortalRole"
+        },
         "exportDisabled": {
             "type": "bool",
             "default": false
+        },
+        "emailNotificationsDelay": {
+            "type": "int",
+            "min": 0,
+            "max": 18000
         },
         "assignmentEmailNotifications": {
             "type": "bool",
@@ -427,9 +452,13 @@
             "view": "views/settings/fields/history-entity-list"
         },
         "googleMapsApiKey": {
-            "type": "varchar"
+            "type": "varchar",
+            "onlyUser": true
         },
         "massEmailDisableMandatoryOptOutLink": {
+            "type": "bool"
+        },
+        "massEmailOpenTracking": {
             "type": "bool"
         },
         "aclStrictMode": {
@@ -478,6 +507,53 @@
             "trim": true
         },
         "cleanupDeletedRecords": {
+            "type": "bool",
+            "tooltip": true
+        },
+        "addressCountryList": {
+            "type": "multiEnum"
+        },
+        "addressCityList": {
+            "type": "multiEnum"
+        },
+        "addressStateList": {
+            "type": "multiEnum"
+        },
+        "jobRunInParallel": {
+            "type": "bool",
+            "tooltip": true
+        },
+        "jobMaxPortion": {
+            "type": "int",
+            "tooltip": true
+        },
+        "jobPoolConcurrencyNumber": {
+            "type": "int",
+            "tooltip": true,
+            "min": 1
+        },
+        "daemonInterval": {
+            "type": "int",
+            "tooltip": true
+        },
+        "daemonMaxProcessNumber": {
+            "type": "int",
+            "tooltip": true,
+            "min": 1
+        },
+        "daemonProcessTimeout": {
+            "type": "int",
+            "tooltip": true
+        },
+        "cronDisabled": {
+            "type": "bool",
+            "tooltip": true
+        },
+        "maintenanceMode": {
+            "type": "bool",
+            "tooltip": true
+        },
+        "useWebSocket": {
             "type": "bool"
         }
     }

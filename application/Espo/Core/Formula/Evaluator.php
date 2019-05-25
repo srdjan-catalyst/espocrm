@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,14 +39,17 @@ class Evaluator
 
     private $parser;
 
+    private $attributeFetcher;
+
     private $parsedHash;
 
-    public function __construct($container = null, array $functionClassNameMap = array(), array $parsedHash = array())
+    public function __construct($container = null, array $functionClassNameMap = [], array $parsedHash = [])
     {
-        $this->functionFactory = new \Espo\Core\Formula\FunctionFactory($container, $functionClassNameMap);
-        $this->formula = new \Espo\Core\Formula\Formula($this->functionFactory);
-        $this->parser = new \Espo\Core\Formula\Parser();
-        $this->parsedHash = array();
+        $this->attributeFetcher = new AttributeFetcher();
+        $this->functionFactory = new FunctionFactory($container, $this->attributeFetcher, $functionClassNameMap);
+        $this->formula = new Formula($this->functionFactory);
+        $this->parser = new Parser();
+        $this->parsedHash = [];
     }
 
     public function process($expression, $entity = null, $variables = null)
@@ -61,6 +64,11 @@ class Evaluator
         if (!$item || !($item instanceof \StdClass)) {
             throw new Error();
         }
-        return $this->formula->process($item, $entity, $variables);
+
+        $result = $this->formula->process($item, $entity, $variables);
+
+        $this->attributeFetcher->resetRuntimeCache();
+
+        return $result;
     }
 }

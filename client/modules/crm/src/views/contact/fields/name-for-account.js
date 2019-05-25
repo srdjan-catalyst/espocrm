@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,10 @@ Espo.define('crm:views/contact/fields/name-for-account', 'views/fields/person-na
                     this.$el.find('a').css('text-decoration', 'line-through');
                 };
             }
+        },
+
+        getAttributeList: function () {
+            return ['name', 'accountIsInactive'];
         }
     });
 

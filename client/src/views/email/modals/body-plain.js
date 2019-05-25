@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@ Espo.define('views/email/modals/body-plain', 'views/modal', function (Dep) {
 
     return Dep.extend({
 
+        backdrop: true,
+
         _template: '<div class="field" data-name="body-plain">{{{bodyPlain}}}</div>',
 
         setup: function () {
@@ -39,7 +41,7 @@ Espo.define('views/email/modals/body-plain', 'views/modal', function (Dep) {
                 'label': 'Close'
             });
 
-            this.header = this.model.get('name');
+            this.headerHtml = Handlebars.Utils.escapeExpression(this.model.get('name'));
 
             this.createView('bodyPlain', 'views/fields/text', {
                 el: this.options.el + ' .field[data-name="bodyPlain"]',
@@ -56,4 +58,3 @@ Espo.define('views/email/modals/body-plain', 'views/modal', function (Dep) {
 
     });
 });
-

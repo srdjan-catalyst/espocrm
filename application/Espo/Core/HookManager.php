@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ class HookManager
 
     private $data;
 
-    private $hookListHash = array();
+    private $hookListHash = [];
 
     private $hooks;
 
@@ -48,18 +48,17 @@ class HookManager
      *
      * @var array
      */
-    protected $ignoredMethodList = array(
+    protected $ignoredMethodList = [
         '__construct',
         'getDependencyList',
-        'inject'
-    );
+        'inject',
+    ];
 
-    protected $paths = array(
+    protected $paths = [
         'corePath' => 'application/Espo/Hooks',
         'modulePath' => 'application/Espo/Modules/{*}/Hooks',
         'customPath' => 'custom/Espo/Custom/Hooks',
-    );
-
+    ];
 
     public function __construct(Container $container)
     {
@@ -125,8 +124,8 @@ class HookManager
     {
         if (class_exists($className)) {
             $hook = new $className();
-            $dependencies = $hook->getDependencyList();
-            foreach ($dependencies as $name) {
+            $dependencyList = $hook->getDependencyList();
+            foreach ($dependencyList as $name) {
                 $hook->inject($name, $this->container->get($name));
             }
             return $hook;

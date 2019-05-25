@@ -41,6 +41,10 @@
                 "createdContact"
             ]
         },
+        "duplicateCheck": {
+            "type": "bool",
+            "default": true
+        },
         "optInConfirmation": {
             "type": "bool"
         },
@@ -84,7 +88,8 @@
         "exampleRequestPayload": {
             "type": "text",
             "notStorable": true,
-            "readOnly": true
+            "readOnly": true,
+            "seeMoreDisabled": true
         },
         "createdAt": {
             "type": "datetime",
@@ -139,7 +144,7 @@
         }
     },
     "collection": {
-        "sortBy": "name",
-        "asc": true
+        "orderBy": "name",
+        "order": "asc"
     }
 }

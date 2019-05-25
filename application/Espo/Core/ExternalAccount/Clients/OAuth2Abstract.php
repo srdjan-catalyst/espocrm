@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -178,7 +178,12 @@ abstract class OAuth2Abstract implements IClient
             }
         }
 
-        throw new Error("Error after requesting {$httpMethod} {$url}.", $code);
+        $reasonPart = '';
+        if (isset($r['result']['error']) && isset($r['result']['error']['message'])) {
+            $reasonPart = '; Reason: ' . $r['result']['error']['message'];
+        }
+
+        throw new Error("Oauth: Error after requesting {$httpMethod} {$url}{$reasonPart}.", $code);
     }
 
     protected function refreshToken()

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,15 +48,35 @@ Espo.define('views/fields/date', 'views/fields/base', function (Dep) {
 
         setup: function () {
             Dep.prototype.setup.call(this);
+
+            if (this.getConfig().get('fiscalYearShift')) {
+                this.searchTypeList = Espo.Utils.clone(this.searchTypeList);
+                if (this.getConfig().get('fiscalYearShift') % 3 != 0) {
+                    this.searchTypeList.push('currentFiscalQuarter');
+                    this.searchTypeList.push('lastFiscalQuarter');
+                }
+                this.searchTypeList.push('currentFiscalYear');
+                this.searchTypeList.push('lastFiscalYear');
+            }
         },
 
         data: function () {
             var data = Dep.prototype.data.call(this);
-            if (this.mode === 'search') {
-                this.searchData.dateValue = this.getDateTime().toDisplayDate(this.searchParams.dateValue);
-                this.searchData.dateValueTo = this.getDateTime().toDisplayDate(this.searchParams.dateValueTo);
-            }
+
             data.dateValue = this.getDateStringValue();
+
+            if (this.isSearchMode()) {
+                var value = this.getSearchParamsData().value || this.searchParams.dateValue;
+                var valueTo = this.getSearchParamsData().valueTo || this.searchParams.dateValueTo;
+
+                data.dateValue = this.getDateTime().toDisplayDate(value);
+                data.dateValueTo = this.getDateTime().toDisplayDate(valueTo);
+
+                if (~['lastXDays', 'nextXDays', 'olderThanXDays', 'afterXDays'].indexOf(this.getSearchType())) {
+                    data.number = this.searchParams.value;
+                }
+            }
+
             return data;
         },
 
@@ -123,7 +143,7 @@ Espo.define('views/fields/date', 'views/fields/base', function (Dep) {
 
         afterRender: function () {
             if (this.mode == 'edit' || this.mode == 'search') {
-                this.$element = this.$el.find('[name="' + this.name + '"]');
+                this.$element = this.$el.find('[data-name="' + this.name + '"]');
 
                 var wait = false;
                 this.$element.on('change', function () {
@@ -164,7 +184,7 @@ Espo.define('views/fields/date', 'views/fields/base', function (Dep) {
                 }.bind(this));
 
                 if (this.mode == 'search') {
-                    var $elAdd = this.$el.find('input[name="' + this.name + '-additional"]');
+                    var $elAdd = this.$el.find('input.additional');
                     $elAdd.datepicker(options).on('show', function (e) {
                         $('body > .datepicker.datepicker-dropdown').css('z-index', 1200);
                     }.bind(this));
@@ -217,29 +237,30 @@ Espo.define('views/fields/date', 'views/fields/base', function (Dep) {
         fetchSearch: function () {
             var value = this.parseDate(this.$element.val());
 
-            var type = this.$el.find('[name="'+this.name+'-type"]').val();
+            var type = this.fetchSearchType();
             var data;
 
             if (type == 'between') {
                 if (!value) {
                     return false;
                 }
-                var valueTo = this.parseDate(this.$el.find('[name="' + this.name + '-additional"]').val());
+                var valueTo = this.parseDate(this.$el.find('input.additional').val());
                 if (!valueTo) {
                     return false;
                 }
                 data = {
                     type: type,
                     value: [value, valueTo],
-                    dateValue: value,
-                    dateValueTo: valueTo
+                    data: {
+                        value: value,
+                        valueTo: valueTo
+                    }
                 };
             } else if (~['lastXDays', 'nextXDays', 'olderThanXDays', 'afterXDays'].indexOf(type)) {
-                var number = this.$el.find('[name="' + this.name + '-number"]').val();
+                var number = this.$el.find('input.number').val();
                 data = {
                     type: type,
-                    value: number,
-                    number: number
+                    value: number
                 };
             } else if (~['on', 'notOn', 'after', 'before'].indexOf(type)) {
                 if (!value) {
@@ -248,7 +269,9 @@ Espo.define('views/fields/date', 'views/fields/base', function (Dep) {
                 data = {
                     type: type,
                     value: value,
-                    dateValue: value
+                    data: {
+                        value: value
+                    }
                 };
             } else if (type === 'isEmpty') {
                 data = {

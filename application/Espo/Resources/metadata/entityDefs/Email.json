@@ -14,13 +14,38 @@
             "trim": true
         },
         "fromName": {
-            "type": "varchar"
+            "type": "varchar",
+            "readOnly": true,
+            "notStorable": true,
+            "textFilterDisabled": true,
+            "layoutFiltersDisabled": true
+        },
+        "fromAddress": {
+            "type": "varchar",
+            "readOnly": true,
+            "notStorable": true,
+            "textFilterDisabled": true,
+            "layoutFiltersDisabled": true
         },
         "fromString": {
             "type": "varchar"
         },
         "replyToString": {
             "type": "varchar"
+        },
+        "replyToName": {
+            "type": "varchar",
+            "readOnly": true,
+            "notStorable": true,
+            "textFilterDisabled": true,
+            "layoutFiltersDisabled": true
+        },
+        "replyToAddress": {
+            "type": "varchar",
+            "readOnly": true,
+            "notStorable": true,
+            "textFilterDisabled": true,
+            "layoutFiltersDisabled": true
         },
         "addressNameMap": {
             "type": "jsonObject",
@@ -139,7 +164,8 @@
             "type": "varchar",
             "maxLength": 255,
             "readOnly": true,
-            "index": true
+            "index": true,
+            "textFilterDisabled": true
         },
         "messageIdInternal": {
             "type": "varchar",
@@ -440,12 +466,15 @@
         }
     },
     "collection": {
-        "sortBy": "dateSent",
-        "asc": false,
+        "orderBy": "dateSent",
+        "order": "desc",
         "textFilterFields": ["name", "bodyPlain", "body"],
         "fullTextSearch": true
     },
     "indexes": {
+        "createdById": {
+            "columns": ["createdById"]
+        },
         "dateSent": {
             "columns": ["dateSent", "deleted"]
         },

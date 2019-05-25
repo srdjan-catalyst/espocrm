@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,29 +25,21 @@
  *
  * In accordance with Section 7(b) of the GNU General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
- ************************************************************************/ 
+ ************************************************************************/
 
 namespace Espo\Core\Utils\Database\Schema\rebuildActions;
 
 class AddSystemUser extends \Espo\Core\Utils\Database\Schema\BaseRebuildActions
 {
-    
     public function afterRebuild()
-    {     
-        $userId = $this->getConfig()->get('systemUser.id');
-
+    {
+        $userId = $this->getConfig()->get('systemUserAttributes.id');
         $entity = $this->getEntityManager()->getEntity('User', $userId);
-
-        if (!isset($entity)) {
-
-            $systemUser = $this->getConfig()->get('systemUser');
-
+        if (!$entity) {
+            $systemUserAttributes = $this->getConfig()->get('systemUserAttributes');
             $entity = $this->getEntityManager()->getEntity('User');
-            $entity->set($systemUser);            
-
-            return $this->getEntityManager()->saveEntity($entity);            
-        }                
-    }    
-    
+            $entity->set($systemUserAttributes);
+            return $this->getEntityManager()->saveEntity($entity);
+        }
+    }
 }
-

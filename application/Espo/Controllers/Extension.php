@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ class Extension extends \Espo\Core\Controllers\Record
             throw new Forbidden();
         }
         if ($this->getConfig()->get('restrictedMode')) {
-            if (!$this->getUser()->get('isSuperAdmin')) {
+            if (!$this->getUser()->isSuperAdmin()) {
                 throw new Forbidden();
             }
         }
@@ -84,7 +84,7 @@ class Extension extends \Espo\Core\Controllers\Record
             throw new Forbidden();
         }
         if ($this->getConfig()->get('restrictedMode')) {
-            if (!$this->getUser()->get('isSuperAdmin')) {
+            if (!$this->getUser()->isSuperAdmin()) {
                 throw new Forbidden();
             }
         }
@@ -94,25 +94,6 @@ class Extension extends \Espo\Core\Controllers\Record
         return true;
     }
 
-    public function actionCreate($params, $data, $request)
-    {
-        throw new Forbidden();
-    }
-
-    public function actionUpdate($params, $data, $request)
-    {
-        throw new Forbidden();
-    }
-
-    public function actionPatch($params, $data, $request)
-    {
-        throw new Forbidden();
-    }
-
-    public function actionListLinked($params, $data, $request)
-    {
-        throw new Forbidden();
-    }
 
     public function actionDelete($params, $data, $request)
     {
@@ -120,7 +101,7 @@ class Extension extends \Espo\Core\Controllers\Record
             throw BadRequest();
         }
         if ($this->getConfig()->get('restrictedMode')) {
-            if (!$this->getUser()->get('isSuperAdmin')) {
+            if (!$this->getUser()->isSuperAdmin()) {
                 throw new Forbidden();
             }
         }
@@ -129,22 +110,42 @@ class Extension extends \Espo\Core\Controllers\Record
         return true;
     }
 
-    public function actionMassUpdate($params, $data, $request)
+    public function beforeCreate()
     {
         throw new Forbidden();
     }
 
-    public function actionMassDelete($params, $data, $request)
+    public function beforeUpdate()
     {
         throw new Forbidden();
     }
 
-    public function actionCreateLink($params, $data, $request)
+    public function beforePatch()
     {
         throw new Forbidden();
     }
 
-    public function actionRemoveLink($params, $data, $request)
+    public function beforeListLinked()
+    {
+        throw new Forbidden();
+    }
+
+    public function beforeMassUpdate()
+    {
+        throw new Forbidden();
+    }
+
+    public function beforeMassDelete()
+    {
+        throw new Forbidden();
+    }
+
+    public function beforeCreateLink()
+    {
+        throw new Forbidden();
+    }
+
+    public function beforeRemoveLink()
     {
         throw new Forbidden();
     }

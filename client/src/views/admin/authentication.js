@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,6 +87,22 @@ Espo.define('views/admin/authentication', 'views/settings/record/edit', function
                     }
                 ]
             },
+            'ldapPortalUserLdapAuth': {
+                map: {
+                    true: [
+                        {
+                            action: 'show',
+                            fields: ['ldapPortalUserPortals', 'ldapPortalUserRoles']
+                        }
+                    ]
+                },
+                default: [
+                    {
+                        action: 'hide',
+                        fields: ['ldapPortalUserPortals', 'ldapPortalUserRoles']
+                    }
+                ]
+            }
         },
 
         setup: function () {
@@ -101,7 +117,7 @@ Espo.define('views/admin/authentication', 'views/settings/record/edit', function
                     'ldapUserLoginFilter', 'ldapBaseDn', 'ldapAccountCanonicalForm',
                     'ldapAccountDomainName', 'ldapAccountDomainNameShort', 'ldapAccountDomainName',
                     'ldapAccountDomainNameShort', 'ldapTryUsernameSplit', 'ldapOptReferrals',
-                    'ldapCreateEspoUser'
+                    'ldapCreateEspoUser', 'ldapPortalUserLdapAuth'
                 ]
             };
 
@@ -143,4 +159,3 @@ Espo.define('views/admin/authentication', 'views/settings/record/edit', function
     });
 
 });
-

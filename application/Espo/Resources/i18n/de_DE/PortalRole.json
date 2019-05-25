@@ -7,5 +7,13 @@
     "Create PortalRole": "Portal Rolle erstellen",
     "Scope Level": "Berechtigungsumfang",
     "Field Level": "Feldebene"
+  },
+  "fields": {
+    "exportPermission": "Exportberechtigung",
+    "massUpdatePermission": "Massenupdate Erlaubnis"
+  },
+  "tooltips": {
+    "exportPermission": "Definiert, ob Portalbenutzer Datensätze exportieren können.",
+    "massUpdatePermission": "Bestimmt, ob Portalbenutzer die Massenänderung von Datensätzen durchführen können."
   }
 }

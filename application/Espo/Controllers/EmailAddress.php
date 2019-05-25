@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,11 +42,13 @@ class EmailAddress extends \Espo\Core\Controllers\Record
             throw new Forbidden();
         }
         $q = $request->get('q');
-        $limit = intval($request->get('limit'));
-        if (empty($limit) || $limit > 30) {
-            $limit = 5;
+        $maxSize = intval($request->get('maxSize'));
+        if (empty($maxSize) || $maxSize > 50) {
+            $maxSize = $this->getConfig()->get('recordsPerPage', 20);
         }
-        return $this->getRecordService()->searchInAddressBook($q, $limit);
+
+        $onlyActual = $request->get('onlyActual') === 'true';
+
+        return $this->getRecordService()->searchInAddressBook($q, $maxSize, $onlyActual);
     }
 }
-

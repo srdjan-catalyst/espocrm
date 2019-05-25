@@ -50,6 +50,16 @@
          "name":"useNumericFormat"
       },
       {
+         "type": "bool",
+         "name": "hasSeconds",
+         "hidden": true
+      },
+      {
+         "type": "enumInt",
+         "name": "minuteStep",
+         "options": [30, 15, 10, 5, 1]
+      },
+      {
          "name":"audited",
          "type":"bool"
       },
@@ -57,6 +67,9 @@
          "name":"readOnly",
          "type":"bool"
       }
+   ],
+   "validationList": [
+      "required"
    ],
    "filter": true,
    "fieldDefs":{

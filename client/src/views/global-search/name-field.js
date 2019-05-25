@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,25 +39,6 @@ Espo.define('views/global-search/name-field', 'views/fields/base', function (Dep
                 id: this.model.id,
                 iconHtml: this.getHelper().getScopeColorIconHtml(this.model.get('_scope'))
             };
-        },
-
-        getIconHtml: function () {
-            if (this.getConfig().get('scopeColorsDisabled')) {
-                return '';
-            }
-            var scope = this.model.get('_scope');
-            var color = this.getMetadata().get(['clientDefs', scope, 'color']);
-            var html = '';
-
-            if (color) {
-                var $span = $('<span class="icon glyphicon glyphicon-unchecked">');
-                $span.css('color', color);
-                html = $span.get(0).outerHTML;
-            }
-
-            if (html) html += ' ';
-
-            return html;
         }
 
     });

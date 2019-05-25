@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,8 +46,8 @@ Espo.define('views/personal-data/modals/personal-data', ['views/modal'], functio
                 }
             ];
 
-            this.header = this.getLanguage().translate('Personal Data');
-            this.header += ': ' + Handlebars.Utils.escapeExpression(this.model.get('name'));
+            this.headerHtml = this.getLanguage().translate('Personal Data');
+            this.headerHtml += ': ' + Handlebars.Utils.escapeExpression(this.model.get('name'));
 
             if (this.getAcl().check(this.model, 'edit')) {
                 this.buttonList.unshift({

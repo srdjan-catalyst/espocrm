@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,6 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
 
         searchTemplate: 'fields/text/search',
 
-        detailMaxLength: 400,
-
-        detailMaxNewLineCount: 10,
-
         seeMoreText: false,
 
         rowsDefault: 10,
@@ -52,27 +48,39 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
 
         seeMoreDisabled: false,
 
+        cutHeight: 200,
+
         searchTypeList: ['contains', 'startsWith', 'equals', 'endsWith', 'like', 'notContains', 'notLike', 'isEmpty', 'isNotEmpty'],
 
         events: {
             'click a[data-action="seeMoreText"]': function (e) {
                 this.seeMoreText = true;
                 this.reRender();
-            }
+            },
+            'click [data-action="mailTo"]': function (e) {
+                this.mailTo($(e.currentTarget).data('email-address'));
+            },
         },
 
         setup: function () {
             Dep.prototype.setup.call(this);
             this.params.rows = this.params.rows || this.rowsDefault;
-            this.detailMaxLength = this.params.lengthOfCut || this.detailMaxLength;
 
             this.seeMoreDisabled = this.seeMoreDisabled || this.params.seeMoreDisabled;
 
             this.autoHeightDisabled = this.options.autoHeightDisabled || this.params.autoHeightDisabled || this.autoHeightDisabled;
 
+            if (this.params.cutHeight) {
+                this.cutHeight = this.params.cutHeight;
+            }
+
             if (this.params.rows < this.rowsMin) {
                 this.rowsMin = this.params.rows;
             }
+
+            this.on('remove', function () {
+                $(window).off('resize.see-more-' + this.cid);
+            }, this);
         },
 
         setupSearch: function () {
@@ -108,6 +116,17 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
                 }
             }
             data.valueIsSet = this.model.has(this.name);
+
+            if (this.isReadMode()) {
+                data.isCut = this.isCut();
+
+                if (data.isCut) {
+                    data.cutHeight = this.cutHeight;
+                }
+
+                data.displayRawText = this.params.displayRawText;
+            }
+
             return data;
         },
 
@@ -121,28 +140,6 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
 
         getValueForDisplay: function () {
             var text = this.model.get(this.name);
-
-            if (text && (this.mode == 'detail' || this.mode == 'list') && !this.seeMoreText && !this.seeMoreDisabled) {
-                var maxLength = this.detailMaxLength;
-
-                var isCut = false;
-
-                if (text.length > this.detailMaxLength) {
-                    text = text.substr(0, this.detailMaxLength);
-                    isCut = true;
-                }
-
-                var nlCount = (text.match(/\n/g) || []).length;
-                if (nlCount > this.detailMaxNewLineCount) {
-                    var a = text.split('\n').slice(0, this.detailMaxNewLineCount);
-                    text = a.join('\n');
-                    isCut = true;
-                }
-
-                if (isCut) {
-                    text += ' ...\n[#see-more-text]';
-                }
-            }
             return text || '';
         },
 
@@ -170,8 +167,45 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
             }
         },
 
+        isCut: function () {
+            return !this.seeMoreText && !this.seeMoreDisabled;
+        },
+
+        controlSeeMore: function () {
+            if (!this.isCut()) return;
+
+            if (this.$text.height() > this.cutHeight) {
+                this.$seeMoreContainer.removeClass('hidden');
+                this.$textContainer.addClass('cut');
+            } else {
+                this.$seeMoreContainer.addClass('hidden');
+                this.$textContainer.removeClass('cut');
+            }
+        },
+
         afterRender: function () {
             Dep.prototype.afterRender.call(this);
+
+            if (this.isReadMode()) {
+                $(window).off('resize.see-more-' + this.cid);
+
+                this.$textContainer = this.$el.find('> .complex-text-container');
+                this.$text = this.$textContainer.find('> .complex-text');
+                this.$seeMoreContainer = this.$el.find('> .see-more-container');
+
+                if (this.isCut()) {
+                    this.controlSeeMore();
+                    if (this.model.get(this.name) && this.$text.height() === 0) {
+                        this.$textContainer.addClass('cut');
+                        setTimeout(this.controlSeeMore.bind(this), 50);
+                    }
+
+                    $(window).on('resize.see-more-' + this.cid, function () {
+                        this.controlSeeMore();
+                    }.bind(this));
+                }
+            }
+
             if (this.mode == 'edit') {
                 var text = this.getValueForDisplay();
                 if (text) {
@@ -191,9 +225,14 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
             }
         },
 
-        fetchSearch: function () {
+        fetch: function () {
+            var data = {};
+            data[this.name] = this.$element.val() || null;
+            return data;
+        },
 
-            var type = this.$el.find('[name="'+this.name+'-type"]').val() || 'startsWith';
+        fetchSearch: function () {
+            var type = this.fetchSearchType() || 'startsWith';
 
             var data;
 
@@ -253,8 +292,38 @@ Espo.define('views/fields/text', 'views/fields/base', function (Dep) {
 
         getSearchType: function () {
             return this.getSearchParamsData().type || this.searchParams.typeFront || this.searchParams.type;
-        }
+        },
+
+        mailTo: function (emailAddress) {
+            var attributes = {
+                status: 'Draft',
+                to: emailAddress
+            };
+
+            if (
+                this.getConfig().get('emailForceUseExternalClient') ||
+                this.getPreferences().get('emailUseExternalClient') ||
+                !this.getAcl().checkScope('Email', 'create')
+            ) {
+                require('email-helper', function (EmailHelper) {
+                    var emailHelper = new EmailHelper();
+                    var link = emailHelper.composeMailToLink(attributes, this.getConfig().get('outboundEmailBccAddress'));
+                    document.location.href = link;
+                }.bind(this));
+
+                return;
+            }
+
+            var viewName = this.getMetadata().get('clientDefs.' + this.scope + '.modalViews.compose') || 'views/modals/compose-email';
+
+            this.notify('Loading...');
+            this.createView('quickCreate', viewName, {
+                attributes: attributes,
+            }, function (view) {
+                view.render();
+                view.notify(false);
+            });
+        },
 
     });
 });
-

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
+define('views/fields/int', 'views/fields/base', function (Dep) {
 
     return Dep.extend({
 
@@ -79,6 +79,15 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
                 data.isNotEmpty = true;
             }
             data.valueIsSet = this.model.has(this.name);
+
+            if (this.isSearchMode()) {
+                data.value = this.searchParams.value;
+                if (this.getSearchType() === 'between') {
+                    data.value = this.getSearchParamsData().value1 || this.searchParams.value1;
+                    data.value2 = this.getSearchParamsData().value2 || this.searchParams.value2;
+                }
+            }
+
             return data;
         },
 
@@ -109,7 +118,7 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
 
         handleSearchType: function (type) {
             var $additionalInput = this.$el.find('input.additional');
-            var $input = this.$el.find('input[name="'+this.name+'"]');
+            var $input = this.$el.find('input[data-name="'+this.name+'"]');
 
             if (type === 'between') {
                 $additionalInput.removeClass('hidden');
@@ -123,9 +132,38 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
             }
         },
 
+        getMaxValue: function () {
+            var maxValue = this.model.getFieldParam(this.name, 'max') || null;
+
+            if (!maxValue && maxValue !== 0) {
+                maxValue = null;
+            }
+
+            if ('max' in this.params) {
+                maxValue = this.params.max;
+            }
+
+            return maxValue;
+        },
+
+        getMinValue: function () {
+            var minValue = this.model.getFieldParam(this.name, 'min');
+
+            if (!minValue && minValue !== 0) {
+                minValue = null;
+            }
+
+            if ('min' in this.params) {
+                minValue = this.params.min;
+            }
+
+            return minValue;
+        },
+
         setupMaxLength: function () {
-            var maxValue = this.model.getFieldParam(this.name, 'max');
-            if (maxValue) {
+            var maxValue = this.getMaxValue();
+
+            if (typeof max !== 'undefined' && max !== null) {
                 maxValue = this.formatNumber(maxValue);
                 this.params.maxLength = maxValue.toString().length;
             }
@@ -147,8 +185,8 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
                 return false;
             }
 
-            var minValue = this.model.getFieldParam(this.name, 'min');
-            var maxValue = this.model.getFieldParam(this.name, 'max');
+            var minValue = this.getMinValue();
+            var maxValue = this.getMaxValue();
 
             if (minValue !== null && maxValue !== null) {
                 if (value < minValue || value > maxValue ) {
@@ -202,7 +240,7 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
         },
 
         fetch: function () {
-            var value = this.$el.find('[name="'+this.name+'"]').val();
+            var value = this.$element.val();
             value = this.parse(value);
             var data = {};
             data[this.name] = value;
@@ -211,7 +249,9 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
 
         fetchSearch: function () {
             var value = this.parse(this.$element.val());
-            var type = this.$el.find('[name="'+this.name+'-type"]').val();
+
+            var type = this.fetchSearchType();
+
             var data;
 
             if (isNaN(value)) {
@@ -219,15 +259,17 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
             }
 
             if (type === 'between') {
-                var valueTo = this.parse(this.$el.find('[name="' + this.name + '-additional"]').val());
+                var valueTo = this.parse(this.$el.find('input.additional').val());
                 if (isNaN(valueTo)) {
                     return false;
                 }
                 data = {
                     type: type,
                     value: [value, valueTo],
-                    value1: value,
-                    value2: valueTo
+                    data: {
+                        value1: value,
+                        value2: valueTo
+                    }
                 };
             } else if (type == 'isEmpty') {
                 data = {
@@ -243,7 +285,9 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
                 data = {
                     type: type,
                     value: value,
-                    value1: value
+                    data: {
+                        value1: value
+                    }
                 };
             }
             return data;
@@ -255,4 +299,3 @@ Espo.define('views/fields/int', 'views/fields/base', function (Dep) {
 
     });
 });
-

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,10 @@ use Doctrine\DBAL\Schema\Column;
 
 class MySqlPlatform extends \Doctrine\DBAL\Platforms\MySqlPlatform
 {
+    /* Espo */
+    const LENGTH_LIMIT_LONGTEXT = 4294967295;
+    /* Espo: end */
+
     public function getAlterTableSQL(TableDiff $diff)
     {
         $columnSql = array();
@@ -379,14 +383,14 @@ class MySqlPlatform extends \Doctrine\DBAL\Platforms\MySqlPlatform
 
         // Charset
         if ( ! isset($options['charset'])) {
-            $options['charset'] = 'utf8';
+            $options['charset'] = 'utf8mb4';
         }
 
         $tableOptions[] = sprintf('DEFAULT CHARACTER SET %s', $options['charset']);
 
         // Collate
         if ( ! isset($options['collate'])) {
-            $options['collate'] = 'utf8_unicode_ci';
+            $options['collate'] = 'utf8mb4_unicode_ci';
         }
 
         $tableOptions[] = sprintf('COLLATE %s', $options['collate']);
@@ -452,6 +456,29 @@ class MySqlPlatform extends \Doctrine\DBAL\Platforms\MySqlPlatform
 
         return 'MEDIUMTEXT';
     }
+
+    /* Espo: fix a problem of changing text field type */
+    public function getClobTypeLength($type)
+    {
+        switch ($type) {
+            case 'tinytext':
+                return static::LENGTH_LIMIT_TINYTEXT;
+                break;
+
+            case 'text':
+                return static::LENGTH_LIMIT_TEXT;
+                break;
+
+            case 'mediumtext':
+                return static::LENGTH_LIMIT_MEDIUMTEXT;
+                break;
+
+            case 'longtext':
+                return static::LENGTH_LIMIT_LONGTEXT;
+                break;
+        }
+    }
+    /* Espo: end */
 
     public function getColumnDeclarationListSQL(array $fields)
     {

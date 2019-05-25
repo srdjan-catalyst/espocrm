@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,11 @@ use \Espo\ORM\EntityFactory;
 
 abstract class Repository extends \Espo\ORM\Repository implements Injectable
 {
-    protected $dependencies = array();
+    protected $dependencyList = [];
 
-    protected $injections = array();
+    protected $dependencies = []; // for backward compatibility
+
+    protected $injections = [];
 
     protected function init()
     {
@@ -55,7 +57,7 @@ abstract class Repository extends \Espo\ORM\Repository implements Injectable
 
     public function getDependencyList()
     {
-        return $this->dependencies;
+        return array_merge($this->dependencyList, $this->dependencies);
     }
 
     protected function addDependencyList(array $list)
@@ -67,7 +69,7 @@ abstract class Repository extends \Espo\ORM\Repository implements Injectable
 
     protected function addDependency($name)
     {
-        $this->dependencies[] = $name;
+        $this->dependencyList[] = $name;
     }
 
     public function __construct($entityType, EntityManager $entityManager, EntityFactory $entityFactory)
@@ -76,4 +78,3 @@ abstract class Repository extends \Espo\ORM\Repository implements Injectable
         $this->init();
     }
 }
-

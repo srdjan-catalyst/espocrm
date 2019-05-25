@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,15 +35,15 @@ class Person extends \Espo\Services\Record
 {
     protected function getDuplicateWhereClause(Entity $entity, $data)
     {
-        $data = array(
+        $whereClause = [
             'OR' => []
-        );
+        ];
         $toCheck = false;
         if ($entity->get('firstName') || $entity->get('lastName')) {
             $part = [];
             $part['firstName'] = $entity->get('firstName');
             $part['lastName'] = $entity->get('lastName');
-            $data['OR'][] = $part;
+            $whereClause['OR'][] = $part;
             $toCheck = true;
         }
         if (
@@ -62,9 +62,9 @@ class Person extends \Espo\Services\Record
                 }
             }
             foreach ($list as $emailAddress) {
-                $data['OR'][] = array(
+                $whereClause['OR'][] = [
                     'emailAddress' => $emailAddress
-                );
+                ];
                 $toCheck = true;
             }
         }
@@ -72,7 +72,7 @@ class Person extends \Espo\Services\Record
             return false;
         }
 
-        return $data;
+        return $whereClause;
     }
 }
 

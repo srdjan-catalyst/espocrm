@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ Espo.define('views/global-search/global-search', 'view', function (Dep) {
         template: 'global-search/global-search',
 
         events: {
-            'keypress #global-search-input': function (e) {
+            'keypress input.global-search-input': function (e) {
                 if (e.keyCode == 13) {
                     this.runSearch();
                 }
@@ -41,13 +41,12 @@ Espo.define('views/global-search/global-search', 'view', function (Dep) {
             'click [data-action="search"]': function () {
                 this.runSearch();
             },
-            'focus #global-search-input': function (e) {
+            'focus input.global-search-input': function (e) {
                 e.currentTarget.select();
             }
         },
 
         setup: function () {
-
             this.wait(true);
             this.getCollectionFactory().create('GlobalSearch', function (collection) {
                 this.collection = collection;
@@ -58,10 +57,10 @@ Espo.define('views/global-search/global-search', 'view', function (Dep) {
         },
 
         afterRender: function () {
-            this.$input = this.$el.find('#global-search-input');
+            this.$input = this.$el.find('input.global-search-input');
         },
 
-        runSearch: function (text) {
+        runSearch: function () {
             var text = this.$input.val().trim();
             if (text != '' && text.length >= 2) {
                 text = text;
@@ -97,7 +96,11 @@ Espo.define('views/global-search/global-search', 'view', function (Dep) {
                 }
             }.bind(this));
             $document.on('click.global-search', function (e) {
-                if (e.target.tagName == 'A' && $(e.target).data('action') != 'showMore') {
+                if (
+                    e.target.tagName == 'A' &&
+                    $(e.target).data('action') != 'showMore' &&
+                    !$(e.target).hasClass('global-search-button')
+                ) {
                     setTimeout(function () {
                         this.closePanel();
                     }.bind(this), 100);

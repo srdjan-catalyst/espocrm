@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,20 +35,19 @@ class PersonName extends Base
 {
     protected function load($fieldName, $entityName)
     {
-        $subList = array('first' . ucfirst($fieldName), ' ', 'last' . ucfirst($fieldName));
+        $subList = ['first' . ucfirst($fieldName), ' ', 'last' . ucfirst($fieldName)];
 
         $tableName = Util::toUnderScore($entityName);
 
-        $orderByField = 'first' . ucfirst($fieldName); // TODO available in settings
+        $orderBy1Field = 'first' . ucfirst($fieldName);
+        $orderBy2Field = 'last' . ucfirst($fieldName);
 
+        $fullList = [];
+        $fieldList = [];
+        $like = [];
+        $equal = [];
 
-        $fullList = array();
-        $fullListReverse = array();
-        $fieldList = array();
-        $like = array();
-        $equal = array();
-
-        foreach($subList as $subFieldName) {
+        foreach ($subList as $subFieldName) {
             $fieldNameTrimmed = trim($subFieldName);
             if (!empty($fieldNameTrimmed)) {
                 $columnName = $tableName . '.' . Util::toUnderScore($fieldNameTrimmed);
@@ -63,21 +62,21 @@ class PersonName extends Base
 
         $fullListReverse = array_reverse($fullList);
 
-        return array(
-            $entityName => array (
-                'fields' => array(
-                    $fieldName => array(
+        return [
+            $entityName => [
+                'fields' => [
+                    $fieldName => [
                         'type' => 'varchar',
                         'select' => $this->getSelect($fullList),
-                        'where' => array(
+                        'where' => [
                             'LIKE' => "(".implode(" OR ", $like)." OR CONCAT(".implode(", ", $fullList).") LIKE {value} OR CONCAT(".implode(", ", $fullListReverse).") LIKE {value})",
                             '=' => "(".implode(" OR ", $equal)." OR CONCAT(".implode(", ", $fullList).") = {value} OR CONCAT(".implode(", ", $fullListReverse).") = {value})",
-                        ),
-                        'orderBy' =>  ''. $tableName . '.' . Util::toUnderScore($orderByField) . ' {direction}'
-                    ),
-                ),
-            ),
-        );
+                        ],
+                        'orderBy' => "{$tableName}." . Util::toUnderScore($orderBy1Field) ." {direction}, {$tableName}." . Util::toUnderScore($orderBy2Field)
+                    ]
+                ]
+            ]
+        ];
     }
 
     protected function getSelect(array $fullList)

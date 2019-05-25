@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ class Sender
 
     protected $isGlobal = false;
 
-    protected $params = array();
+    protected $params = [];
 
     public function __construct($config, $entityManager)
     {
@@ -72,17 +72,17 @@ class Sender
 
     public function resetParams()
     {
-        $this->params = array();
+        $this->params = [];
         return $this;
     }
 
-    public function setParams(array $params = array())
+    public function setParams(array $params = [])
     {
         $this->params = array_merge($this->params, $params);
         return $this;
     }
 
-    public function useSmtp(array $params = array())
+    public function useSmtp(array $params = [])
     {
         $this->isGlobal = false;
         $this->params = $params;
@@ -93,23 +93,34 @@ class Sender
 
         $localHostName = $config->get('smtpLocalHostName', gethostname());
 
-        $opts = array(
+        $options = [
             'name' => $localHostName,
             'host' => $params['server'],
             'port' => $params['port'],
-            'connection_config' => array()
-        );
+            'connectionConfig' => [],
+        ];
+
+        $connectionOptions = $params['connectionOptions'] ?? [];
+        foreach ($connectionOptions as $key => $value) {
+            $options['connectionConfig'][$key] = $value;
+        }
+
         if ($params['auth']) {
             if (!empty($params['smtpAuthMechanism'])) {
-                $opts['connection_class'] = $params['smtpAuthMechanism'];
+                $options['connectionClass'] = $params['smtpAuthMechanism'];
             } else {
-                $opts['connection_class'] = 'login';
+                $options['connectionClass'] = 'login';
             }
-            $opts['connection_config']['username'] = $params['username'];
-            $opts['connection_config']['password'] = $params['password'];
+            $options['connectionConfig']['username'] = $params['username'];
+            $options['connectionConfig']['password'] = $params['password'];
         }
+
+        if (!empty($params['smtpAuthClassName'])) {
+            $options['connectionClass'] = $params['smtpAuthClassName'];
+        }
+
         if ($params['security']) {
-            $opts['connection_config']['ssl'] = strtolower($params['security']);
+            $options['connectionConfig']['ssl'] = strtolower($params['security']);
         }
 
         if (array_key_exists('fromName', $params)) {
@@ -119,15 +130,15 @@ class Sender
             $this->params['fromAddress'] = $params['fromAddress'];
         }
 
-        $options = new SmtpOptions($opts);
-        $this->transport->setOptions($options);
+        $smtpOptions = new SmtpOptions($options);
+        $this->transport->setOptions($smtpOptions);
 
         return $this;
     }
 
     public function useGlobal()
     {
-        $this->params = array();
+        $this->params = [];
         if ($this->isGlobal) {
             return $this;
         }
@@ -138,30 +149,30 @@ class Sender
 
         $localHostName = $config->get('smtpLocalHostName', gethostname());
 
-        $opts = array(
+        $options = [
             'name' => $localHostName,
             'host' => $config->get('smtpServer'),
             'port' => $config->get('smtpPort'),
-            'connection_config' => array()
-        );
+            'connection_config' => [],
+        ];
         if ($config->get('smtpAuth')) {
-            $opts['connection_class'] = $config->get('smtpAuthMechanism', 'login');
-            $opts['connection_config']['username'] = $config->get('smtpUsername');
-            $opts['connection_config']['password'] = $config->get('smtpPassword');
+            $options['connection_class'] = $config->get('smtpAuthMechanism', 'login');
+            $options['connection_config']['username'] = $config->get('smtpUsername');
+            $options['connection_config']['password'] = $config->get('smtpPassword');
         }
         if ($config->get('smtpSecurity')) {
-            $opts['connection_config']['ssl'] = strtolower($config->get('smtpSecurity'));
+            $options['connection_config']['ssl'] = strtolower($config->get('smtpSecurity'));
         }
 
-        $options = new SmtpOptions($opts);
-        $this->transport->setOptions($options);
+        $smtpOptions = new SmtpOptions($options);
+        $this->transport->setOptions($smtpOptions);
 
         $this->isGlobal = true;
 
         return $this;
     }
 
-    public function send(Email $email, $params = array(), &$message = null, $attachmentList = [])
+    public function send(Email $email, $params = [], &$message = null, $attachmentList = [])
     {
         if (!$message) {
             $message = new Message();
@@ -176,7 +187,10 @@ class Sender
             } else {
                 $fromName = $config->get('outboundEmailFromName');
             }
+
             $message->addFrom(trim($email->get('from')), $fromName);
+
+            $fromAddress = trim($email->get('from'));
         } else {
             if (!empty($params['fromAddress'])) {
                 $fromAddress = $params['fromAddress'];
@@ -194,11 +208,15 @@ class Sender
             }
 
             $message->addFrom($fromAddress, $fromName);
-        }
 
-        if (!$email->get('from')) {
             $email->set('from', $fromAddress);
         }
+
+        $fromString = '<' . $fromAddress . '>';
+        if ($fromName) {
+            $fromString = $fromName . ' ' . $fromString;
+        }
+        $email->set('fromString', $fromString);
 
         $sender = new \Zend\Mail\Header\Sender();
         $sender->setAddress($email->get('from'));
@@ -262,8 +280,13 @@ class Sender
 
         if (!empty($attachmentCollection)) {
             foreach ($attachmentCollection as $a) {
-                $fileName = $this->getEntityManager()->getRepository('Attachment')->getFilePath($a);
-                $attachment = new MimePart(file_get_contents($fileName));
+                if ($a->get('contents')) {
+                    $contents = $a->get('contents');
+                } else {
+                    $fileName = $this->getEntityManager()->getRepository('Attachment')->getFilePath($a);
+                    $contents = file_get_contents($fileName);
+                }
+                $attachment = new MimePart($contents);
                 $attachment->disposition = Mime::DISPOSITION_ATTACHMENT;
                 $attachment->encoding = Mime::ENCODING_BASE64;
                 $attachment->filename ='=?utf-8?B?' . base64_encode($a->get('name')) . '?=';
@@ -276,8 +299,13 @@ class Sender
 
         if (!empty($attachmentInlineCollection)) {
             foreach ($attachmentInlineCollection as $a) {
-                $fileName = $this->getEntityManager()->getRepository('Attachment')->getFilePath($a);
-                $attachment = new MimePart(file_get_contents($fileName));
+                if ($a->get('contents')) {
+                    $contents = $a->get('contents');
+                } else {
+                    $fileName = $this->getEntityManager()->getRepository('Attachment')->getFilePath($a);
+                    $contents = file_get_contents($fileName);
+                }
+                $attachment = new MimePart($contents);
                 $attachment->disposition = Mime::DISPOSITION_INLINE;
                 $attachment->encoding = Mime::ENCODING_BASE64;
                 $attachment->id = $a->id;
@@ -328,7 +356,7 @@ class Sender
 
         } else {
             if ($email->get('isHtml')) {
-                $body->setParts(array($textPart, $htmlPart));
+                $body->setParts([$textPart, $htmlPart]);
                 $messageType = 'multipart/alternative';
             } else {
                 $body = $email->getBodyPlainForSending();
@@ -393,4 +421,3 @@ class Sender
         return $messageId;
     }
 }
-

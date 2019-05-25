@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,20 @@
 Espo.define('collections/note', 'collection', function (Dep) {
 
     return Dep.extend({
+
+        parse: function (response, params) {
+            var total = this.total;
+            var list = Dep.prototype.parse.call(this, response, params);
+
+            if (params.data && params.data.after) {
+                if (total >= 0 && response.total >= 0) {
+                    this.total = total + response.total;
+                } else {
+                    this.total = total;
+                }
+            }
+            return list;
+        },
 
         fetchNew: function (options) {
             var options = options || {};

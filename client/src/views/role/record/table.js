@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -303,7 +303,7 @@ Espo.define('views/role/record/table', 'view', function (Dep) {
                 };
                 var scopeData = this.acl.fieldData[scope];
 
-                var fieldList = this.getFieldManager().getScopeFieldList(scope);
+                var fieldList = this.getFieldManager().getEntityTypeFieldList(scope);
                 this.getLanguage().sortFieldList(scope, fieldList);
 
                 var fieldDataList = [];
@@ -375,7 +375,7 @@ Espo.define('views/role/record/table', 'view', function (Dep) {
                     var fieldObj = {};
                     this.fieldActionList.forEach(function (action) {
                         var $select = this.$el.find('select[data-scope="'+scope+'"][data-field="'+field+'"][data-action="'+action+'"]');
-                        if (!$select.size()) return;
+                        if (!$select.length) return;
                         fieldObj[action] = $select.val();
                     }, this);
                     scopeObj[field] = fieldObj;

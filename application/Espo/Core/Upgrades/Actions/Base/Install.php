@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ class Install extends \Espo\Core\Upgrades\Actions\Base
         //check permissions copied and deleted files
         $this->checkIsWritable();
 
+        $this->enableMaintenanceMode();
+
         $this->beforeRunAction();
 
         $this->backupExistingFiles();
@@ -91,6 +93,8 @@ class Install extends \Espo\Core\Upgrades\Actions\Base
         $this->deleteFiles('vendor');
         $this->copyFiles('vendor');
 
+        $this->disableMaintenanceMode();
+
         if (!isset($data['skipSystemRebuild']) || !$data['skipSystemRebuild']) {
             if (!$this->systemRebuild()) {
                 $this->throwErrorAndRemovePackage('Error occurred while EspoCRM rebuild.');
@@ -102,21 +106,25 @@ class Install extends \Espo\Core\Upgrades\Actions\Base
             $this->throwErrorAndRemovePackage('Cannot copy afterInstall files.');
         }
 
-        /* run before install script */
+        /* run after install script */
         if (!isset($data['skipAfterScript']) || !$data['skipAfterScript']) {
             $this->runScript('after');
         }
 
         $this->afterRunAction();
 
-        $this->clearCache();
+        $this->finalize();
 
         /* delete unziped files */
         $this->deletePackageFiles();
 
-        $this->finalize();
+        if ($this->getManifestParam('skipBackup')) {
+            $this->getFileManager()->removeInDir([$this->getPath('backupPath'), self::FILES]);
+        }
 
         $GLOBALS['log']->debug('Installation process ['.$processId.']: end run.');
+
+        $this->clearCache();
     }
 
     protected function restoreFiles()

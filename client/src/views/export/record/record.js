@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ Espo.define('views/export/record/record', 'views/record/base', function (Dep) {
 
             this.scope = this.options.scope;
 
-            var fieldList = this.getFieldManager().getScopeFieldList(this.scope);
+            var fieldList = this.getFieldManager().getEntityTypeFieldList(this.scope);
 
             var forbiddenFieldList = this.getAcl().getScopeForbiddenFieldList(this.scope);
 
@@ -89,8 +89,12 @@ Espo.define('views/export/record/record', 'views/record/base', function (Dep) {
                 options: fieldList
             });
 
+            var formatList =
+                this.getMetadata().get(['scopes', this.scope, 'exportFormatList']) ||
+                this.getMetadata().get('app.export.formatList');
+
             this.createField('format', 'views/fields/enum', {
-                options: this.getMetadata().get('app.export.formatList')
+                options: formatList
             });
 
             this.controlAllFields();
@@ -108,6 +112,4 @@ Espo.define('views/export/record/record', 'views/record/base', function (Dep) {
         }
 
     });
-
 });
-

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ use Espo\Core\Utils\Util;
 
 class Currency extends Base
 {
-    protected function load($fieldName, $entityName)
+    protected function load($fieldName, $entityType)
     {
         $converedFieldName = $fieldName . 'Converted';
 
@@ -41,40 +41,73 @@ class Currency extends Base
 
         $alias = $fieldName . 'CurrencyRate';
 
-        $d = [
-            $entityName => [
+        $defs = [
+            $entityType => [
                 'fields' => [
                     $fieldName => [
                         'type' => 'float',
-                        'orderBy' => $converedFieldName . ' {direction}'
                     ]
                 ]
             ]
         ];
 
+        $part = Util::toUnderScore($entityType) . "." . $currencyColumnName;
+        $leftJoins = [
+            [
+                'Currency',
+                $alias,
+                [$alias . '.id:' => $fieldName . 'Currency']
+            ]
+        ];
+
+        $foreignAlias = "{$alias}{$entityType}Foreign";
+
         $params = $this->getFieldParams($fieldName);
         if (!empty($params['notStorable'])) {
-            $d[$entityName]['fields'][$fieldName]['notStorable'] = true;
+            $defs[$entityType]['fields'][$fieldName]['notStorable'] = true;
         } else {
-            $d[$entityName]['fields'][$fieldName . 'Converted'] = [
+            $defs[$entityType]['fields'][$fieldName . 'Converted'] = [
                 'type' => 'float',
-                'select' => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate" ,
+                'select' => [
+                    'sql' => $part . " * {$alias}.rate",
+                    'leftJoins' => $leftJoins,
+                ],
+                'selectForeign' => [
+                    'sql' => "{alias}.{$currencyColumnName} * {$foreignAlias}.rate",
+                    'leftJoins' => [
+                        [
+                            'Currency',
+                            $foreignAlias,
+                            [
+                                $foreignAlias . '.id:' => "{alias}.{$fieldName}Currency"
+                            ]
+                        ]
+                    ],
+                ],
                 'where' =>
                 [
-                        "=" => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate = {value}",
-                        ">" => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate > {value}",
-                        "<" => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate < {value}",
-                        ">=" => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate >= {value}",
-                        "<=" => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate <= {value}",
-                        "<>" => Util::toUnderScore($entityName) . "." . $currencyColumnName . " * {$alias}.rate <> {value}",
-                        "IS NULL" => Util::toUnderScore($entityName) . "." . $currencyColumnName . ' IS NULL',
-                        "IS NOT NULL" => Util::toUnderScore($entityName) . "." . $currencyColumnName . ' IS NOT NULL'
+                        "=" => ['sql' => $part . " * {$alias}.rate = {value}", 'leftJoins' => $leftJoins],
+                        ">" => ['sql' => $part . " * {$alias}.rate > {value}", 'leftJoins' => $leftJoins],
+                        "<" => ['sql' => $part . " * {$alias}.rate < {value}", 'leftJoins' => $leftJoins],
+                        ">=" => ['sql' => $part . " * {$alias}.rate >= {value}", 'leftJoins' => $leftJoins],
+                        "<=" => ['sql' => $part . " * {$alias}.rate <= {value}", 'leftJoins' => $leftJoins],
+                        "<>" => ['sql' => $part . " * {$alias}.rate <> {value}", 'leftJoins' => $leftJoins],
+                        "IS NULL" => ['sql' => $part . ' IS NULL'],
+                        "IS NOT NULL" => ['sql' => $part . ' IS NOT NULL'],
                 ],
                 'notStorable' => true,
-                'orderBy' => $converedFieldName . " {direction}"
+                'orderBy' => [
+                    'sql' => $converedFieldName . " {direction}",
+                    'leftJoins' => $leftJoins,
+                ],
+            ];
+
+            $defs[$entityType]['fields'][$fieldName]['orderBy'] = [
+                'sql' => $part . " * {$alias}.rate {direction}",
+                'leftJoins' => $leftJoins,
             ];
         }
 
-        return $d;
+        return $defs;
     }
 }

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ Espo.define('views/admin/formula/fields/attribute', 'views/fields/multi-enum', f
         setupOptions: function () {
             Dep.prototype.setupOptions.call(this);
 
-            var attributeList = this.getFieldManager().getEntityAttributeList(this.options.scope).sort();
+            var attributeList = this.getFieldManager().getEntityTypeAttributeList(this.options.scope).sort();
 
             var links = this.getMetadata().get(['entityDefs', this.options.scope, 'links']);
             var linkList = [];
@@ -49,7 +49,8 @@ Espo.define('views/admin/formula/fields/attribute', 'views/fields/multi-enum', f
             linkList.forEach(function (link) {
                 var scope = links[link].entity;
                 if (!scope) return;
-                var linkAttributeList = this.getFieldManager().getEntityAttributeList(scope).sort();
+                if (links[link].disabled) return;
+                var linkAttributeList = this.getFieldManager().getEntityTypeAttributeList(scope).sort();
                 linkAttributeList.forEach(function (item) {
                     attributeList.push(link + '.' + item);
                 }, this);

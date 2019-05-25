@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -128,10 +128,11 @@ Espo.define('views/modals/select-records', ['views/modal', 'search-manager'], fu
                 }
             }
 
-            this.header = '';
+            this.headerHtml = '';
             var iconHtml = this.getHelper().getScopeColorIconHtml(this.scope);
-            this.header += this.getLanguage().translate(this.scope, 'scopeNamesPlural');
-            this.header = iconHtml + this.header;
+            this.headerHtml += this.translate('Select') + ': ';
+            this.headerHtml += this.getLanguage().translate(this.scope, 'scopeNamesPlural');
+            this.headerHtml = iconHtml + this.headerHtml;
 
             this.waitForView('list');
             if (this.searchPanel) {
@@ -142,8 +143,8 @@ Espo.define('views/modals/select-records', ['views/modal', 'search-manager'], fu
                 collection.maxSize = this.getConfig().get('recordsPerPageSmall') || 5;
                 this.collection = collection;
 
-                this.defaultSortBy = collection.sortBy;
-                this.defaultAsc = collection.asc;
+                this.defaultOrderBy = collection.orderBy;
+                this.defaultOrder = collection.defaultOrder;
 
                 this.loadSearch();
                 this.wait(true);
@@ -182,8 +183,8 @@ Espo.define('views/modals/select-records', ['views/modal', 'search-manager'], fu
                     disableSavePreset: true,
                 }, function (view) {
                     this.listenTo(view, 'reset', function () {
-                        this.collection.sortBy = this.defaultSortBy;
-                        this.collection.asc = this.defaultAsc;
+                        this.collection.orderBy = this.defaultOrderBy;
+                        this.collection.order = this.defaultOrder;
                     }, this);
                 });
             }

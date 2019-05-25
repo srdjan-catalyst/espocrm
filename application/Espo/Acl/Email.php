@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ use \Espo\ORM\Entity;
 
 class Email extends \Espo\Core\Acl\Base
 {
+    protected $ownerUserIdAttribute = 'usersIds';
 
     public function checkEntityRead(EntityUser $user, Entity $entity, $data)
     {
@@ -118,4 +119,3 @@ class Email extends \Espo\Core\Acl\Base
         return false;
     }
 }
-

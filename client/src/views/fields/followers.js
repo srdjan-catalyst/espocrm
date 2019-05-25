@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('Views.Fields.Followers', 'Views.Fields.LinkMultiple', function (Dep) {
+Espo.define('views/fields/followers', 'views/fields/link-multiple', function (Dep) {
 
     return Dep.extend({
 
@@ -94,6 +94,9 @@ Espo.define('Views.Fields.Followers', 'Views.Fields.LinkMultiple', function (Dep
                 collection.url = this.model.name + '/' + this.model.id + '/followers';
                 collection.offset = this.ids.length || 0;
                 collection.maxSize = this.portionSize;
+                collection.data.select = ['id', 'name'].join(',');
+                collection.orderBy = null;
+                collection.order = null;
 
                 this.listenToOnce(collection, 'sync', function () {
                     var idList = this.model.get(this.idsName) || [];
@@ -132,5 +135,3 @@ Espo.define('Views.Fields.Followers', 'Views.Fields.LinkMultiple', function (Dep
 
     });
 });
-
-

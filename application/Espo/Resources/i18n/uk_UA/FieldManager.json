@@ -1,6 +1,9 @@
 {
   "labels": {
-    "Dynamic Logic": "Логічність динаміки"
+    "Dynamic Logic": "Логічність динаміки",
+    "Name": "Ім'я",
+    "Label": "Мітка",
+    "Type": "Тип"
   },
   "options": {
     "dateTimeDefault": {
@@ -13,7 +16,7 @@
       "javascript: return this.dateTime.getDateTimeShiftedFromNow(2, 'hours', 15);": "+2 години",
       "javascript: return this.dateTime.getDateTimeShiftedFromNow(3, 'hours', 15);": "+3 години",
       "javascript: return this.dateTime.getDateTimeShiftedFromNow(4, 'hours', 15);": "+4 години",
-      "javascript: return this.dateTime.getDateTimeShiftedFromNow(5, 'hours', 15);": "+5 години",
+      "javascript: return this.dateTime.getDateTimeShiftedFromNow(5, 'hours', 15);": "+5 годин",
       "javascript: return this.dateTime.getDateTimeShiftedFromNow(6, 'hours', 15);": "+6 годин",
       "javascript: return this.dateTime.getDateTimeShiftedFromNow(7, 'hours', 15);": "+7 годин",
       "javascript: return this.dateTime.getDateTimeShiftedFromNow(8, 'hours', 15);": "+8 годин",
@@ -70,6 +73,29 @@
     "maxLength": "Максимально допустима довжина тексту.",
     "before": "Значення дати має бути перед значенням дати у вказаному полі.",
     "after": "Значення дати має бути після значення дати у вказаному полі.",
-    "readOnly": "Користувач не може вичначати значення поля. Воно буде задане формулою."
+    "readOnly": "Користувач не може вичначати значення поля. Воно буде задане формулою.",
+    "maxFileSize": "Якщо порожній або 0, то необмежений"
+  },
+  "fieldParts": {
+    "address": {
+      "street": "Вулиця",
+      "city": "Місто",
+      "state": "Регіон",
+      "country": "Країна",
+      "postalCode": "Поштовий індекс",
+      "map": "Карта"
+    },
+    "personName": {
+      "salutation": "Привітання",
+      "first": "Ім'я",
+      "last": "Прізвище"
+    },
+    "currency": {
+      "converted": "(Конвертована)",
+      "currency": "(Валюта)"
+    },
+    "datetimeOptional": {
+      "date": "Дата"
+    }
   }
 }

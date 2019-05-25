@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,15 +70,21 @@ Espo.define('views/fields/datetime-optional', 'views/fields/datetime', function 
         initTimepicker: function () {
             var $time = this.$time;
 
-            $time.timepicker({
-                step: 30,
+            var o = {
+                step: this.params.minuteStep || 30,
                 scrollDefaultNow: true,
                 timeFormat: this.timeFormatMap[this.getDateTime().timeFormat],
                 noneOption: [{
                     label: this.noneOption,
                     value: this.noneOption,
                 }]
-            });
+            };
+
+            if (this.emptyTimeInInlineEditDisabled && this.isInlineEditMode() || this.noneOptionIsHidden) {
+                delete o.noneOption;
+            }
+
+            $time.timepicker(o);
             $time.parent().find('button.time-picker-btn').on('click', function () {
                 $time.timepicker('show');
             });
@@ -87,8 +93,8 @@ Espo.define('views/fields/datetime-optional', 'views/fields/datetime', function 
         fetch: function () {
             var data = {};
 
-            var date = this.$el.find('[name="' + this.name + '"]').val();
-            var time = this.$el.find('[name="' + this.name + '-time"]').val();
+            var date = this.$date.val();
+            var time = this.$time.val();
 
             var value = null;
             if (time != this.noneOption && time != '') {
@@ -100,8 +106,16 @@ Espo.define('views/fields/datetime-optional', 'views/fields/datetime', function 
             } else {
                 if (date != '') {
                     data[this.nameDate] = this.getDateTime().fromDisplayDate(date);
+                    var dateTimeValue = data[this.nameDate] + ' 00:00:00';
+
+                    dateTimeValue = moment.utc(dateTimeValue)
+                        .tz(this.getConfig().get('timeZone') || 'UTC')
+                        .format(this.getDateTime().internalDateTimeFullFormat);
+
+                    data[this.name] = dateTimeValue;
                 } else {
                     data[this.nameDate] = null;
+                    data[this.name] = null;
                 }
             }
             return data;
@@ -114,7 +128,13 @@ Espo.define('views/fields/datetime-optional', 'views/fields/datetime', function 
                 var value = this.model.get(this.name) || this.model.get(this.nameDate);
                 var otherValue = this.model.get(field) || this.model.get(fieldDate);
                 if (value && otherValue) {
-                    if (moment(value).unix() <= moment(otherValue).unix()) {
+                    var isNotValid = false;
+                    if (this.validateAfterAllowSameDay && this.model.get(this.nameDate)) {
+                        isNotValid = moment(value).unix() < moment(otherValue).unix();
+                    } else {
+                        isNotValid = moment(value).unix() <= moment(otherValue).unix();
+                    }
+                    if (isNotValid) {
                         var msg = this.translate('fieldShouldAfter', 'messages').replace('{field}', this.getLabelText())
                                                                                 .replace('{otherField}', this.translate(field, 'fields', this.model.name));
 
@@ -154,4 +174,3 @@ Espo.define('views/fields/datetime-optional', 'views/fields/datetime', function 
 
     });
 });
-

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,11 +41,11 @@ class ServiceFactory
     /**
      * @var array - path to Service files
      */
-    protected $paths = array(
+    protected $paths = [
         'corePath' => 'application/Espo/Services',
         'modulePath' => 'application/Espo/Modules/{*}/Services',
         'customPath' => 'custom/Espo/Custom/Services',
-    );
+    ];
 
     protected $data;
 
@@ -104,13 +104,15 @@ class ServiceFactory
     {
         if (class_exists($className)) {
             $service = new $className();
-            $dependencies = $service->getDependencyList();
-            foreach ($dependencies as $name) {
+            $dependencyList = $service->getDependencyList();
+            foreach ($dependencyList as $name) {
                 $service->inject($name, $this->container->get($name));
+            }
+            if (method_exists($service, 'prepare')) {
+                $service->prepare();
             }
             return $service;
         }
         throw new Error("Class '$className' does not exist.");
     }
 }
-

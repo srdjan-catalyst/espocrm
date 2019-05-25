@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,14 @@ use \Espo\Modules\Crm\Business\Event\Invitations;
 
 use \Espo\Core\Exceptions\Error;
 use \Espo\Core\Exceptions\Forbidden;
+use \Espo\Core\Exceptions\BadRequest;
 
 class Meeting extends \Espo\Services\Record
 {
+    protected $validateRequiredSkipFieldList = [
+        'dateEnd'
+    ];
+
     protected function init()
     {
         $this->addDependencyList([
@@ -51,6 +56,8 @@ class Meeting extends \Espo\Services\Record
 
     protected $exportSkipFieldList = ['duration'];
 
+    protected $duplicateIgnoreAttributeList = ['usersColumns', 'contactsColumns', 'leadsColumns'];
+
     protected function getMailSender()
     {
         return $this->getInjection('container')->get('mailSender');
@@ -59,11 +66,6 @@ class Meeting extends \Espo\Services\Record
     protected function getPreferences()
     {
         return $this->getInjection('preferences');
-    }
-
-    protected function getCrypt()
-    {
-        return $this->getInjection('container')->get('crypt');
     }
 
     protected function getLanguage()
@@ -114,15 +116,11 @@ class Meeting extends \Espo\Services\Record
     {
         $smtpParams = null;
         if ($useUserSmtp) {
-            $smtpParams = $this->getPreferences()->getSmtpParams();
-            if ($smtpParams) {
-                if (array_key_exists('password', $smtpParams)) {
-                    $smtpParams['password'] = $this->getCrypt()->decrypt($smtpParams['password']);
-                }
-                $smtpParams['fromAddress'] = $this->getUser()->get('emailAddress');
-                $smtpParams['fromName'] = $this->getUser()->get('name');
-            }
+            $smtpParams = $this->getServiceFactory()->create('Email')->getUserSmtpParams($this->getUser()->id);
         }
+
+        $templateFileManager = $this->getInjection('container')->get('templateFileManager');
+
         return new Invitations(
             $this->getEntityManager(),
             $smtpParams,
@@ -131,7 +129,8 @@ class Meeting extends \Espo\Services\Record
             $this->getInjection('fileManager'),
             $this->getDateTime(),
             $this->getInjection('number'),
-            $this->getLanguage()
+            $this->getLanguage(),
+            $templateFileManager
         );
     }
 
@@ -233,5 +232,37 @@ class Meeting extends \Espo\Services\Record
             }
         }
         return $attributeList;
+    }
+
+    public function setAcceptanceStatus(string $id, string $status, ?string $userId = null)
+    {
+        $userId = $userId ?? $this->getUser()->id;
+
+        $statusList = $this->getMetadata()->get(['entityDefs', $this->entityType, 'fields', 'acceptanceStatus', 'options'], []);
+        if (!in_array($status, $statusList)) throw new BadRequest();
+
+        $entity = $this->getEntityManager()->getEntity($this->entityType, $id);
+        if (!$entity) throw new NotFound();
+        if (!$entity->hasLinkMultipleId('users', $userId));
+
+
+        $this->getEntityManager()->getRepository($this->entityType)->updateRelation(
+            $entity, 'users', $userId, (object) ['status' => $status]
+        );
+
+        $actionData = [
+            'eventName' => $entity->get('name'),
+            'eventType' => $entity->getEntityType(),
+            'eventId' => $entity->id,
+            'dateStart' => $entity->get('dateStart'),
+            'status' => $status,
+            'link' => 'users',
+            'inviteeType' => 'User',
+            'inviteeId' => $userId,
+        ];
+
+        $this->getEntityManager()->getHookManager()->process($this->entityType, 'afterConfirmation', $entity, [], $actionData);
+
+        return true;
     }
 }

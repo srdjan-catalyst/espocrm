@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('model-factory', [], function () {
+define('model-factory', [], function () {
 
     var ModelFactory = function (loader, metadata, user) {
         this.loader = loader;
@@ -49,10 +49,15 @@ Espo.define('model-factory', [], function () {
         user: null,
 
         create: function (name, callback, context) {
-            context = context || this;
-            this.getSeed(name, function (seed) {
-                var model = new seed();
-                callback.call(context, model);
+            return new Promise(function (resolve) {
+                context = context || this;
+                this.getSeed(name, function (seed) {
+                    var model = new seed();
+                    if (callback) {
+                        callback.call(context, model);
+                    }
+                    resolve(model);
+                }.bind(this));
             }.bind(this));
         },
 
@@ -67,6 +72,7 @@ Espo.define('model-factory', [], function () {
             Espo.loader.require(className, function (modelClass) {
                 this.seeds[name] = modelClass.extend({
                     name: name,
+                    entityType: name,
                     defs: this.metadata.get('entityDefs.' + name) || {},
                     dateTime: this.dateTime,
                     _user: this.user
@@ -77,5 +83,4 @@ Espo.define('model-factory', [], function () {
     });
 
     return ModelFactory;
-
 });

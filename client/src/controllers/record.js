@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('controllers/record', 'controller', function (Dep) {
+define('controllers/record', 'controller', function (Dep) {
 
     return Dep.extend({
 
@@ -55,7 +55,7 @@ Espo.define('controllers/record', 'controller', function (Dep) {
             this.handleCheckAccess('read');
         },
 
-        list: function (options) {
+        actionList: function (options) {
             var isReturn = options.isReturn;
             if (this.getRouter().backProcessed) {
                 isReturn = true;
@@ -87,8 +87,9 @@ Espo.define('controllers/record', 'controller', function (Dep) {
             this.handleCheckAccess('read');
         },
 
-        createViewView: function (options, model) {
-            this.main(this.getViewName('detail'), {
+        createViewView: function (options, model, view) {
+            var view = view || this.getViewName('detail');
+            this.main(view, {
                 scope: this.name,
                 model: model,
                 returnUrl: options.returnUrl,
@@ -99,8 +100,18 @@ Espo.define('controllers/record', 'controller', function (Dep) {
 
         prepareModelView: function (model, options) {},
 
-        view: function (options) {
+        actionView: function (options) {
             var id = options.id;
+
+            var isReturn = this.getRouter().backProcessed;
+            if (isReturn) {
+                if (this.lastViewActionOptions && this.lastViewActionOptions.id === id) {
+                    options = this.lastViewActionOptions;
+                }
+            } else {
+                delete this.lastViewActionOptions;
+            }
+            this.lastViewActionOptions = options;
 
             var createView = function (model) {
                 this.prepareModelView(model, options);
@@ -111,29 +122,38 @@ Espo.define('controllers/record', 'controller', function (Dep) {
                 var model = options.model;
                 createView(model);
 
-                this.listenToOnce(model, 'sync', function () {
-                    this.hideLoadingNotification();
-                }, this);
                 this.showLoadingNotification();
-                model.fetch();
+
+                model.fetch().then(function () {
+                    this.hideLoadingNotification();
+                }.bind(this));
 
                 this.listenToOnce(this.baseController, 'action', function () {
                     model.abortLastFetch();
                 }, this);
             } else {
-                this.getModel(function (model) {
+                this.getModel().then(function (model) {
                     model.id = id;
 
                     this.showLoadingNotification();
-                    this.listenToOnce(model, 'sync', function () {
+
+                    model.fetch({main: true}).then(function () {
+                        if (model.get('deleted')) {
+                            this.listenToOnce(model, 'after:restore-deleted', function () {
+                                createView(model);
+                            }, this);
+
+                            this.prepareModelView(model, options);
+                            this.createViewView(options, model, 'views/deleted-detail');
+                            return;
+                        }
                         createView(model);
-                    }, this);
-                    model.fetch({main: true});
+                    }.bind(this));
 
                     this.listenToOnce(this.baseController, 'action', function () {
                         model.abortLastFetch();
                     }, this);
-                });
+                }.bind(this));
             }
         },
 
@@ -163,7 +183,7 @@ Espo.define('controllers/record', 'controller', function (Dep) {
 
         create: function (options) {
             options = options || {};
-            this.getModel(function (model) {
+            this.getModel().then(function (model) {
                 if (options.relate) {
                     model.setRelate(options.relate);
                 }
@@ -183,7 +203,11 @@ Espo.define('controllers/record', 'controller', function (Dep) {
                 this.prepareModelCreate(model, options);
 
                 this.main(this.getViewName('edit'), o);
-            });
+            }.bind(this));
+        },
+
+        actionCreate: function (options) {
+            this.create(options);
         },
 
         beforeEdit: function () {
@@ -200,10 +224,10 @@ Espo.define('controllers/record', 'controller', function (Dep) {
             }, this);
         },
 
-        edit: function (options) {
+        actionEdit: function (options) {
             var id = options.id;
 
-            this.getModel(function (model) {
+            this.getModel().then(function (model) {
                 model.id = id;
                 if (options.model) {
                     model = options.model;
@@ -232,17 +256,17 @@ Espo.define('controllers/record', 'controller', function (Dep) {
                 this.listenToOnce(this.baseController, 'action', function () {
                     model.abortLastFetch();
                 }, this);
-            });
+            }.bind(this));
         },
 
         beforeMerge: function () {
             this.handleCheckAccess('edit');
         },
 
-        merge: function (options) {
+        actionMerge: function (options) {
             var ids = options.ids.split(',');
 
-            this.getModel(function (model) {
+            this.getModel().then(function (model) {
                 var models = [];
 
                 var proceed = function () {
@@ -287,12 +311,14 @@ Espo.define('controllers/record', 'controller', function (Dep) {
                     return;
                 }
             }
-            this.collectionFactory.create(collectionName, function (collection) {
+            return this.collectionFactory.create(collectionName, function (collection) {
                 this.collectionMap[collectionName] = collection;
                 this.listenTo(collection, 'sync', function () {
                     collection.isFetched = true;
                 }, this);
-                callback.call(context, collection);
+                if (callback) {
+                    callback.call(context, collection);
+                }
             }, context);
         },
 
@@ -307,10 +333,13 @@ Espo.define('controllers/record', 'controller', function (Dep) {
                 throw new Error('No collection for unnamed controller');
             }
             var modelName = this.entityType || this.name;
-            this.modelFactory.create(modelName, function (model) {
-                callback.call(context, model);
+
+            return this.modelFactory.create(modelName, function (model) {
+                if (callback) {
+                    callback.call(context, model);
+                }
             }, context);
         },
-    });
 
+    });
 });

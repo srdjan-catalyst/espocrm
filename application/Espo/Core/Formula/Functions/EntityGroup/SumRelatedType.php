@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,6 +101,10 @@ class SumRelatedType extends \Espo\Core\Formula\Functions\Base
 
         $selectParams['groupBy'] = [$foreignLink . '.id'];
 
+        $selectParams['whereClause'][] = [
+            $foreignLink . '.id' => $entity->id
+        ];
+
         $entityManager->getRepository($foreignEntityType)->handleSelectParams($selectParams);
 
         $sql = $entityManager->getQuery()->createSelectQuery($foreignEntityType, $selectParams);
@@ -114,6 +118,6 @@ class SumRelatedType extends \Espo\Core\Formula\Functions\Base
             return 0;
         }
 
-        return $rowList[0]['SUM:' . $field];
+        return floatval($rowList[0]['SUM:' . $field]);
     }
 }

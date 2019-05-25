@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -348,10 +348,6 @@ class MetadataTest extends \PHPUnit\Framework\TestCase
         $result = 'fields';
         $this->assertObjectHasAttribute($result, $this->object->getObjects('entityDefs.User'));
 
-        $result = (object) [
-            'type' => 'bool',
-            'tooltip' => true
-        ];
-        $this->assertEquals($result, $this->object->getObjects('entityDefs.User.fields.isAdmin'));
+        $this->assertObjectHasAttribute('type', $this->object->getObjects('entityDefs.User.fields.name'));
     }
 }

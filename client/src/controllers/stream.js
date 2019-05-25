@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,13 +25,14 @@
  * In accordance with Section 7(b) of the GNU General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
-Espo.define('controllers/stream', 'controller', function (Dep) {
+
+define('controllers/stream', 'controller', function (Dep) {
 
     return Dep.extend({
 
         defaultAction: 'index',
 
-        index: function () {
+        actionIndex: function () {
             this.main('views/stream', {
                 displayTitle: true,
             }, function (view) {
@@ -39,7 +40,7 @@ Espo.define('controllers/stream', 'controller', function (Dep) {
             });
         },
 
-        posts: function () {
+        actionPosts: function () {
             this.main('views/stream', {
                 displayTitle: true,
                 filter: 'posts',
@@ -48,7 +49,7 @@ Espo.define('controllers/stream', 'controller', function (Dep) {
             });
         },
 
-        updates: function () {
+        actionUpdates: function () {
             this.main('views/stream', {
                 displayTitle: true,
                 filter: 'updates',
@@ -58,5 +59,4 @@ Espo.define('controllers/stream', 'controller', function (Dep) {
         },
 
     });
-
 });

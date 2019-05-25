@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ Espo.define('views/preferences/record/edit', 'views/record/edit', function (Dep)
         setup: function () {
             Dep.prototype.setup.call(this);
 
-            this.addButton({
+            this.addDropdownItem({
                 name: 'reset',
                 html: this.getLanguage().translate('Reset to Default', 'labels', 'Admin'),
                 style: 'danger'
@@ -97,7 +97,7 @@ Espo.define('views/preferences/record/edit', 'views/record/edit', function (Dep)
                 });
             }
 
-            if (this.model.get('isPortalUser')) {
+            if (this.model.isPortal()) {
                 this.layoutName = 'detailPortal';
             }
 
@@ -110,7 +110,7 @@ Espo.define('views/preferences/record/edit', 'views/record/edit', function (Dep)
                 }, this);
             }
 
-            if (!this.getUser().isAdmin() || this.model.get('isPortalUser')) {
+            if (!this.getUser().isAdmin() || this.model.isPortal()) {
                 this.hideField('dashboardLayout');
             }
 
@@ -121,21 +121,25 @@ Espo.define('views/preferences/record/edit', 'views/record/edit', function (Dep)
             this.listenTo(this.model, 'change:scopeColorsDisabled', this.controlColorsField, this);
 
             var hideNotificationPanel = true;
-            if (!this.getConfig().get('assignmentEmailNotifications') || this.model.get('isPortalUser')) {
+            if (!this.getConfig().get('assignmentEmailNotifications') || this.model.isPortal()) {
                 this.hideField('receiveAssignmentEmailNotifications');
             } else {
                 hideNotificationPanel = false;
             }
 
-            if (!this.getConfig().get('mentionEmailNotifications') || this.model.get('isPortalUser')) {
+            if (this.getConfig().get('emailForceUseExternalClient')) {
+                this.hideField('emailUseExternalClient');
+            }
+
+            if (!this.getConfig().get('mentionEmailNotifications') || this.model.isPortal()) {
                 this.hideField('receiveMentionEmailNotifications');
             } else {
                 hideNotificationPanel = false;
             }
 
-            if (!this.getConfig().get('streamEmailNotifications') && !this.model.get('isPortalUser')) {
+            if (!this.getConfig().get('streamEmailNotifications') && !this.model.isPortal()) {
                 this.hideField('receiveStreamEmailNotifications');
-            } else if (!this.getConfig().get('portalStreamEmailNotifications') && this.model.get('isPortalUser')) {
+            } else if (!this.getConfig().get('portalStreamEmailNotifications') && this.model.isPortal()) {
                 this.hideField('receiveStreamEmailNotifications');
             } else {
                 hideNotificationPanel = false;

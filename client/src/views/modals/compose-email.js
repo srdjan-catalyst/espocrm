@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,9 +54,13 @@ Espo.define('views/modals/compose-email', 'views/modals/edit', function (Dep) {
                 style: 'primary'
             });
 
-            this.header = this.getLanguage().translate('Compose Email');
+            this.headerHtml = this.getLanguage().translate('Compose Email');
 
-            if (this.getPreferences().get('emailUseExternalClient')) {
+            if (
+                this.getConfig().get('emailForceUseExternalClient') ||
+                this.getPreferences().get('emailUseExternalClient') ||
+                !this.getAcl().checkScope('Email', 'create')
+            ) {
                 var attributes = this.options.attributes || {};
 
                 require('email-helper', function (EmailHelper) {
@@ -84,6 +88,7 @@ Espo.define('views/modals/compose-email', 'views/modals/edit', function (Dep) {
                 selectTemplateDisabled: this.options.selectTemplateDisabled,
                 removeAttachmentsOnSelectTemplate: this.options.removeAttachmentsOnSelectTemplate,
                 signatureDisabled: this.options.signatureDisabled,
+                appendSignature: this.options.appendSignature,
                 exit: function () {}
             };
             this.createView('edit', viewName, options, callback);

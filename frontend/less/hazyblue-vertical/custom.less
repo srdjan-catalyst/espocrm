@@ -1,36 +1,26 @@
+#navbar .navbar {
+    .box-shadow(none);
+
+    .navbar-right {
+        .box-shadow(none);
+    }
+}
+
+@media screen and (min-width: @screen-sm-min) {
+    #navbar .navbar {
+        .navbar-right {
+            background-color: @navbar-bg;
+        }
+    }
+}
+
 .panel-heading {
     border-bottom-width: 0;
 }
 
-.panel-default.note-editor .panel-heading .btn-default {
-    background-color: @btn-default-bg;
-    border-color: @btn-default-border;
-}
-
-.panel .panel-heading .btn-default {
-    background-color: @panel-default-heading-bg;
-    border-color: @panel-default-heading-bg;
-}
-
-.panel .panel-heading .open .btn {
-    border-color: transparent;
-}
-
-.panel .panel-heading .btn-default {
-    &:active,
-    &.active {
-        box-shadow: none;
-        -webkit-box-shadow: none;
-        -moz-box-shadow: none;
-    }
-}
-
-.navbar-inverse .navbar-nav > .open > a,
-.navbar-inverse .navbar-nav > .open > a:hover,
-.navbar-inverse .navbar-nav > .open > a:active,
-.navbar-inverse .navbar-nav > .open > a:focus {
-    background-color: transparent;
-    .box-shadow(inset 0 1px 5px rgba(0,0,0,.125));
+.panel-default.note-editor > .panel-heading .btn-default {
+    background-color: @btn-default-bg !important;
+    border-color: @btn-default-border !important;
 }
 
 .panel-title {
@@ -89,16 +79,9 @@ table.table {
 .panel-body .list-container > .list,
 .dashlet-container > .panel,
 .note-editor.panel {
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
+    .box-shadow(none);
 }
 
-@media screen and (min-width: @screen-sm-min) {
-    #navbar .nav.navbar-nav.navbar-right {
-        background-color: @navbar-bg;
-    }
-}
 
 .list-container > .list,
 .panel,
@@ -109,26 +92,19 @@ table.table {
 .well,
 .admin-content .table.table-bordered,
 .admin-content iframe,
-.list-kanban > table thead,
-.list-group-panel {
-    -webkit-box-shadow: 3px 3px 4px rgba(0,0,0,0.13);
-    -moz-box-shadow: 3px 3px 4px rgba(0,0,0,0.13);
-    box-shadow: 3px 3px 4px rgba(0,0,0,0.13);
+.list-kanban > div > table > thead,
+.list-group-panel,
+.popup-notification {
+    .box-shadow(3px 3px 4px rgba(0,0,0,0.13));
 }
 
-#navbar .nav.navbar-nav.navbar-right,
-.stick-sub.button-container,
-#navbar .navbar.navbar-inverse {
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
+.stick-sub.button-container {
+    .box-shadow(none);
 }
 
 @media (min-width: @screen-sm-min) {
     .modal-dialog > .modal-content {
-        -webkit-box-shadow: 0 0px 15px rgba(0,0,0,0.35);
-        -moz-box-shadow: 0 0px 15px rgba(0,0,0,0.35);
-        box-shadow: 0 0px 15px rgba(0,0,0,0.35);
+        .box-shadow(0 0px 15px rgba(0,0,0,0.35));
     }
 }
 

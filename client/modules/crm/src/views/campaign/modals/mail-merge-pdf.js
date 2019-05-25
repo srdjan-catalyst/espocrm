@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ Espo.define('crm:views/campaign/modals/mail-merge-pdf', ['views/modal', 'model']
 
         setup: function () {
             Dep.prototype.setup.call(this);
-            this.header = this.translate('Generate Mail Merge PDF', 'labels', 'Campaign');
+            this.headerHtml = this.translate('Generate Mail Merge PDF', 'labels', 'Campaign');
             var linkList = ['contacts', 'leads', 'accounts', 'users'];
             this.linkList = [];
             linkList.forEach(function (link) {

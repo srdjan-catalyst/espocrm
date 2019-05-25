@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@ Espo.define('views/modals/mass-update', 'views/modal', function (Dep) {
     return Dep.extend({
 
         cssName: 'mass-update',
-
-        header: false,
 
         template: 'modals/mass-update',
 
@@ -76,7 +74,7 @@ Espo.define('views/modals/mass-update', 'views/modal', function (Dep) {
             this.selectData = this.options.selectData;
             this.byWhere = this.options.byWhere;
 
-            this.header = this.translate(this.scope, 'scopeNamesPlural') + ' &raquo ' + this.translate('Mass Update');
+            this.headerHtml = this.translate(this.scope, 'scopeNamesPlural') + ' &raquo ' + this.translate('Mass Update');
 
             this.wait(true);
             this.getModelFactory().create(this.scope, function (model) {
@@ -104,7 +102,7 @@ Espo.define('views/modals/mass-update', 'views/modal', function (Dep) {
 
             this.$el.find('ul.filter-list li[data-name="'+name+'"]').addClass('hidden');
 
-            if (this.$el.find('ul.filter-list li:not(.hidden)').size() == 0) {
+            if (this.$el.find('ul.filter-list li:not(.hidden)').length == 0) {
                 this.$el.find('button.select-field').addClass('disabled').attr('disabled', 'disabled');
             }
 

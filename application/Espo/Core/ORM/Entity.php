@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,12 +33,22 @@ class Entity extends \Espo\ORM\Entity
 {
     public function hasLinkMultipleField($field)
     {
-        return $this->hasAttribute($field . 'Ids');
+        return
+            $this->hasRelation($field) &&
+            $this->getAttributeParam($field . 'Ids', 'isLinkMultipleIdList');
     }
 
     public function hasLinkField($field)
     {
-        return $this->hasAttribute($field . 'Id');
+        return $this->hasAttribute($field . 'Id') && $this->hasRelation($field);
+    }
+
+    public function hasLinkParentField($field)
+    {
+        return
+            $this->hasAttributeType($field . 'Type') == 'foreignType' &&
+            $this->hasAttribute($field . 'Id') &&
+            $this->hasRelation($field);
     }
 
     public function loadParentNameField($field)
@@ -64,14 +74,27 @@ class Entity extends \Espo\ORM\Entity
         }
     }
 
-    public function loadLinkMultipleField($field, $columns = null)
+    public function getLinkMultipleCollection($field)
     {
-        if (!$this->hasRelation($field) || !$this->hasAttribute($field . 'Ids')) return;
+        if (!$this->hasLinkMultipleField($field)) return;
 
-        $defs = array();
-        if (!empty($columns)) {
-            $defs['additionalColumns'] = $columns;
+        $defs = $this->getRelationSelectParams($field);
+
+        $columnAttribute = $field . 'Columns';
+        if ($this->hasAttribute($columnAttribute) && $this->getAttributeParam($columnAttribute, 'columns')) {
+            $defs['additionalColumns'] = $this->getAttributeParam($columnAttribute, 'columns');
         }
+
+        $collection = $this->get($field, $defs);
+
+        return $collection;
+    }
+
+    protected function getRelationSelectParams($link)
+    {
+        $field = $link;
+
+        $defs = [];
 
         $idsAttribute = $field . 'Ids';
 
@@ -101,6 +124,19 @@ class Entity extends \Espo\ORM\Entity
                     }
                 }
             }
+        }
+
+        return $defs;
+    }
+
+    public function loadLinkMultipleField($field, $columns = null)
+    {
+        if (!$this->hasRelation($field) || !$this->hasAttribute($field . 'Ids')) return;
+
+        $defs = $this->getRelationSelectParams($field);
+
+        if (!empty($columns)) {
+            $defs['additionalColumns'] = $columns;
         }
 
         $defs['select'] = ['id', 'name'];
@@ -135,6 +171,8 @@ class Entity extends \Espo\ORM\Entity
                 }
             }
         }
+
+        $idsAttribute = $field . 'Ids';
 
         $this->set($idsAttribute, $ids);
         if (!$this->isNew() && !$this->hasFetched($idsAttribute)) {
@@ -180,14 +218,43 @@ class Entity extends \Espo\ORM\Entity
         $this->set($field . 'Name', $entityName);
     }
 
+    public function getLinkMultipleName($field, $id)
+    {
+        $namesAttribute = $field . 'Names';
+        if (!$this->has($namesAttribute)) return;
+
+        $names = $this->get($namesAttribute);
+        if ($names instanceof \StdClass) {
+            if (isset($names->$id)) {
+                if (isset($names->$id)) {
+                    return $names->$id;
+                }
+            }
+        }
+    }
+
+    public function setLinkMultipleName($field, $id, $value)
+    {
+        $namesAttribute = $field . 'Names';
+        if (!$this->has($namesAttribute)) return;
+
+        $object = $this->get($namesAttribute);
+        if (!isset($object) || !($object instanceof \StdClass)) {
+            $object = (object) [];
+        }
+
+        $object->$id = $value;
+        $this->set($namesAttribute, $object);
+    }
+
     public function getLinkMultipleColumn($field, $column, $id)
     {
-        $columnsField = $field . 'Columns';
+        $columnsAttribute = $field . 'Columns';
 
-        if (!$this->has($columnsField)) {
+        if (!$this->has($columnsAttribute)) {
             return;
         }
-        $columns = $this->get($columnsField);
+        $columns = $this->get($columnsAttribute);
         if ($columns instanceof \StdClass) {
             if (isset($columns->$id)) {
                 if (isset($columns->$id->$column)) {
@@ -199,11 +266,11 @@ class Entity extends \Espo\ORM\Entity
 
     public function setLinkMultipleColumn($field, $column, $id, $value)
     {
-        $columnsField = $field . 'Columns';
-        if (!$this->hasAttribute($columnsField)) {
+        $columnsAttribute = $field . 'Columns';
+        if (!$this->hasAttribute($columnsAttribute)) {
             return;
         }
-        $object = $this->get($columnsField);
+        $object = $this->get($columnsAttribute);
         if (!isset($object) || !($object instanceof \StdClass)) {
             $object = (object) [];
         }
@@ -215,35 +282,35 @@ class Entity extends \Espo\ORM\Entity
         }
 
         $object->$id->$column = $value;
-        $this->set($columnsField, $object);
+        $this->set($columnsAttribute, $object);
     }
 
     public function setLinkMultipleIdList($field, array $idList)
     {
-        $idsField = $field . 'Ids';
-        $this->set($idsField, $idList);
+        $idsAttribute = $field . 'Ids';
+        $this->set($idsAttribute, $idList);
     }
 
     public function addLinkMultipleId($field, $id)
     {
-        $idsField = $field . 'Ids';
+        $idsAttribute = $field . 'Ids';
 
-        if (!$this->hasAttribute($idsField)) return;
+        if (!$this->hasAttribute($idsAttribute)) return;
 
-        if (!$this->has($idsField)) {
+        if (!$this->has($idsAttribute)) {
             if (!$this->isNew()) {
                 $this->loadLinkMultipleField($field);
             } else {
-                $this->set($idsField, []);
+                $this->set($idsAttribute, []);
             }
         }
-        if (!$this->has($idsField)) {
+        if (!$this->has($idsAttribute)) {
             return;
         }
-        $idList = $this->get($idsField);
+        $idList = $this->get($idsAttribute);
         if (!in_array($id, $idList)) {
             $idList[] = $id;
-            $this->set($idsField, $idList);
+            $this->set($idsAttribute, $idList);
         }
     }
 
@@ -262,16 +329,16 @@ class Entity extends \Espo\ORM\Entity
 
     public function getLinkMultipleIdList($field)
     {
-        $idsField = $field . 'Ids';
+        $idsAttribute = $field . 'Ids';
 
-        if (!$this->hasAttribute($idsField)) return null;
+        if (!$this->hasAttribute($idsAttribute)) return null;
 
-        if (!$this->has($idsField)) {
+        if (!$this->has($idsAttribute)) {
             if (!$this->isNew()) {
                 $this->loadLinkMultipleField($field);
             }
         }
-        $valueList = $this->get($idsField);
+        $valueList = $this->get($idsAttribute);
         if (empty($valueList)) {
             return [];
         }
@@ -280,25 +347,24 @@ class Entity extends \Espo\ORM\Entity
 
     public function hasLinkMultipleId($field, $id)
     {
-        $idsField = $field . 'Ids';
+        $idsAttribute = $field . 'Ids';
 
-        if (!$this->hasAttribute($idsField)) return null;
+        if (!$this->hasAttribute($idsAttribute)) return null;
 
-        if (!$this->has($idsField)) {
+        if (!$this->has($idsAttribute)) {
             if (!$this->isNew()) {
                 $this->loadLinkMultipleField($field);
             }
         }
 
-        if (!$this->has($idsField)) {
+        if (!$this->has($idsAttribute)) {
             return;
         }
 
-        $idList = $this->get($idsField);
+        $idList = $this->get($idsAttribute);
         if (in_array($id, $idList)) {
             return true;
         }
         return false;
     }
 }
-

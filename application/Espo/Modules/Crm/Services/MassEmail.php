@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ class MassEmail extends \Espo\Services\Record
     {
         parent::init();
         $this->addDependency('container');
-        $this->addDependency('language');
+        $this->addDependency('defaultLanguage');
     }
 
     protected function getMailSender()
@@ -61,7 +61,7 @@ class MassEmail extends \Espo\Services\Record
 
     protected function getLanguage()
     {
-        return $this->getInjection('language');
+        return $this->getInjection('defaultLanguage');
     }
 
     protected function beforeCreateEntity(Entity $entity, $data)
@@ -384,14 +384,14 @@ class MassEmail extends \Espo\Services\Record
             }
         }
 
-        $trackOpenedUrl = $this->getConfig()->get('siteUrl') . '?entryPoint=campaignTrackOpened&id=' . $queueItem->id;
-        $trackOpenedHtml = '<img alt="Email Campaign" width="1" height="1" border="0" src="'.$trackOpenedUrl.'">';
+        $trackImageAlt = $this->getLanguage()->translate('Campaign', 'scopeNames');
 
-        if ($massEmail->get('campaignId')) {
+        $trackOpenedUrl = $this->getConfig()->get('siteUrl') . '?entryPoint=campaignTrackOpened&id=' . $queueItem->id;
+        $trackOpenedHtml = '<img alt="'.$trackImageAlt.'" width="1" height="1" border="0" src="'.$trackOpenedUrl.'">';
+
+        if ($massEmail->get('campaignId') && $this->getConfig()->get('massEmailOpenTracking')) {
             if ($emailData['isHtml']) {
-                if ($massEmail->get('campaignId')) {
-                    $body .= $trackOpenedHtml;
-                }
+                $body .= '<br>' . $trackOpenedHtml;
             }
         }
 
@@ -546,7 +546,7 @@ class MassEmail extends \Espo\Services\Record
         return $this->campaignService;
     }
 
-    protected function findLinkedEntitiesQueueItems($id, $params)
+    protected function findLinkedQueueItems($id, $params)
     {
         $link = 'queueItems';
 

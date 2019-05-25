@@ -3,11 +3,23 @@
         "label": "System",
         "rows": [
             [{"name": "useCache"}, {"name": "siteUrl"}],
-            [{"name": "exportDisabled"}, {"name": "globalSearchEntityList"}],
-            [{"name": "followCreatedEntities"}, {"name": "b2cMode"}],
-            [{"name": "aclStrictMode"}, {"name": "aclAllowDeleteCreated"}],
-            [{"name": "textFilterUseContainsForVarchar"}, {"name": "emailAddressIsOptedOutByDefault"}],
-            [{"name": "cleanupDeletedRecords"}, false]
+            [{"name": "b2cMode"}, {"name": "aclStrictMode"}],
+            [{"name": "maintenanceMode"}, {"name": "cronDisabled"}],
+            [{"name": "useWebSocket"}, false]
+        ]
+    },
+    {
+        "label": "Search",
+        "rows": [
+            [{"name": "textFilterUseContainsForVarchar"}, {"name": "globalSearchEntityList"}]
+        ]
+    },
+    {
+        "label": "Misc",
+        "rows": [
+            [{"name": "followCreatedEntities"}, {"name": "emailAddressIsOptedOutByDefault"}],
+            [{"name": "aclAllowDeleteCreated"}, {"name": "cleanupDeletedRecords"}],
+            [{"name": "exportDisabled"}, false]
         ]
     },
     {
@@ -16,8 +28,10 @@
             [{"name": "language"}, {"name": "timeZone"}],
             [{"name": "dateFormat"}, {"name": "weekStart"}],
             [{"name": "timeFormat"},  {"name": "thousandSeparator"}],
-            [{"name": "addressFormat"}, {"name": "decimalMark"}],
-            [{"name": "addressPreview"}, false]
+            [{"name": "fiscalYearShift"},  {"name": "decimalMark"}],
+            [{"name": "addressFormat"}, {"name": "addressPreview"}],
+            [{"name": "addressCountryList"}, {"name": "addressCityList"}],
+            [{"name": "addressStateList"}, false]
         ]
     },
     {

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
     return Dep.extend({
 
         cssName: 'detail-modal',
-
-        header: false,
 
         template: 'modals/detail',
 
@@ -74,12 +72,10 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
 
             this.layoutName = this.options.layoutName || this.layoutName;
 
-            if (!this.removeDisabled) {
-                this.addRemoveButton();
-            }
+            this.setupRecordButtons();
 
-            if (!this.editDisabled) {
-                this.addEditButton();
+            if (this.model) {
+                this.controlRecordButtonsVisibility();
             }
 
             if (!this.fullFormDisabled) {
@@ -97,16 +93,18 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
             if (this.model && this.model.collection && !this.navigateButtonsDisabled) {
                 this.buttonList.push({
                     name: 'previous',
-                    html: '<span class="glyphicon glyphicon-chevron-left"></span>',
+                    html: '<span class="fas fa-chevron-left"></span>',
                     title: this.translate('Previous Entry'),
                     pullLeft: true,
+                    className: 'btn-icon',
                     disabled: true
                 });
                 this.buttonList.push({
                     name: 'next',
-                    html: '<span class="glyphicon glyphicon-chevron-right"></span>',
+                    html: '<span class="fas fa-chevron-right"></span>',
                     title: this.translate('Next Entry'),
                     pullLeft: true,
+                    className: 'btn-icon',
                     disabled: true
                 });
                 this.indexOfRecord = this.model.collection.indexOf(this.model);
@@ -121,10 +119,14 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
 
             this.sourceModel = this.model;
 
-            this.getModelFactory().create(this.scope, function (model) {
+            this.getModelFactory().create(this.scope).then(function (model) {
                 if (!this.sourceModel) {
                     this.model = model;
                     this.model.id = this.id;
+
+                    this.setupAfterModelCreated();
+
+                    this.listenTo(this.model, 'sync', this.controlRecordButtonsVisibility, this);
 
                     this.listenToOnce(this.model, 'sync', function () {
                         this.createRecordView();
@@ -134,27 +136,57 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
                     this.model = this.sourceModel.clone();
                     this.model.collection = this.sourceModel.collection;
 
+                    this.setupAfterModelCreated();
+
                     this.listenTo(this.model, 'change', function () {
                         this.sourceModel.set(this.model.getClonedAttributes());
                     }, this);
+
+                    this.listenTo(this.model, 'sync', this.controlRecordButtonsVisibility, this);
 
                     this.once('after:render', function () {
                         this.model.fetch();
                     }, this);
                     this.createRecordView();
                 }
-            }, this);
+            }.bind(this));
 
             this.listenToOnce(this.getRouter(), 'routed', function () {
                 this.remove();
             }, this);
         },
 
+        setupAfterModelCreated: function () {
+        },
+
+        setupRecordButtons: function () {
+            if (!this.removeDisabled) {
+                this.addRemoveButton();
+            }
+
+            if (!this.editDisabled) {
+                this.addEditButton();
+            }
+        },
+
+        controlRecordButtonsVisibility: function () {
+            if (this.getAcl().check(this.model, 'edit')) {
+                this.showButton('edit');
+            } else {
+                this.hideButton('edit');
+            }
+
+            if (this.getAcl().check(this.model, 'delete')) {
+                this.showButton('remove');
+            } else {
+                this.hideButton('remove');
+            }
+        },
+
         addEditButton: function () {
             this.addButton({
                 name: 'edit',
                 label: 'Edit',
-                style: 'primary'
             }, true);
         },
 
@@ -163,10 +195,10 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
         },
 
         addRemoveButton: function () {
-            this.addButton({
+            this.addDropdownItem({
                 name: 'remove',
                 label: 'Remove'
-            }, true);
+            });
         },
 
         removeRemoveButton: function () {
@@ -181,19 +213,19 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
             var model = this.model;
             var scope = this.getScope();
 
-            this.header = '';
+            this.headerHtml = '';
             var iconHtml = this.getHelper().getScopeColorIconHtml(this.scope);
 
-            this.header += this.getLanguage().translate(scope, 'scopeNames');
+            this.headerHtml += this.getLanguage().translate(scope, 'scopeNames');
 
             if (model.get('name')) {
-                this.header += ' &raquo; ' + Handlebars.Utils.escapeExpression(model.get('name'));
+                this.headerHtml += ' &raquo; ' + Handlebars.Utils.escapeExpression(model.get('name'));
             }
             if (!this.fullFormDisabled) {
-                this.header = '<a href="#' + scope + '/view/' + this.id+'" class="action" title="'+this.translate('Full Form')+'" data-action="fullForm">' + this.header + '</a>';
+                this.headerHtml = '<a href="#' + scope + '/view/' + this.id+'" class="action" title="'+this.translate('Full Form')+'" data-action="fullForm">' + this.headerHtml + '</a>';
             }
 
-            this.header = iconHtml + this.header;
+            this.headerHtml = iconHtml + this.headerHtml;
 
             if (!this.editDisabled) {
                 var editAccess = this.getAcl().check(model, 'edit', true);
@@ -301,6 +333,8 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
         switchToModelByIndex: function (indexOfRecord) {
             if (!this.model.collection) return;
 
+            var previousModel = this.model;
+
             this.sourceModel = this.model.collection.at(indexOfRecord);
 
             if (!this.sourceModel) {
@@ -319,6 +353,8 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
                 this.sourceModel.set(this.model.getClonedAttributes());
             }, this);
 
+            this.listenTo(this.model, 'sync', this.controlRecordButtonsVisibility, this);
+
             this.once('after:render', function () {
                 this.model.fetch();
             }, this);
@@ -328,6 +364,8 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
             }.bind(this));
 
             this.controlNavigationButtons();
+
+            this.trigger('switch-model', this.model, previousModel);
         },
 
         actionPrevious: function () {
@@ -365,9 +403,24 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
         },
 
         actionEdit: function () {
+            if (this.options.quickEditDisabled) {
+                var options = {
+                    id: this.id,
+                    model: this.model,
+                    returnUrl: this.getRouter().getCurrentUrl(),
+                };
+                if (this.options.rootUrl) {
+                    options.rootUrl = this.options.rootUrl;
+                }
+                this.getRouter().navigate('#' + this.scope + '/edit/' + this.id, {trigger: false});
+                this.getRouter().dispatch(this.scope, 'edit', options);
+                return;
+            }
+
             var viewName = this.getMetadata().get(['clientDefs', this.scope, 'modalViews', 'edit']) || 'views/modals/edit';
             this.createView('quickEdit', viewName, {
                 scope: this.scope,
+                entityType: this.model.entityType,
                 id: this.id,
                 fullFormDisabled: this.fullFormDisabled
             }, function (view) {
@@ -385,9 +438,11 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
                 }, this);
 
                 this.listenToOnce(view, 'after:save', function (model) {
+                    this.model.set(model.getClonedAttributes());
+
                     this.trigger('after:save', model);
 
-                    this.model.set(model.getClonedAttributes());
+                    this.controlRecordButtonsVisibility();
                 }, this);
 
                 view.render();
@@ -444,4 +499,3 @@ Espo.define('views/modals/detail', 'views/modal', function (Dep) {
         }
     });
 });
-

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class EmailFilterManager
 {
     private $entityManager;
 
-    private $data = array();
+    private $data = [];
 
     protected $filtersMatcher = null;
 
@@ -61,10 +61,10 @@ class EmailFilterManager
     public function getMatchingFilter(Email $email, $userId)
     {
         if (!array_key_exists($userId, $this->data)) {
-            $emailFilterList = $this->getEntityManager()->getRepository('EmailFilter')->where(array(
+            $emailFilterList = $this->getEntityManager()->getRepository('EmailFilter')->where([
                 'parentId' => $userId,
                 'parentType' => 'User'
-            ))->order('LIST:action:Skip;Move to Folder')->find();
+            ])->order('LIST:action:Skip,Move to Folder')->find();
             $this->data[$userId] = $emailFilterList;
         }
         foreach ($this->data[$userId] as $emailFilter) {
@@ -74,5 +74,3 @@ class EmailFilterManager
         }
     }
 }
-
-

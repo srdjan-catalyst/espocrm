@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ namespace Espo\Core\Utils\Database\Orm;
 
 use Espo\Core\Utils\Util;
 use Espo\ORM\Entity;
+use Espo\Core\Utils\Database\Schema\Utils as SchemaUtils;
 
 class Converter
 {
@@ -188,10 +189,8 @@ class Converter
     {
         $ormMetadata = array();
         $ormMetadata[$entityName] = array(
-            'fields' => array(
-            ),
-            'relations' => array(
-            )
+            'fields' => [],
+            'relations' => []
         );
 
         foreach ($this->permittedEntityOptions as $optionName) {
@@ -208,21 +207,22 @@ class Converter
         $ormMetadata = Util::merge($ormMetadata, $convertedLinks);
 
         $this->applyFullTextSearch($ormMetadata, $entityName);
+        $this->applyIndexes($ormMetadata, $entityName);
 
         if (!empty($entityMetadata['collection']) && is_array($entityMetadata['collection'])) {
             $collectionDefs = $entityMetadata['collection'];
             $ormMetadata[$entityName]['collection'] = array();
 
-            if (array_key_exists('sortByByColumn', $collectionDefs)) {
-                $ormMetadata[$entityName]['collection']['orderBy'] = $collectionDefs['sortByByColumn'];
-            } else if (array_key_exists('sortBy', $collectionDefs)) {
-                if (array_key_exists($collectionDefs['sortBy'], $ormMetadata[$entityName]['fields'])) {
-                    $ormMetadata[$entityName]['collection']['orderBy'] = $collectionDefs['sortBy'];
+            if (array_key_exists('orderByColumn', $collectionDefs)) {
+                $ormMetadata[$entityName]['collection']['orderBy'] = $collectionDefs['orderByColumn'];
+            } else if (array_key_exists('orderBy', $collectionDefs)) {
+                if (array_key_exists($collectionDefs['orderBy'], $ormMetadata[$entityName]['fields'])) {
+                    $ormMetadata[$entityName]['collection']['orderBy'] = $collectionDefs['orderBy'];
                 }
             }
             $ormMetadata[$entityName]['collection']['order'] = 'ASC';
-            if (array_key_exists('asc', $collectionDefs)) {
-                $ormMetadata[$entityName]['collection']['order'] = $collectionDefs['asc'] ? 'ASC' : 'DESC';
+            if (array_key_exists('order', $collectionDefs)) {
+                $ormMetadata[$entityName]['collection']['order'] = strtoupper($collectionDefs['order']);
             }
         }
 
@@ -262,6 +262,18 @@ class Converter
                     case 'bool':
                         $fieldParams['default'] = isset($fieldParams['default']) ? (bool) $fieldParams['default'] : $this->defaultValue['bool'];
                         break;
+
+                    //todo: remove the types from ORM Metadata. Types are deprecated.
+                    case 'email':
+                    case 'phone':
+                        break;
+
+                    default:
+                        $constName = strtoupper(Util::toUnderScore($fieldParams['type']));
+                        if (!defined('\\Espo\\ORM\\Entity::' . $constName)) {
+                            $fieldParams['type'] = $this->defaultFieldType;
+                        }
+                        break;
                 }
             }
         }
@@ -279,7 +291,7 @@ class Converter
      */
     protected function convertFields($entityName, &$entityMetadata)
     {
-        //List of unmerged fields with default field defenitions in $outputMeta
+        //List of unmerged fields with default field definitions in $outputMeta
         $unmergedFields = array(
             'name',
         );
@@ -332,7 +344,7 @@ class Converter
     }
 
     /**
-     * Correct fields defenitions based on \Espo\Custom\Core\Utils\Database\Orm\Fields
+     * Correct fields definitions based on \Espo\Custom\Core\Utils\Database\Orm\Fields
      *
      * @param  array  $ormMetadata
      *
@@ -387,15 +399,18 @@ class Converter
                 $ormMetadata[$entityName]['fields']['isFollowed'] = array(
                     'type' => 'varchar',
                     'notStorable' => true,
+                    'notExportable' => true,
                 );
 
                 $ormMetadata[$entityName]['fields']['followersIds'] = array(
                     'type' => 'jsonArray',
                     'notStorable' => true,
+                    'notExportable' => true,
                 );
                 $ormMetadata[$entityName]['fields']['followersNames'] = array(
                     'type' => 'jsonObject',
                     'notStorable' => true,
+                    'notExportable' => true,
                 );
             }
         } //END: add a field 'isFollowed' for stream => true
@@ -412,6 +427,10 @@ class Converter
 
         if (isset($fieldTypeMetadata['fieldDefs'])) {
             $fieldParams = Util::merge($fieldParams, $fieldTypeMetadata['fieldDefs']);
+        }
+
+        if ($fieldParams['type'] == 'base' && isset($fieldParams['dbType'])) {
+            $fieldParams['notStorable'] = false;
         }
 
         /** check if need to skipOrmDefs this field in ORM metadata */
@@ -531,6 +550,20 @@ class Converter
                 'columns' => $fullTextSearchColumnList,
                 'flags' => ['fulltext']
             ];
+        }
+    }
+
+    protected function applyIndexes(&$ormMetadata, $entityType)
+    {
+        if (!isset($ormMetadata[$entityType]['indexes'])) {
+            return;
+        }
+
+        foreach ($ormMetadata[$entityType]['indexes'] as $indexName => &$indexData) {
+            if (!isset($indexData['key'])) {
+                $indexType = SchemaUtils::getIndexTypeByIndexDefs($indexData);
+                $indexData['key'] = SchemaUtils::generateIndexName($indexName, $indexType);
+            }
         }
     }
 }

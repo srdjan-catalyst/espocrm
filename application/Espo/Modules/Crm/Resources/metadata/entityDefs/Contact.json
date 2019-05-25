@@ -31,14 +31,41 @@
                 "IS NULL": "contact.account_id IS NULL",
                 "IS NOT NULL": "contact.account_id IS NOT NULL"
             },
+            "customizationDisabled": true,
             "disabled": true
         },
         "title": {
             "type": "varchar",
-            "maxLength": 50,
+            "maxLength": 100,
             "notStorable": true,
-            "select": "accountContact.role",
-            "orderBy": "accountContact.role {direction}",
+            "select": {
+                "sql": "accountContact.role",
+                "leftJoins": [
+                    [
+                        "AccountContact",
+                        "accountContact",
+                        {
+                            "contact.id:": "accountContact.contactId",
+                            "contact.accountId:": "accountContact.accountId",
+                            "accountContact.deleted": false
+                        }
+                    ]
+                ]
+            },
+            "orderBy": {
+                "sql": "accountContact.role {direction}",
+                "leftJoins": [
+                    [
+                        "AccountContact",
+                        "accountContact",
+                        {
+                            "contact.id:": "accountContact.contactId",
+                            "contact.accountId:": "accountContact.accountId",
+                            "accountContact.deleted": false
+                        }
+                    ]
+                ]
+            },
             "where": {
                 "LIKE": {
                     "leftJoins": ["accounts"],
@@ -129,6 +156,7 @@
             "layoutDetailDisabled": true,
             "layoutMassUpdateDisabled": true,
             "layoutFiltersDisabled": true,
+            "layoutAvailabilityList": ["listForAccount"],
             "exportDisabled": true,
             "importDisabled": true,
             "view": "crm:views/contact/fields/account-role",
@@ -137,18 +165,54 @@
         "accountIsInactive": {
             "type": "bool",
             "notStorable": true,
-            "select": "accountContact.is_inactive",
-            "orderBy": "accountContact.is_inactive {direction}",
+            "select": {
+                "sql": "accountContact.is_inactive",
+                "leftJoins": [
+                    [
+                        "AccountContact",
+                        "accountContact",
+                        {
+                            "contact.id:": "accountContact.contactId",
+                            "contact.accountId:": "accountContact.accountId",
+                            "accountContact.deleted": false
+                        }
+                    ]
+                ]
+            },
+            "orderBy": {
+                "sql": "accountContact.is_inactive {direction}",
+                "leftJoins": [
+                    [
+                        "AccountContact",
+                        "accountContact",
+                        {
+                            "contact.id:": "accountContact.contactId",
+                            "contact.accountId:": "accountContact.accountId",
+                            "accountContact.deleted": false
+                        }
+                    ]
+                ]
+            },
             "where": {
-                "=": {
-                    "leftJoins": ["accounts"],
-                    "sql": "accountsMiddle.is_inactive = {value}",
-                    "distinct": true
+                "= TRUE": {
+                    "leftJoins": [
+                        [
+                            "AccountContact",
+                            "accountContactFilterIsInactive",
+                            {"contact.accountId:": "accountContactFilterIsInactive.accountId"}
+                        ]
+                    ],
+                    "sql": "accountContactFilterIsInactive.is_inactive = true"
                 },
-                "<>": {
-                    "leftJoins": ["accounts"],
-                    "sql": "accountsMiddle.is_inactive <> {value}",
-                    "distinct": true
+                "= FALSE": {
+                    "leftJoins": [
+                        [
+                            "AccountContact",
+                            "accountContactFilterIsInactive",
+                            {"contact.accountId:": "accountContactFilterIsInactive.accountId"}
+                        ]
+                    ],
+                    "sql": "accountContactFilterIsInactive.is_inactive <> true OR accountContactFilterIsInactive.is_inactive IS NULL"
                 }
             },
             "layoutListDisabled": true,
@@ -211,6 +275,7 @@
             "notStorable": true,
             "layoutListDisabled": true,
             "layoutDetailDisabled": true,
+            "importDisabled": true,
             "layoutMassUpdateDisabled": true,
             "exportDisabled": true,
             "view": "crm:views/lead/fields/acceptance-status",
@@ -223,6 +288,7 @@
             "layoutListDisabled": true,
             "layoutDetailDisabled": true,
             "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
             "exportDisabled": true,
             "view": "crm:views/lead/fields/acceptance-status",
             "link": "calls",
@@ -274,7 +340,8 @@
             "layoutMassUpdateDisabled": true,
             "layoutFiltersDisabled": true,
             "exportDisabled": true,
-            "entity": "TargetList"
+            "entity": "TargetList",
+            "directAccessDisabled": true
         },
         "portalUser": {
             "type": "link",
@@ -329,13 +396,14 @@
             "additionalColumns": {
                 "role": {
                     "type": "varchar",
-                    "len": 50
+                    "len": 100
                 },
                 "isInactive": {
                     "type": "bool",
                     "default": false
                 }
             },
+            "additionalAttributeList": ["columns"],
             "layoutRelationshipsDisabled": true
         },
         "opportunities": {
@@ -421,8 +489,8 @@
         }
     },
     "collection": {
-        "sortBy": "createdAt",
-        "asc": false,
+        "orderBy": "createdAt",
+        "order": "desc",
         "textFilterFields": ["name", "emailAddress"]
     },
     "indexes": {

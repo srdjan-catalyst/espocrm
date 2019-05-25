@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, SearchManager) {
+define('views/list', ['views/main', 'search-manager'], function (Dep, SearchManager) {
 
     return Dep.extend({
 
@@ -96,8 +96,8 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
                 this.setupSearchManager();
             }
 
-            this.defaultSortBy = this.collection.sortBy;
-            this.defaultAsc = this.collection.asc;
+            this.defaultOrderBy = this.collection.orderBy;
+            this.defaultOrder = this.collection.order;
 
             this.setupSorting();
 
@@ -162,8 +162,8 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
             if (this.quickCreate) {
                 this.menu.buttons.unshift({
                     action: 'quickCreate',
-                    label: 'Create ' + this.scope,
-                    style: 'primary',
+                    html: '<span class="fas fa-plus fa-sm"></span> ' + this.translate('Create ' +  this.scope, 'labels', this.scope),
+                    style: 'default',
                     acl: 'create',
                     aclScope: this.entityType || this.scope
                 });
@@ -171,8 +171,8 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
                 this.menu.buttons.unshift({
                     link: '#' + this.scope + '/create',
                     action: 'create',
-                    label: 'Create ' +  this.scope,
-                    style: 'primary',
+                    html: '<span class="fas fa-plus fa-sm"></span> ' + this.translate('Create ' +  this.scope,  'labels', this.scope),
+                    style: 'default',
                     acl: 'create',
                     aclScope: this.entityType || this.scope
                 });
@@ -186,7 +186,8 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
                 searchManager: this.searchManager,
                 scope: this.scope,
                 viewMode: this.viewMode,
-                viewModeList: this.viewModeList
+                viewModeList: this.viewModeList,
+                isWide: true,
             }, function (view) {
                 this.listenTo(view, 'reset', function () {
                     this.resetSorting();
@@ -233,13 +234,13 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
             this.collection.url = this.scope + '/action/listKanban';
             this.collection.maxSize = this.getConfig().get('recordsPerPageSmall');
 
-            this.collection.sortBy = this.collection.defaultSortBy;
-            this.collection.asc = this.collection.defaultAsc;
+            this.collection.orderBy = this.collection.defaultOrderBy;
+            this.collection.order = this.collection.defaultOrder;
         },
 
         resetSorting: function () {
-            this.collection.sortBy = this.defaultSortBy;
-            this.collection.asc = this.defaultAsc;
+            this.collection.orderBy = this.defaultOrderBy;
+            this.collection.order = this.defaultOrder;
             this.getStorage().clear('listSorting', this.collection.name);
         },
 
@@ -265,12 +266,13 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
         },
 
         applyStoredSorting: function () {
-            var sortingParams = this.getStorage().get('listSorting', this.collection.name) || {};
-            if ('sortBy' in sortingParams) {
-                this.collection.sortBy = sortingParams.sortBy;
+            var sortingParams = this.getStorage().get('listSorting', this.collection.entityType) || {};
+
+           if ('orderBy' in sortingParams) {
+                this.collection.orderBy = sortingParams.orderBy;
             }
-            if ('asc' in sortingParams) {
-                this.collection.asc = sortingParams.asc;
+            if ('order' in sortingParams) {
+                this.collection.order = sortingParams.order;
             }
         },
 
@@ -433,6 +435,10 @@ Espo.define('views/list', ['views/main', 'search-manager'], function (Dep, Searc
 
             router.navigate(url, {trigger: false});
             router.dispatch(this.scope, 'create', options);
+        },
+
+        isActualForReuse: function () {
+            return this.collection.isFetched;
         }
 
     });

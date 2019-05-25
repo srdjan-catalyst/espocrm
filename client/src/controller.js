@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 /**
  * Controller. Views, Models and Collections are created here.*/
 
-Espo.define('controller', [], function () {
+define('controller', [], function () {
 
     var Controller = function (params, injections) {
         this.params = params || {};
@@ -192,13 +192,14 @@ Espo.define('controller', [], function () {
             this.handleAccessGlobal();
 
             action = action || this.defaultAction;
-            var method = action;
+            var method = 'action' + Espo.Utils.upperCaseFirst(action);
+
             if (!(method in this)) {
                 throw new Espo.Exceptions.NotFound("Action '" + this.name + "#" + action + "' is not found");
             }
 
-            var preMethod = 'before' + Espo.Utils.upperCaseFirst(method);
-            var postMethod = 'after' + Espo.Utils.upperCaseFirst(method);
+            var preMethod = 'before' + Espo.Utils.upperCaseFirst(action);
+            var postMethod = 'after' + Espo.Utils.upperCaseFirst(action);
 
             if (preMethod in this) {
                 this[preMethod].call(this, options || {});
@@ -304,12 +305,23 @@ Espo.define('controller', [], function () {
                     if (this.hasStoredMainView(storedKey)) {
                         var main = this.getStoredMainView(storedKey);
 
-                        if (!main.lastUrl || main.lastUrl === this.getRouter().getCurrentUrl()) {
+                        var isActual = true;
+                        if (main && typeof main.isActualForReuse === 'function') {
+                            isActual = main.isActualForReuse();
+                        }
+
+                        if (
+                            (!main.lastUrl || main.lastUrl === this.getRouter().getCurrentUrl())
+                            &&
+                            isActual
+                        ) {
                             process(main);
                             if (main && typeof main.applyRoutingParams === 'function') {
                                 main.applyRoutingParams(options.params || {});
                             }
                             return;
+                        } else {
+                            this.clearStoredMainView(storedKey);
                         }
                     }
                 }
@@ -358,5 +370,3 @@ Espo.define('controller', [], function () {
 
     return Controller;
 });
-
-

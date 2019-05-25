@@ -2,15 +2,13 @@
   "fields": {
     "from": "Da",
     "to": "A",
-    "subject": "Soggetto",
     "bodyContains": "Contenuto del Corpo",
     "action": "Azione",
     "isGlobal": "Globale",
     "emailFolder": "Cartella"
   },
   "labels": {
-    "Create EmailFilter": "Crea un filtro per le email",
-    "Emails": "Emails"
+    "Create EmailFilter": "Crea un filtro per le email"
   },
   "tooltips": {
     "from": "Messaggi di posta elettronica inviati dall'indirizzo specificato. Lascia vuoto se non necessario. È possibile utilizzare caratteri jolly *.",

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,31 +39,33 @@ class HasMany extends Base
 
         $relationType = isset($linkParams['relationName']) ? 'manyMany' : 'hasMany';
 
-        $relation = array(
-            $entityName => array (
-                'fields' => array(
-                       $linkName.'Ids' => array(
+        $isStub = !$this->getMetadata()->get(['entityDefs', $entityName, 'fields', $linkName]);
+
+        $relation = [
+            $entityName => [
+                'fields' => [
+                       $linkName.'Ids' => [
                         'type' => 'jsonArray',
                         'notStorable' => true,
-                    ),
-                    $linkName.'Names' => array(
+                        'isLinkStub' => $isStub,
+                    ],
+                    $linkName.'Names' => [
                         'type' => 'jsonObject',
                         'notStorable' => true,
-                    ),
-                ),
-                'relations' => array(
-                    $linkName => array(
+                        'isLinkStub' => $isStub,
+                    ],
+                ],
+                'relations' => [
+                    $linkName => [
                         'type' => $relationType,
                         'entity' => $foreignEntityName,
                         'foreignKey' => lcfirst($foreignLinkName.'Id'),
                         'foreign' => $foreignLinkName
-                    ),
-                ),
-            ),
-        );
+                    ],
+                ],
+            ],
+        ];
 
         return $relation;
     }
-
-
 }

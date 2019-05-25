@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,8 +63,8 @@ class AclManager extends \Espo\Core\AclManager
 
             if (class_exists($className)) {
                 $acl = new $className($scope);
-                $dependencies = $acl->getDependencyList();
-                foreach ($dependencies as $name) {
+                $dependencyList = $acl->getDependencyList();
+                foreach ($dependencyList as $name) {
                     $acl->inject($name, $this->getContainer()->get($name));
                 }
                 $this->implementationHashMap[$scope] = $acl;
@@ -264,8 +264,7 @@ class AclManager extends \Espo\Core\AclManager
 
     protected function checkUserIsNotPortal($user)
     {
-        return !$user->get('isPortalUser');
+        return !$user->isPortal();
     }
 
 }
-

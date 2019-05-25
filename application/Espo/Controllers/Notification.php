@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ class Notification extends \Espo\Core\Controllers\Record
 {
     public static $defaultAction = 'list';
 
-    public function actionList($params, $data, $request)
+    public function getActionList($params, $data, $request, $response)
     {
         $userId = $this->getUser()->id;
 
@@ -73,29 +73,28 @@ class Notification extends \Espo\Core\Controllers\Record
         return $this->getService('Notification')->markAllRead($userId);
     }
 
-    public function actionExport($params, $data, $request)
+    public function beforeExport()
     {
         throw new Error();
     }
 
-    public function actionMassUpdate($params, $data, $request)
+    public function beforeMassUpdate()
     {
         throw new Error();
     }
 
-    public function actionCreateLink($params, $data, $request)
+    public function beforeCreateLink()
     {
         throw new Error();
     }
 
-    public function actionRemoveLink($params, $data, $request)
+    public function beforeRemoveLink()
     {
         throw new Error();
     }
 
-    public function actionMerge($params, $data, $request)
+    public function beforeMerge()
     {
         throw new Error();
     }
 }
-

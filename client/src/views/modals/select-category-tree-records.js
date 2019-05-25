@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,11 @@ Espo.define('views/modals/select-category-tree-records', 'views/modals/select-re
 
             this.scope = this.options.scope;
 
-            this.header = this.getLanguage().translate(this.scope, 'scopeNamesPlural');
+            this.headerHtml = '';
+            var iconHtml = this.getHelper().getScopeColorIconHtml(this.scope);
+            this.headerHtml += this.translate('Select') + ': ';
+            this.headerHtml += this.getLanguage().translate(this.scope, 'scopeNamesPlural');
+            this.headerHtml = iconHtml + this.headerHtml;
 
             this.waitForView('list');
 

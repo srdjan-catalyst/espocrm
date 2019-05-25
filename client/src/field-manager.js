@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
- Espo.define('field-manager', [], function () {
+ define('field-manager', [], function () {
 
     var FieldManager = function (defs, metadata) {
         this.defs = defs || {};
@@ -64,11 +64,7 @@
             return false;
         },
 
-        getEntityAttributeList: function (entityType) {
-            return this.getScopeAttributeList(entityType);
-        },
-
-        getScopeAttributeList: function (entityType) {
+        getEntityTypeAttributeList: function (entityType) {
             var list = [];
             var defs = this.metadata.get('entityDefs.' + entityType + '.fields') || {};
             Object.keys(defs).forEach(function (field) {
@@ -135,12 +131,29 @@
             return fieldNames;
         },
 
+        getEntityTypeFieldAttributeList: function (entityType, field) {
+            var type = this.metadata.get(['entityDefs', entityType, 'fields', field, 'type']);
+            if (!type) return [];
+            return _.union(
+                this.getAttributeList(type, field),
+                this.metadata.get(['entityDefs', entityType, 'fields', field, 'additionalAttributeList']) || []
+            );
+        },
+
         getAttributeList: function (fieldType, fieldName) {
             return _.union(this.getActualAttributeList(fieldType, fieldName), this.getNotActualAttributeList(fieldType, fieldName));
         },
 
-        getScopeFieldList: function (scope) {
-            return Object.keys(this.metadata.get('entityDefs.' + scope + '.fields') || {});
+        getEntityTypeFieldList: function (entityType) {
+            return Object.keys(this.metadata.get(['entityDefs', entityType, 'fields']) || {});
+        },
+
+        getScopeFieldList: function (entityType) { // TODO remove in 5.8.0
+            return this.getEntityTypeFieldList(entityType);
+        },
+
+        getEntityTypeFieldParam: function (entityType, field, param) {
+            this.metadata.get(['entityDefs', entityType, 'fields', field, param]);
         },
 
         getViewName: function (fieldType) {
@@ -156,10 +169,6 @@
             return this.getParamList(fieldType);
         },
 
-        getEntityAttributes: function (entityType) {
-            return this.getEntityAttributeList(entityType);
-        },
-
         getAttributes: function (fieldType, fieldName) {
             return this.getAttributeList(fieldType, fieldName);
         },
@@ -170,12 +179,26 @@
 
         getNotActualAttributes: function (fieldType, fieldName) {
             return this.getNotActualAttributeList(fieldType, fieldName);
-        }
+        },
+
+        isEntityTypeFieldAvailable: function (entityType, field) {
+            if (this.metadata.get(['entityDefs', entityType, 'fields', field, 'disabled'])) return false;
+            if (
+                this.metadata.get(['entityAcl', entityType, 'fields', field, 'onlyAdmin'])
+                ||
+                this.metadata.get(['entityAcl', entityType, 'fields', field, 'forbidden'])
+                ||
+                this.metadata.get(['entityAcl', entityType, 'fields', field, 'internal'])
+            ) return false;
+
+            return true;
+        },
+
+        isScopeFieldAvailable: function (entityType, field) {
+            return this.isEntityTypeFieldAvailable(entityType, field);
+        },
 
     });
 
     return FieldManager;
-
 });
-
-

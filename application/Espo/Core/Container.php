@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,17 +32,13 @@ namespace Espo\Core;
 class Container
 {
 
-    private $data = array();
+    private $data = [];
 
-
-    /**
-     * Constructor
-     */
     public function __construct()
     {
     }
 
-    public function get($name)
+    public function get(string $name)
     {
         if (empty($this->data[$name])) {
             $this->load($name);
@@ -67,7 +63,7 @@ class Container
         } else {
 
             try {
-                $className = $this->get('metadata')->get('app.loaders.' . ucfirst($name));
+                $className = $this->get('metadata')->get(['app', 'loaders', ucfirst($name)]);
             } catch (\Exception $e) {}
 
             if (!isset($className) || !class_exists($className)) {
@@ -86,10 +82,10 @@ class Container
         return null;
     }
 
-    protected function getServiceClassName($name, $default)
+    public function getServiceClassName(string $name, string $default)
     {
         $metadata = $this->get('metadata');
-        $className = $metadata->get('app.serviceContainer.classNames.' . $name, $default);
+        $className = $metadata->get(['app', 'serviceContainer', 'classNames',  $name], $default);
         return $className;
     }
 
@@ -119,7 +115,7 @@ class Container
         $rotation = $config->get('logger.rotation', true);
 
         $log = new \Espo\Core\Utils\Log('Espo');
-        $levelCode = $log->getLevelCode($config->get('logger.level', 'WARNING'));
+        $levelCode = $log::toMonologLevel($config->get('logger.level', 'WARNING'));
 
         if ($rotation) {
             $maxFileNumber = $config->get('logger.maxFileNumber', 30);
@@ -131,7 +127,7 @@ class Container
 
         $errorHandler = new \Monolog\ErrorHandler($log);
         $errorHandler->registerExceptionHandler(null, false);
-        $errorHandler->registerErrorHandler(array(), false);
+        $errorHandler->registerErrorHandler([], false);
 
         return $log;
     }
@@ -176,15 +172,6 @@ class Container
         );
     }
 
-    protected function loadMailSender()
-    {
-        $className = $this->getServiceClassName('mailSernder', '\\Espo\\Core\\Mail\\Sender');
-        return new $className(
-            $this->get('config'),
-            $this->get('entityManager')
-        );
-    }
-
     protected function loadDateTime()
     {
         return new \Espo\Core\Utils\DateTime(
@@ -209,16 +196,10 @@ class Container
         );
     }
 
-    protected function loadSelectManagerFactory()
+    protected function loadNotificatorFactory()
     {
-        return new \Espo\Core\SelectManagerFactory(
-            $this->get('entityManager'),
-            $this->get('user'),
-            $this->get('acl'),
-            $this->get('aclManager'),
-            $this->get('metadata'),
-            $this->get('config'),
-            $this->get('injectableFactory')
+        return new \Espo\Core\NotificatorFactory(
+            $this
         );
     }
 
@@ -240,6 +221,14 @@ class Container
     }
 
     protected function loadAclManager()
+    {
+        $className = $this->getServiceClassName('acl', '\\Espo\\Core\\AclManager');
+        return new $className(
+            $this->get('container')
+        );
+    }
+
+    protected function loadInternalAclManager()
     {
         $className = $this->getServiceClassName('acl', '\\Espo\\Core\\AclManager');
         return new $className(
@@ -359,14 +348,6 @@ class Container
         );
     }
 
-    protected function loadClientManager()
-    {
-        return new \Espo\Core\Utils\ClientManager(
-            $this->get('config'),
-            $this->get('themeManager')
-        );
-    }
-
     protected function loadInjectableFactory()
     {
         return new \Espo\Core\InjectableFactory(
@@ -379,4 +360,3 @@ class Container
         $this->set('user', $user);
     }
 }
-

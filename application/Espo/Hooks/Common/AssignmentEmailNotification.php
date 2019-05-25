@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,17 +87,18 @@ class AssignmentEmailNotification extends \Espo\Core\Hooks\Base
     protected function createJob(Entity $entity, $userId)
     {
         $job = $this->getEntityManager()->getEntity('Job');
-        $job->set(array(
+        $job->set([
             'serviceName' => 'EmailNotification',
             'methodName' => 'notifyAboutAssignmentJob',
-            'data' => json_encode(array(
+            'data' => [
                 'userId' => $userId,
                 'assignerUserId' => $this->getUser()->id,
                 'entityId' => $entity->id,
                 'entityType' => $entity->getEntityType()
-            )),
+            ],
             'executeTime' => date('Y-m-d H:i:s'),
-        ));
+            'queue' => 'e0'
+        ]);
         $this->getEntityManager()->saveEntity($job);
     }
 }

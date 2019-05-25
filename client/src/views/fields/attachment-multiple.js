@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ Espo.define('views/fields/attachment-multiple', 'views/fields/base', function (D
             'image/jpeg',
             'image/png',
             'image/gif',
+            'image/webp',
         ],
 
         validations: ['ready', 'required'],
@@ -284,11 +285,8 @@ Espo.define('views/fields/attachment-multiple', 'views/fields/base', function (D
 
             var preview = name;
 
-            switch (type) {
-                case 'image/png':
-                case 'image/jpeg':
-                case 'image/gif':
-                    preview = '<img src="' + this.getImageUrl(id, 'small') + '" title="' + name + '">';
+            if (~this.previewTypeList.indexOf(type)) {
+                preview = '<img src="' + this.getImageUrl(id, 'small') + '" title="' + name + '">';
             }
 
             return preview;
@@ -297,7 +295,7 @@ Espo.define('views/fields/attachment-multiple', 'views/fields/base', function (D
         addAttachmentBox: function (name, type, id, link) {
             var $attachments = this.$attachments;
 
-            var removeLink = '<a href="javascript:" class="remove-attachment pull-right"><span class="glyphicon glyphicon-remove"></span></a>';
+            var removeLink = '<a href="javascript:" class="remove-attachment pull-right"><span class="fas fa-times"></span></a>';
 
             var preview = name;
             if (this.showPreviews && id) {
@@ -490,11 +488,8 @@ Espo.define('views/fields/attachment-multiple', 'views/fields/base', function (D
         },
 
         isTypeIsImage: function (type) {
-            switch (type) {
-                case 'image/png':
-                case 'image/jpeg':
-                case 'image/gif':
-                    return true;
+            if (~this.previewTypeList.indexOf(type)) {
+                return true;
             }
             return false
         },
@@ -529,7 +524,7 @@ Espo.define('views/fields/attachment-multiple', 'views/fields/base', function (D
                         previews.push('<div class="attachment-preview">' + this.getDetailPreview(name, type, id) + '</div>');
                         continue;
                     }
-                    var line = '<div class="attachment-block"><span class="glyphicon glyphicon-paperclip small"></span> <a href="' + this.getDownloadUrl(id) + '" target="_BLANK">' + Handlebars.Utils.escapeExpression(name) + '</a></div>';
+                    var line = '<div class="attachment-block"><span class="fas fa-paperclip text-soft small"></span> <a href="' + this.getDownloadUrl(id) + '" target="_BLANK">' + Handlebars.Utils.escapeExpression(name) + '</a></div>';
                     names.push(line);
                 }
                 var string = previews.join('') + names.join('');

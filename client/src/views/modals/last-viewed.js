@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,13 +56,13 @@ Espo.define('views/modals/last-viewed', ['views/modal', 'search-manager'], funct
                 }
             ];
 
-            this.header = this.getLanguage().translate('LastViewed', 'scopeNamesPlural');
-            this.header = '<a href="#LastViewed" class="action" data-action="listView">' + this.header + '</a>';
+            this.headerHtml = this.getLanguage().translate('LastViewed', 'scopeNamesPlural');
+            this.headerHtml = '<a href="#LastViewed" class="action" data-action="listView">' + this.headerHtml + '</a>';
 
             this.waitForView('list');
 
             this.getCollectionFactory().create(this.scope, function (collection) {
-                collection.maxSize = this.getConfig().get('lastViewedCount') || 20;
+                collection.maxSize = this.getConfig().get('recordsPerPage');
                 this.collection = collection;
 
                 collection.url = 'LastViewed';
@@ -100,4 +100,3 @@ Espo.define('views/modals/last-viewed', ['views/modal', 'search-manager'], funct
         },
     });
 });
-

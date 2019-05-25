@@ -8,31 +8,84 @@
     </div>
     {{/if}}
 
-    {{#if checkboxes}}
-    {{#if massActionList}}
+    {{#if displayActionsButtonGroup}}
     <div class="btn-group actions">
-        <button type="button" class="btn btn-default dropdown-toggle actions-button" data-toggle="dropdown" disabled>
+        {{#if massActionList}}
+        <button type="button" class="btn btn-default dropdown-toggle actions-button hidden" data-toggle="dropdown">
         {{translate 'Actions'}}
         <span class="caret"></span>
         </button>
-        <ul class="dropdown-menu">
+        {{/if}}
+        {{#if buttonList.length}}
+        {{#each buttonList}}
+            {{button name scope=../../scope label=label style=style hidden=hidden}}
+        {{/each}}
+        {{/if}}
+        <div class="btn-group">
+            {{#if dropdownItemList.length}}
+            <button type="button" class="btn btn-default dropdown-toggle dropdown-item-list-button" data-toggle="dropdown">
+                <span class="fas fa-ellipsis-h"></span>
+            </button>
+            <ul class="dropdown-menu pull-left">
+                {{#each dropdownItemList}}
+                {{#if this}}
+                <li class="{{#if hidden}}hidden{{/if}}"><a href="javascript:" class="action" data-action="{{name}}">{{#if html}}{{{html}}}{{else}}{{translate label scope=../../../entityType}}{{/if}}</a></li>
+                {{else}}
+                    {{#unless @first}}
+                    {{#unless @last}}
+                    <li class="divider"></li>
+                    {{/unless}}
+                    {{/unless}}
+                {{/if}}
+                {{/each}}
+            </ul>
+            {{/if}}
+        </div>
+        {{#if massActionList}}
+        <ul class="dropdown-menu actions-menu">
             {{#each massActionList}}
-            <li><a href="javascript:" data-action="{{./this}}" class='mass-action'>{{translate this category="massActions" scope=../scope}}</a></li>
+            {{#if this}}
+            <li><a href="javascript:" data-action="{{./this}}" class='mass-action'>{{translate this category="massActions" scope=../../scope}}</a></li>
+            {{else}}
+            {{#unless @first}}
+            {{#unless @last}}
+            <li class="divider"></li>
+            {{/unless}}
+            {{/unless}}
+            {{/if}}
             {{/each}}
         </ul>
+        {{/if}}
     </div>
-    {{/if}}
+
+    <div class="sticked-bar hidden">
+        <div class="btn-group">
+            <button type="button" class="btn btn-default dropdown-toggle actions-button hidden" data-toggle="dropdown">
+            {{translate 'Actions'}}
+            <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu actions-menu">
+                {{#each massActionList}}
+                {{#if this}}
+                <li><a href="javascript:" data-action="{{./this}}" class='mass-action'>{{translate this category="massActions" scope=../../scope}}</a></li>
+                {{else}}
+                {{#unless @first}}
+                {{#unless @last}}
+                <li class="divider"></li>
+                {{/unless}}
+                {{/unless}}
+                {{/if}}
+                {{/each}}
+            </ul>
+        </div>
+    </div>
     {{/if}}
 
     {{#if displayTotalCount}}
         <div class="text-muted total-count">
-        {{translate 'Total'}}: <span class="total-count-span">{{collection.total}}</span>
+        {{translate 'Total'}}: <span class="total-count-span">{{totalCountFormatted}}</span>
         </div>
     {{/if}}
-
-    {{#each buttonList}}
-        {{button name scope=../../scope label=label style=style}}
-    {{/each}}
 </div>
 {{/if}}
 
@@ -59,16 +112,10 @@
                 {{/if}}
                 {{#each headerDefs}}
                 <th {{#if width}} width="{{width}}"{{/if}}{{#if align}} style="text-align: {{align}};"{{/if}}>
-                    {{#if this.sortable}}
-                        <a href="javascript:" class="sort" data-name="{{this.name}}">{{#if this.hasCustomLabel}}{{this.customLabel}}{{else}}{{translate this.name scope=../../../collection.name category='fields'}}{{/if}}</a>
-                        {{#if this.sorted}}{{#if this.asc}}<span class="caret"></span>{{else}}<span class="caret-up"></span>{{/if}}{{/if}}
-                    {{else}}
-                        {{#if this.hasCustomLabel}}
-                            {{this.customLabel}}
-                        {{else}}
-                            {{translate this.name scope=../../../collection.name category='fields'}}
-                        {{/if}}
-                    {{/if}}
+                    {{#if this.isSortable}}
+                        <a href="javascript:" class="sort" data-name="{{this.name}}">{{label}}</a>
+                        {{#if this.isSorted}}{{#unless this.isDesc}}<span class="fas fa-chevron-down fa-sm"></span>{{else}}<span class="fas fa-chevron-up fa-sm"></span>{{/unless}}{{/if}}
+                    {{else}}{{label}}{{/if}}
                 </th>
                 {{/each}}
             </tr>
@@ -85,9 +132,9 @@
     {{#unless paginationEnabled}}
     {{#if showMoreEnabled}}
     <div class="show-more{{#unless showMoreActive}} hide{{/unless}}">
-        <a type="button" href="javascript:" class="btn btn-default btn-block" data-action="showMore" {{#if showCount}}title="{{translate 'Total'}}: {{collection.total}}"{{/if}}>
+        <a type="button" href="javascript:" class="btn btn-default btn-block" data-action="showMore" {{#if showCount}}title="{{translate 'Total'}}: {{totalCountFormatted}}"{{/if}}>
             {{#if showCount}}
-            <div class="pull-right text-muted more-count">{{moreCount}}</div>
+            <div class="pull-right text-muted more-count">{{moreCountFormatted}}</div>
             {{/if}}
             <span>{{translate 'Show more'}}</span>
         </a>

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
 
         type: 'wysiwyg',
 
+        listTemplate: 'fields/wysiwyg/detail',
+
         detailTemplate: 'fields/wysiwyg/detail',
 
         editTemplate: 'fields/wysiwyg/edit',
@@ -44,6 +46,8 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
 
         setup: function () {
             Dep.prototype.setup.call(this);
+
+            this.hasBodyPlainField = !!~this.getFieldManager().getEntityTypeFieldList(this.model.entityType).indexOf(this.name + 'Plain');
 
             if ('height' in this.params) {
                 this.height = this.params.height;
@@ -77,7 +81,7 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
                     var AttachmentButton = function (context) {
                         var ui = $.summernote.ui;
                         var button = ui.button({
-                            contents: '<i class="glyphicon glyphicon-paperclip"></i>',
+                            contents: '<i class="fas fa-paperclip"></i>',
                             tooltip: this.translate('Attach File'),
                             click: function () {
                                 this.attachFile();
@@ -89,14 +93,18 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
                 }
             }
 
-            this.listenTo(this.model, 'change:isHtml', function (model) {
-                if (this.mode == 'edit') {
+            this.listenTo(this.model, 'change:isHtml', function (model, value, o) {
+                if (o.ui && this.mode == 'edit') {
                     if (this.isRendered()) {
                         if (!model.has('isHtml') || model.get('isHtml')) {
-        		            var value = this.plainToHtml(this.model.get(this.name));
-        		            this.model.set(this.name, value);
+                            var value = this.plainToHtml(this.model.get(this.name));
+                            if (this.lastHtmlValue && this.model.get(this.name) === this.htmlToPlain(this.lastHtmlValue)) {
+                                value = this.lastHtmlValue;
+                            }
+                            this.model.set(this.name, value);
                             this.enableWysiwygMode();
                         } else {
+                            this.lastHtmlValue = this.model.get(this.name);
         		            var value = this.htmlToPlain(this.model.get(this.name));
         		            this.model.set(this.name, value);
                             this.disableWysiwygMode();
@@ -108,7 +116,7 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
                         this.reRender();
                     }
                 }
-            }.bind(this));
+            }, this);
 
             this.once('remove', function () {
                 if (this.$summernote) {
@@ -148,6 +156,9 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
             if (value) {
                 value = value.replace(/<[\/]{0,1}(base)[^><]*>/gi, '');
                 value = value.replace(/<[\/]{0,1}(script)[^><]*>/gi, '');
+                value = value.replace(/<[^><]*([^a-z]{1}on[a-z]+)=[^><]*>/gi, function (match) {
+                    return match.replace(/[^a-z]{1}on[a-z]+=/gi, ' data-handler-stripped=');
+                });
             }
             return value || '';
         },
@@ -178,7 +189,7 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
                 }
             }
 
-            if (this.mode == 'detail') {
+            if (this.mode == 'detail' || this.mode == 'list') {
                 if (!this.model.has('isHtml') || this.model.get('isHtml')) {
                     if (!this.useIframe) {
                         this.$element = this.$el.find('.html-container');
@@ -363,6 +374,9 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
                         this.trigger('change')
                     }.bind(this),
                 },
+                onCreateLink: function (link) {
+                    return link;
+                },
                 toolbar: this.toolbar,
                 buttons: this.buttons
             };
@@ -371,7 +385,7 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
                 options.height = this.height;
             } else {
                 var $scrollable = this.$el.closest('.modal-body');
-                if (!$scrollable.size()) {
+                if (!$scrollable.length) {
                     $scrollable = $(window);
                 }
                 this.$scrollable = $scrollable;
@@ -427,12 +441,16 @@ Espo.define('views/fields/wysiwyg', ['views/fields/text', 'lib!Summernote'], fun
         fetch: function () {
             var data = {};
             if (!this.model.has('isHtml') || this.model.get('isHtml')) {
-                data[this.name] = this.$summernote.summernote('code');
+                var code = this.$summernote.summernote('code');
+                if (code == '<p><br></p>') {
+                    code = '';
+                }
+                data[this.name] = code;
             } else {
                 data[this.name] = this.$element.val();
             }
 
-            if (this.model.has('isHtml')) {
+            if (this.model.has('isHtml') && this.hasBodyPlainField) {
             	if (this.model.get('isHtml')) {
             		data[this.name + 'Plain'] = this.htmlToPlain(data[this.name]);
             	} else {

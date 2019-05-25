@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,10 +116,14 @@ class EmailReminder
         $user = $this->getEntityManager()->getEntity('User', $reminder->get('userId'));
         $entity = $this->getEntityManager()->getEntity($reminder->get('entityType'), $reminder->get('entityId'));
 
+        if (!$user || !$entity) return;
         $emailAddress = $user->get('emailAddress');
+        if (!$emailAddress) return;
 
-        if (empty($user) || empty($emailAddress) || empty($entity)) {
-            return;
+        if ($entity->hasLinkMultipleField('users')) {
+            $entity->loadLinkMultipleField('users', ['status' => 'acceptanceStatus']);
+            $status = $entity->getLinkMultipleColumn('users', 'status', $user->id);
+            if ($status === 'Declined') return;
         }
 
         $email = $this->getEntityManager()->getEntity('Email');
@@ -128,9 +132,9 @@ class EmailReminder
         $subjectTpl = $this->getTemplateFileManager()->getTemplate('reminder', 'subject', $entity->getEntityType(), 'Crm');
         $bodyTpl = $this->getTemplateFileManager()->getTemplate('reminder', 'body', $entity->getEntityType(), 'Crm');
 
-        $subjectTpl = str_replace(array("\n", "\r"), '', $subjectTpl);
+        $subjectTpl = str_replace(["\n", "\r"], '', $subjectTpl);
 
-        $data = array();
+        $data = [];
 
         $siteUrl = rtrim($this->getConfig()->get('siteUrl'), '/');
         $recordUrl = $siteUrl . '/#' . $entity->getEntityType() . '/view/' . $entity->id;
@@ -153,7 +157,7 @@ class EmailReminder
         $htmlizer = new \Espo\Core\Htmlizer\Htmlizer($this->fileManager, $dateTime, $this->number, null);
 
         $subject = $htmlizer->render($entity, $subjectTpl, 'reminder-email-subject-' . $entity->getEntityType(), $data, true);
-        $body = $htmlizer->render($entity, $bodyTpl, 'reminder-email-body-' . $entity->getEntityType(), $data, true);
+        $body = $htmlizer->render($entity, $bodyTpl, 'reminder-email-body-' . $entity->getEntityType(), $data, false);
 
         $email->set('subject', $subject);
         $email->set('body', $body);
@@ -164,4 +168,3 @@ class EmailReminder
         $emailSender->send($email);
     }
 }
-

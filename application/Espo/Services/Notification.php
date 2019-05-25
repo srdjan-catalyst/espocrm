@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,12 @@ class Notification extends \Espo\Services\Record
 {
     protected $actionHistoryDisabled = true;
 
+    protected function init()
+    {
+        parent::init();
+        $this->addDependency('container');
+    }
+
     public function notifyAboutMentionInPost($userId, $noteId)
     {
         $notification = $this->getEntityManager()->getEntity('Notification');
@@ -55,8 +61,14 @@ class Notification extends \Espo\Services\Record
 
     public function notifyAboutNote(array $userIdList, \Espo\Entities\Note $note)
     {
-        $data = array('noteId' => $note->id);
+        $data = ['noteId' => $note->id];
         $encodedData = Json::encode($data);
+
+        $related = null;
+        if ($note->get('relatedType') == 'Email') {
+            $related = $this->getEntityManager()->getRepository('Email')
+                ->select(['id', 'sentById', 'createdById'])->where(['id' => $note->get('relatedId')])->findOne();
+        }
 
         $now = date('Y-m-d H:i:s');
         $pdo = $this->getEntityManager()->getPDO();
@@ -66,29 +78,37 @@ class Notification extends \Espo\Services\Record
         $sql = "INSERT INTO `notification` (`id`, `data`, `type`, `user_id`, `created_at`, `related_id`, `related_type`, `related_parent_id`, `related_parent_type`) VALUES ";
         $arr = [];
 
-        $userList = $this->getEntityManager()->getRepository('User')->where(array(
+        $userList = $this->getEntityManager()->getRepository('User')->where([
             'isActive' => true,
             'id' => $userIdList
-        ))->find();
+        ])->find();
+
         foreach ($userList as $user) {
             $userId = $user->id;
             if (!$this->checkUserNoteAccess($user, $note)) continue;
             if ($note->get('createdById') === $user->id) continue;
-            $id = uniqid();
+            if ($related && $related->getEntityType() == 'Email' && $related->get('sentById') == $user->id) continue;
+            if ($related && $related->get('createdById') == $user->id) continue;
+
+            $id = \Espo\Core\Utils\Util::generateId();
             $arr[] = "(".$query->quote($id).", ".$query->quote($encodedData).", ".$query->quote('Note').", ".$query->quote($userId).", ".$query->quote($now).", ".$query->quote($note->id).", ".$query->quote('Note').", ".$query->quote($note->get('parentId')).", ".$query->quote($note->get('parentType')).")";
         }
 
-        if (empty($arr)) {
-            return;
-        }
+        if (empty($arr)) return;
 
         $sql .= implode(", ", $arr);
         $pdo->query($sql);
+
+        if ($this->getConfig()->get('useWebSocket')) {
+            foreach ($userIdList as $userId) {
+                $this->getInjection('container')->get('webSocketSubmission')->submit('newNotification', $userId);
+            }
+        }
     }
 
     public function checkUserNoteAccess(\Espo\Entities\User $user, \Espo\Entities\Note $note)
     {
-        if ($user->get('isPortalUser')) {
+        if ($user->isPortal()) {
             if ($note->get('relatedType')) {
                 if ($note->get('relatedType') === 'Email' && $note->get('parentType') === 'Case') {
                     return true;

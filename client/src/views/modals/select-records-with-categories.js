@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,8 @@ Espo.define('views/modals/select-records-with-categories', ['views/modals/select
                         showRoot: true,
                         rootName: this.translate(this.scope, 'scopeNamesPlural'),
                         buttonsDisabled: true,
-                        checkboxes: false
+                        checkboxes: false,
+                        isExpanded: this.isExpanded
                     }, function (view) {
                         if (this.isRendered()) {
                             view.render();

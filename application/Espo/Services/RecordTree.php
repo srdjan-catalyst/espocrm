@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -174,21 +174,21 @@ class RecordTree extends Record
         }
     }
 
-    public function updateEntity($id, $data)
+    public function update($id, $data)
     {
         if (!empty($data->parentId) && $data->parentId == $id) {
             throw new Forbidden();
         }
 
-        return parent::updateEntity($id, $data);
+        return parent::update($id, $data);
     }
 
-    public function linkEntity($id, $link, $foreignId)
+    public function link($id, $link, $foreignId)
     {
         if ($id == $foreignId ) {
             throw new Forbidden();
         }
-        return parent::linkEntity($id, $link, $foreignId);
+        return parent::link($id, $link, $foreignId);
     }
 
     public function getLastChildrenIdList($parentId = null)

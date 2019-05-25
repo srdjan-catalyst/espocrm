@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ class CheckNewVersion extends \Espo\Core\Jobs\Base
     protected function getRunTime()
     {
         $hour = rand(0, 4);
-        $minute = rand(0, 60);
+        $minute = rand(0, 59);
 
         $nextDay = new \DateTime('+ 1 day');
         $time = $nextDay->format('Y-m-d') . ' ' . $hour . ':' . $minute . ':00';

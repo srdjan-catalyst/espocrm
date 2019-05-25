@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,15 +41,15 @@ class PortalRole extends Record
 
     protected $forceSelectAllAttributes = true;
 
-    public function afterCreate(Entity $entity, array $data = array())
+    public function afterCreateEntity(Entity $entity, $data)
     {
-        parent::afterCreate($entity, $data);
+        parent::afterCreateEntity($entity, $data);
         $this->clearRolesCache();
     }
 
-    public function afterUpdate(Entity $entity, array $data = array())
+    public function afterUpdateEntity(Entity $entity, $data)
     {
-        parent::afterUpdate($entity, $data);
+        parent::afterUpdateEntity($entity, $data);
         $this->clearRolesCache();
     }
 

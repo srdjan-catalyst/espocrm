@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,26 +50,29 @@ class Uninstall extends \Espo\Core\Upgrades\Actions\Base
 
         $this->checkIsWritable();
 
+        $this->enableMaintenanceMode();
+
         $this->beforeRunAction();
 
-        /* run before install script */
+        /* run before uninstall script */
         if (!isset($data['skipBeforeScript']) || !$data['skipBeforeScript']) {
             $this->runScript('beforeUninstall');
         }
 
         $backupPath = $this->getPath('backupPath');
         if (file_exists($backupPath)) {
-
             /* copy core files */
             if (!$this->copyFiles()) {
                 $this->throwErrorAndRemovePackage('Cannot copy files.');
             }
-
-            /* remove extension files, saved in fileList */
-            if (!$this->deleteFiles('delete', true)) {
-                $this->throwErrorAndRemovePackage('Permission denied to delete files.');
-            }
         }
+
+        /* remove extension files, saved in fileList */
+        if (!$this->deleteFiles('delete', true)) {
+            $this->throwErrorAndRemovePackage('Permission denied to delete files.');
+        }
+
+        $this->disableMaintenanceMode();
 
         if (!isset($data['skipSystemRebuild']) || !$data['skipSystemRebuild']) {
             if (!$this->systemRebuild()) {
@@ -84,14 +87,14 @@ class Uninstall extends \Espo\Core\Upgrades\Actions\Base
 
         $this->afterRunAction();
 
-        $this->clearCache();
-
         /* delete backup files */
         $this->deletePackageFiles();
 
         $this->finalize();
 
         $GLOBALS['log']->debug('Uninstallation process ['.$processId.']: end run.');
+
+        $this->clearCache();
     }
 
     protected function restoreFiles()

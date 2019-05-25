@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,13 +43,18 @@ class Contact extends \Espo\Core\Templates\Services\Person
         'title'
     ];
 
-    protected $linkSelectParams = array(
-        'targetLists' => array(
-            'additionalColumns' => array(
+    protected $linkSelectParams =[
+        'targetLists' => [
+            'additionalColumns' => [
                 'optedOut' => 'isOptedOut'
-            )
-        )
-    );
+            ]
+        ],
+        'opportunities' => [
+            'additionalColumns' => [
+                'role' => 'contactRole'
+            ]
+        ]
+    ];
 
     protected $mandatorySelectAttributeList = [
         'accountId',
@@ -61,17 +66,17 @@ class Contact extends \Espo\Core\Templates\Services\Person
         if (!empty($data->emailId)) {
             $email = $this->getEntityManager()->getEntity('Email', $data->emailId);
             if ($email && !$email->get('parentId')) {
-                if ($this->getConfig()->get('b2cMode')) {
-                    $email->set(array(
+                if ($this->getConfig()->get('b2cMode') || !$entity->get('accountId')) {
+                    $email->set([
                         'parentType' => 'Contact',
                         'parentId' => $entity->id
-                    ));
+                    ]);
                 } else {
                     if ($entity->get('accountId')) {
-                        $email->set(array(
+                        $email->set([
                             'parentType' => 'Account',
                             'parentId' => $entity->get('accountId')
-                        ));
+                        ]);
                     }
                 }
                 $this->getEntityManager()->saveEntity($email);

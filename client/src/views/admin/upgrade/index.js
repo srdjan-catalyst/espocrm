@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,9 +37,15 @@ Espo.define('views/admin/upgrade/index', 'view', function (Dep) {
         data: function () {
             return {
                 versionMsg: this.translate('Current version') + ': ' + this.getConfig().get('version'),
+                infoMsg: this.translate('upgradeInfo', 'messages', 'Admin').replace('{url}', 'https://www.espocrm.com/documentation/administration/upgrading/'),
                 backupsMsg: this.translate('upgradeBackup', 'messages', 'Admin'),
-                downloadMsg: this.translate('downloadUpgradePackage', 'messages', 'Admin').replace('{url}', 'http://www.espocrm.com/download/upgrades')
+                upgradeRecommendation: this.translate('upgradeRecommendation', 'messages', 'Admin'),
+                downloadMsg: this.translate('downloadUpgradePackage', 'messages', 'Admin').replace('{url}', 'https://www.espocrm.com/download/upgrades')
             };
+        },
+
+        afterRender: function () {
+            this.$el.find('.panel-body a').attr('target', '_BLANK');
         },
 
         events: {

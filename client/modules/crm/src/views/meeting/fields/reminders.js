@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,15 +26,15 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('Crm:Views.Meeting.Fields.Reminders', 'Views.Fields.Base', function (Dep) {
+Espo.define('crm:views/meeting/fields/reminders', 'views/fields/base', function (Dep) {
 
     return Dep.extend({
 
-        detailTemplate: 'crm:meeting.fields.reminders.detail',
+        detailTemplate: 'crm:meeting/fields/reminders/detail',
 
-        listTemplate: 'crm:meeting.fields.reminders.detail',
+        listTemplate: 'crm:meeting/fields/reminders/detail',
 
-        editTemplate: 'crm:meeting.fields.reminders.edit',
+        editTemplate: 'crm:meeting/fields/reminders/edit',
 
         events: {
             'click [data-action="addReminder"]': function () {
@@ -130,7 +130,7 @@ Espo.define('Crm:Views.Meeting.Fields.Reminders', 'Views.Fields.Base', function 
                                        .attr('type', 'button')
                                        .attr('tabindex', '-1')
                                        .attr('data-action', 'removeReminder')
-                                       .html('<span class="glyphicon glyphicon-remove"></span>');
+                                       .html('<span class="fas fa-times"></span>');
 
             $item.append($('<div class="input-group-btn">').append($type))
                  .append($seconds)

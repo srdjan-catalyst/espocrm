@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,10 @@ Espo.define('crm:views/dashlets/opportunities-by-lead-source', 'crm:views/dashle
                 });
             }
             return data;
+        },
+
+        isNoData: function () {
+            return !this.chartData.length;
         },
 
         setupDefaultOptions: function () {
@@ -107,7 +111,7 @@ Espo.define('crm:views/dashlets/opportunities-by-lead-source', 'crm:views/dashle
                         var fraction = obj.fraction || 0;
                         var percentage = (100 * fraction).toFixed(2).toString();
 
-                        return (obj.series.label || self.translate('None')) + ':<br>' + value + ' / ' + percentage + '%';
+                        return (obj.series.label || self.translate('None')) + '<br>' + value + ' / ' + percentage + '%';
                     }
                 },
                 legend: {

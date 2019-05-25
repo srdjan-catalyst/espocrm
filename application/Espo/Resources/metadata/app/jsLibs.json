@@ -21,8 +21,8 @@
     },
     "Selectize": {
         "path": "client/lib/selectize.min.js",
-        "exportsTo": "$",
-        "exportsAs": "selectize"
+        "exportsTo": "window",
+        "exportsAs": "Selectize"
     },
     "Cropper": {
         "path": "client/lib/cropper.min.js",
@@ -38,5 +38,10 @@
         "path": "client/lib/bootstrap-colorpicker.js",
         "exportsTo": "$",
         "exportsAs": "colorpicker"
+    },
+    "exif": {
+        "path": "client/lib/exif-js.js",
+        "exportsTo": "window",
+        "exportsAs": "EXIF"
     }
 }

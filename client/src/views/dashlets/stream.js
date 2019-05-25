@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,13 +64,13 @@ Espo.define('views/dashlets/stream', 'views/dashlets/abstract/base', function (D
             this.actionList.unshift({
                 name: 'viewList',
                 html: this.translate('View List'),
-                iconHtml: '<span class="glyphicon glyphicon glyphicon-th-list"></span>',
+                iconHtml: '<span class="fas fa-align-justify"></span>',
                 url: '#Stream'
             });
             this.actionList.unshift({
                 name: 'create',
                 html: this.translate('Create Post', 'labels'),
-                iconHtml: '<span class="glyphicon glyphicon-plus"></span>'
+                iconHtml: '<span class="fas fa-plus"></span>'
             });
         },
 

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,15 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-
-Espo.define('views/modals/add-dashlet', 'views/modal', function (Dep) {
+define('views/modals/add-dashlet', 'views/modal', function (Dep) {
 
     return Dep.extend({
 
         cssName: 'add-dashlet',
 
         template: 'modals/add-dashlet',
+
+        backdrop: true,
 
         fitHeight: true,
 
@@ -44,7 +45,7 @@ Espo.define('views/modals/add-dashlet', 'views/modal', function (Dep) {
         },
 
         events: {
-            'click button.add': function (e) {
+            'click .add': function (e) {
                 var name = $(e.currentTarget).data('name');
                 this.trigger('add', name);
                 this.close();
@@ -59,7 +60,7 @@ Espo.define('views/modals/add-dashlet', 'views/modal', function (Dep) {
         ],
 
         setup: function () {
-            this.header = this.translate('Add Dashlet');
+            this.headerHtml = this.translate('Add Dashlet');
 
             var dashletList = Object.keys(this.getMetadata().get('dashlets') || {}).sort(function (v1, v2) {
                 return this.translate(v1, 'dashlets').localeCompare(this.translate(v2, 'dashlets'));
@@ -85,5 +86,3 @@ Espo.define('views/modals/add-dashlet', 'views/modal', function (Dep) {
         },
     });
 });
-
-

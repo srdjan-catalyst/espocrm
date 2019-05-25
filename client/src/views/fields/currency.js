@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,8 +64,16 @@ Espo.define('views/fields/currency', 'views/fields/float', function (Dep) {
         setup: function () {
             Dep.prototype.setup.call(this);
             this.currencyFieldName = this.name + 'Currency';
-            this.currencyList = this.getConfig().get('currencyList') || ['USD'];
-            var currencyValue = this.currencyValue = this.model.get(this.currencyFieldName) || this.getConfig().get('defaultCurrency');
+            this.defaultCurrency = this.getConfig().get('defaultCurrency');
+            this.currencyList = this.getConfig().get('currencyList') || [this.defaultCurrency];
+            this.isSingleCurrency = this.currencyList.length <= 1;
+
+            var currencyValue = this.currencyValue = this.model.get(this.currencyFieldName) || this.defaultCurrency;
+
+            if (!~this.currencyList.indexOf(currencyValue)) {
+                this.currencyList = Espo.Utils.clone(this.currencyList);
+                this.currencyList.push(currencyValue);
+            }
         },
 
         getCurrencyFormat: function () {
@@ -160,9 +168,9 @@ Espo.define('views/fields/currency', 'views/fields/float', function (Dep) {
         afterRender: function () {
             Dep.prototype.afterRender.call(this);
             if (this.mode == 'edit') {
-                this.$currency = this.$el.find('[name="' + this.currencyFieldName + '"]');
+                this.$currency = this.$el.find('[data-name="' + this.currencyFieldName + '"]');
                 this.$currency.on('change', function () {
-                    this.model.set(this.currencyFieldName, this.$currency.val());
+                    this.model.set(this.currencyFieldName, this.$currency.val(), {ui: true});
                 }.bind(this));
             }
         },
@@ -181,7 +189,7 @@ Espo.define('views/fields/currency', 'views/fields/float', function (Dep) {
             data[this.name] = value;
             data[this.currencyFieldName] = currencyValue
             return data;
-        },
+        }
+
     });
 });
-

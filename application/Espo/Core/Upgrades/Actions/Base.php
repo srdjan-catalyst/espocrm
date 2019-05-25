@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@ abstract class Base
 
     protected $packagePostfix = 'z';
 
+    protected $scriptParams = [];
+
     /**
      * Directory name of files in a package
      */
@@ -111,13 +113,18 @@ abstract class Base
         return $this->actionManager;
     }
 
-    protected function getParams($name = null)
+    protected function getParams($name, $returns = null)
     {
         if (isset($this->params[$name])) {
             return $this->params[$name];
         }
 
-        return $this->params;
+        return $returns;
+    }
+
+    protected function setParam($name, $value)
+    {
+        $this->params[$name] = $value;
     }
 
     protected function getZipUtil()
@@ -153,6 +160,7 @@ abstract class Base
     {
         $this->deletePackageFiles();
         $this->deletePackageArchive();
+        $this->disableMaintenanceMode();
         throw new Error($errorMessage);
     }
 
@@ -164,7 +172,7 @@ abstract class Base
             throw new Error('Another installation process is currently running.');
         }
 
-        $this->processId = uniqid();
+        $this->processId = Util::generateId();
 
         return $this->processId;
     }
@@ -285,7 +293,7 @@ abstract class Base
             $script = new $scriptName();
 
             try {
-                $script->run($this->getContainer());
+                $script->run($this->getContainer(), $this->scriptParams);
             } catch (\Exception $e) {
                 $this->throwErrorAndRemovePackage($e->getMessage());
             }
@@ -583,6 +591,17 @@ abstract class Base
         return true;
     }
 
+    protected function getManifestParam($name, $default = null)
+    {
+        $manifest = $this->getManifest();
+
+        if (array_key_exists($name, $manifest)) {
+            return $manifest[$name];
+        }
+
+        return $default;
+    }
+
     /**
      * Unzip a package archieve
      *
@@ -725,5 +744,58 @@ abstract class Base
         }
 
         return $array;
+    }
+
+    protected function enableMaintenanceMode()
+    {
+        $config = $this->getConfig();
+
+        $actualParams = [
+            'maintenanceMode' => $config->get('maintenanceMode'),
+            'cronDisabled' => $config->get('cronDisabled'),
+            'useCache' => $config->get('useCache'),
+        ];
+
+        $this->setParam('beforeMaintenanceModeParams', $actualParams);
+
+        $save = false;
+
+        if (!$actualParams['maintenanceMode']) {
+            $config->set('maintenanceMode', true);
+            $save = true;
+        }
+
+        if (!$actualParams['cronDisabled']) {
+            $config->set('cronDisabled', true);
+            $save = true;
+        }
+
+        if ($actualParams['useCache']) {
+            $config->set('useCache', false);
+            $save = true;
+        }
+
+        if ($save) {
+            $config->save();
+        }
+    }
+
+    protected function disableMaintenanceMode()
+    {
+        $config = $this->getConfig();
+        $beforeMaintenanceModeParams = $this->getParams('beforeMaintenanceModeParams', []);
+
+        $save = false;
+
+        foreach ($beforeMaintenanceModeParams as $paramName => $paramValue) {
+            if ($config->get($paramName) != $paramValue) {
+                $config->set($paramName, $paramValue);
+                $save = true;
+            }
+        }
+
+        if ($save) {
+            $config->save();
+        }
     }
 }

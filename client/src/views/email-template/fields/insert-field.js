@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
  * In accordance with Section 7(b) of the GNU General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
+
 Espo.define('views/email-template/fields/insert-field', 'views/fields/base', function (Dep) {
 
     return Dep.extend({
@@ -53,34 +54,21 @@ Espo.define('views/email-template/fields/insert-field', 'views/fields/base', fun
                 var entityList = [];
                 var defs = this.getMetadata().get('scopes');
                 entityList = Object.keys(defs).filter(function (scope) {
-                    return (defs[scope].entity && (defs[scope].tab || defs[scope].object));
-                });
+                    if (scope === 'Email') return;
+                    if (!this.getAcl().checkScope(scope)) return;
+                    return (defs[scope].entity && (defs[scope].object));
+                }, this);
 
                 this.translatedOptions = {};
 
-                var entityFields = {};
+                var entityPlaceholders = {};
                 entityList.forEach(function (scope) {
                     this.translatedOptions[scope] = {};
 
-                    var list = this.getFieldManager().getEntityAttributes(scope) || [];
+                    entityPlaceholders[scope] = this.getScopeAttributeList(scope);
 
-                    var forbiddenList = this.getAcl().getScopeForbiddenAttributeList(scope);
-                    list = list.filter(function (item) {
-                        if (~forbiddenList.indexOf(item)) return;
-                        return true;
-                    }, this);
-
-                    list.push('id');
-                    if (this.getMetadata().get('entityDefs.' + scope + '.fields.name.type') == 'personName') {
-                        list.unshift('name');
-                        this.translatedOptions[scope]['name'] = this.translate('name', 'fields', scope);
-                    };
-                    entityFields[scope] = list.sort(function (v1, v2) {
-                        return this.translate(v1, 'fields', scope).localeCompare(this.translate(v2, 'fields', scope));
-                    }.bind(this));
-
-                    entityFields[scope].forEach(function (item) {
-                        this.translatedOptions[scope][item] = this.translate(item, 'fields', scope);
+                    entityPlaceholders[scope].forEach(function (item) {
+                        this.translatedOptions[scope][item] = this.translatePlaceholder(scope, item);
                     }, this);
 
                     var links = this.getMetadata().get('entityDefs.' + scope + '.links') || {};
@@ -95,39 +83,138 @@ Espo.define('views/email-template/fields/insert-field', 'views/fields/base', fun
                         var foreignScope = links[link].entity;
                         if (!foreignScope) return;
 
-                        var attributeList = this.getFieldManager().getEntityAttributes(foreignScope) || [];
+                        if (links[link].disabled) return;
 
-                        var forbiddenList = this.getAcl().getScopeForbiddenAttributeList(scope);
-                        attributeList = attributeList.filter(function (item) {
-                            if (~forbiddenList.indexOf(item)) return;
-                            return true;
-                        }, this);
+                        if (
+                            this.getMetadata().get(['entityAcl', scope, 'links', link, 'onlyAdmin'])
+                            ||
+                            this.getMetadata().get(['entityAcl', scope, 'links', link, 'forbidden'])
+                            ||
+                            this.getMetadata().get(['entityAcl', scope, 'links', link, 'internal'])
+                        ) return;
 
-                        attributeList.push('id');
-                        if (this.getMetadata().get('entityDefs.' + foreignScope + '.fields.name.type') == 'personName') {
-                            attributeList.unshift('name');
-                        };
-
-                        attributeList.sort(function (v1, v2) {
-                            return this.translate(v1, 'fields', foreignScope).localeCompare(this.translate(v2, 'fields', foreignScope));
-                        }.bind(this));
+                        var attributeList = this.getScopeAttributeList(foreignScope);
 
                         attributeList.forEach(function (item) {
-                            entityFields[scope].push(link + '.' + item);
+                            entityPlaceholders[scope].push(link + '.' + item);
 
-                            this.translatedOptions[scope][link + '.' + item] =
-                                this.translate(link, 'links', scope) + '.' + this.translate(item, 'fields', foreignScope);
+                            this.translatedOptions[scope][link + '.' + item] = this.translatePlaceholder(scope, link + '.' + item);
+
                         }, this);
                     }, this);
 
                 }, this);
 
-                entityFields['Person'] = ['name', 'firstName', 'lastName', 'salutationName', 'emailAddress', 'assignedUserName'];
+                entityPlaceholders['Person'] = ['name', 'firstName', 'lastName', 'salutationName', 'emailAddress', 'assignedUserName'];
                 this.translatedOptions['Person'] = {};
 
                 this.entityList = entityList;
-                this.entityFields = entityFields;
+                this.entityFields = entityPlaceholders;
             }
+        },
+
+        getScopeAttributeList: function (scope) {
+            var fieldList = this.getFieldManager().getEntityTypeFieldList(scope);
+
+            var list = [];
+
+            fieldList = fieldList.sort(function (v1, v2) {
+                return this.translate(v1, 'fields', scope).localeCompare(this.translate(v2, 'fields', scope));
+            }.bind(this));
+
+            fieldList.forEach(function (field) {
+                var fieldType = this.getMetadata().get(['entityDefs', scope, 'fields', field, 'type']);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', field, 'disabled'])) return;
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', field, 'directAccessDisabled'])) return;
+
+                if (fieldType === 'map') return;
+                if (fieldType === 'linkMultiple') return;
+                if (fieldType === 'attachmentMultiple') return;
+
+                if (
+                    this.getMetadata().get(['entityAcl', scope, 'fields', field, 'onlyAdmin'])
+                    ||
+                    this.getMetadata().get(['entityAcl', scope, 'fields', field, 'forbidden'])
+                    ||
+                    this.getMetadata().get(['entityAcl', scope, 'fields', field, 'internal'])
+                ) return;
+
+                var fieldAttributeList = this.getFieldManager().getAttributeList(fieldType, field);
+
+                fieldAttributeList.forEach(function (attribute) {
+                    if (~list.indexOf(attribute)) return;
+                    list.push(attribute);
+                }, this);
+            }, this);
+
+            var forbiddenList = this.getAcl().getScopeForbiddenAttributeList(scope);
+            list = list.filter(function (item) {
+                if (~forbiddenList.indexOf(item)) return;
+                return true;
+            }, this);
+
+            list.push('id');
+            if (this.getMetadata().get('entityDefs.' + scope + '.fields.name.type') == 'personName') {
+                list.unshift('name');
+            }
+
+            return list;
+        },
+
+        translatePlaceholder: function (entityType, item) {
+            var field = item;
+            var scope = entityType;
+            var isForeign = false;
+            if (~item.indexOf('.')) {
+                isForeign = true;
+                field = item.split('.')[1];
+                var link = item.split('.')[0];
+                scope = this.getMetadata().get('entityDefs.' + entityType + '.links.' + link + '.entity');
+            }
+
+            var label = item;
+
+            label = this.translate(field, 'fields', scope);
+
+            if (field.indexOf('Id') === field.length - 2) {
+                var baseField = field.substr(0, field.length - 2);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', baseField])) {
+                    label = this.translate(baseField, 'fields', scope) + ' (' + this.translate('id', 'fields') + ')';
+                }
+            } else if (field.indexOf('Name') === field.length - 4) {
+                var baseField = field.substr(0, field.length - 4);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', baseField])) {
+                    label = this.translate(baseField, 'fields', scope) + ' (' + this.translate('name', 'fields') + ')';
+                }
+            } else if (field.indexOf('Type') === field.length - 4) {
+                var baseField = field.substr(0, field.length - 4);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', baseField])) {
+                    label = this.translate(baseField, 'fields', scope) + ' (' + this.translate('type', 'fields') + ')';
+                }
+            }
+
+            if (field.indexOf('Ids') === field.length - 3) {
+                var baseField = field.substr(0, field.length - 3);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', baseField])) {
+                    label = this.translate(baseField, 'fields', scope) + ' (' + this.translate('ids', 'fields') + ')';
+                }
+            } else if (field.indexOf('Names') === field.length - 5) {
+                var baseField = field.substr(0, field.length - 5);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', baseField])) {
+                    label = this.translate(baseField, 'fields', scope) + ' (' + this.translate('names', 'fields') + ')';
+                }
+            } else if (field.indexOf('Types') === field.length - 5) {
+                var baseField = field.substr(0, field.length - 5);
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', baseField])) {
+                    label = this.translate(baseField, 'fields', scope) + ' (' + this.translate('types', 'fields') + ')';
+                }
+            }
+
+            if (isForeign) {
+                label = this.translate(link, 'links', entityType) + '.' + label;
+            }
+
+            return label;
         },
 
         afterRender: function () {
@@ -143,8 +230,8 @@ Espo.define('views/email-template/fields/insert-field', 'views/fields/base', fun
                     return a.localeCompare(b);
                 }, this);
 
-                var $entityType = this.$entityType = this.$el.find('[name="entityType"]');
-                var $field = this.$field = this.$el.find('[name="field"]');
+                var $entityType = this.$entityType = this.$el.find('[data-name="entityType"]');
+                var $field = this.$field = this.$el.find('[data-name="field"]');
 
                 $entityType.on('change', function () {
                     this.changeEntityType();
@@ -180,12 +267,10 @@ Espo.define('views/email-template/fields/insert-field', 'views/fields/base', fun
         },
 
         insert: function (entityType, field) {
-            this.trigger('insert-field', {
+            this.model.trigger('insert-field', {
                 entityType: entityType,
                 field: field
             });
         }
-
     });
-
 });

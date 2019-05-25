@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,21 +68,27 @@ Espo.define('crm:views/calendar/modals/edit', 'views/modals/edit', function (Dep
 
         createRecordView: function (model, callback) {
             if (!this.id && !this.dateIsChanged) {
-                this.model.set('dateStart', this.options.dateStart);
-                this.model.set('dateEnd', this.options.dateEnd);
+                if (this.options.dateStart && this.options.dateEnd) {
+                    this.model.set('dateStart', this.options.dateStart);
+                    this.model.set('dateEnd', this.options.dateEnd);
+                }
 
                 if (this.options.allDay) {
-                    if (this.options.allDay) {
-                        var allDayScopeList = this.getMetadata().get('clientDefs.Calendar.allDayScopeList') || [];
-                        if (~allDayScopeList.indexOf(this.scope)) {
-                            this.model.set('dateStart', null);
-                            this.model.set('dateEnd', null);
-                            this.model.set('dateStartDate', null);
-                            this.model.set('dateEndDate', this.options.dateEndDate);
-                            if (this.options.dateEndDate !== this.options.dateStartDate) {
-                                this.model.set('dateStartDate', this.options.dateStartDate)
-                            }
+                    var allDayScopeList = this.getMetadata().get('clientDefs.Calendar.allDayScopeList') || [];
+                    if (~allDayScopeList.indexOf(this.scope)) {
+                        this.model.set('dateStart', null);
+                        this.model.set('dateEnd', null);
+                        this.model.set('dateStartDate', null);
+                        this.model.set('dateEndDate', this.options.dateEndDate);
+                        if (this.options.dateEndDate !== this.options.dateStartDate) {
+                            this.model.set('dateStartDate', this.options.dateStartDate)
                         }
+                    } else if (this.getMetadata().get(['entityDefs', this.scope, 'fields', 'dateStartDate'])) {
+                        this.model.set('dateStart', null);
+                        this.model.set('dateEnd', null);
+                        this.model.set('dateStartDate', this.options.dateStartDate);
+                        this.model.set('dateEndDate', this.options.dateEndDate);
+                        this.model.set('isAllDay', true);
                     }
                 }
             }
@@ -160,7 +166,7 @@ Espo.define('crm:views/calendar/modals/edit', 'views/modals/edit', function (Dep
             Dep.prototype.setup.call(this);
 
             if (!this.id) {
-                this.header = this.translate('Create', 'labels', 'Calendar');
+                this.headerHtml = this.translate('Create', 'labels', 'Calendar');
             }
 
             if (this.id) {

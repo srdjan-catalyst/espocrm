@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
                 this.model.set('stream', this.getMetadata().get('scopes.' + scope + '.stream') || false);
                 this.model.set('disabled', this.getMetadata().get('scopes.' + scope + '.disabled') || false);
 
-                this.model.set('sortBy', this.getMetadata().get('entityDefs.' + scope + '.collection.sortBy'));
-                this.model.set('sortDirection', this.getMetadata().get('entityDefs.' + scope + '.collection.asc') ? 'asc' : 'desc');
+                this.model.set('sortBy', this.getMetadata().get('entityDefs.' + scope + '.collection.orderBy'));
+                this.model.set('sortDirection', this.getMetadata().get('entityDefs.' + scope + '.collection.order'));
 
                 this.model.set('textFilterFields', this.getMetadata().get(['entityDefs', scope, 'collection', 'textFilterFields']) || ['name']);
                 this.model.set('fullTextSearch', this.getMetadata().get(['entityDefs', scope, 'collection', 'fullTextSearch']) || false);
@@ -223,6 +223,7 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
                 var fieldDefs = this.getMetadata().get('entityDefs.' + scope + '.fields') || {};
 
                 var orderableFieldList = Object.keys(fieldDefs).filter(function (item) {
+                    if (!this.getFieldManager().isScopeFieldAvailable(scope, item)) return false;
                     if (fieldDefs[item].notStorable) {
                         return false;
                     }
@@ -280,20 +281,17 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
                     }
                 });
 
-                var optionList = Object.keys(fieldDefs).filter(function (item) {
-                    var fieldType = fieldDefs[item].type;
-                    if (!this.getMetadata().get(['fields', fieldType, 'textFilter'])) return false
-                    if (this.getMetadata().get(['entityDefs', scope, 'fields', item, 'disabled'])) {
-                        return false;
-                    }
-                    if (this.getMetadata().get(['entityDefs', scope, 'fields', item, 'textFilterDisabled'])) {
-                        return false;
-                    }
-                    return true;
-                }, this);
+                var filtersOptionList = this.getTextFiltersOptionList(scope);
 
                 var textFilterFieldsTranslation = {};
-                optionList.forEach(function (item) {
+                filtersOptionList.forEach(function (item) {
+                    if (~item.indexOf('.')) {
+                        var link = item.split('.')[0];
+                        var foreignField = item.split('.')[1];
+                        var foreignEntityType = this.getMetadata().get(['entityDefs', scope, 'links', link, 'entity']);
+                        textFilterFieldsTranslation[item] = this.translate(link, 'links', scope) + '.' + this.translate(foreignField, 'fields', foreignEntityType);
+                        return;
+                    }
                     textFilterFieldsTranslation[item] = this.translate(item, 'fields', scope);
                 }, this);
 
@@ -304,7 +302,7 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
                     defs: {
                         name: 'textFilterFields',
                         params: {
-                            options: optionList
+                            options: filtersOptionList
                         }
                     },
                     tooltip: true,
@@ -380,6 +378,14 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
             this.$el.find('.cell[data-name=' + name+']').css('visibility', 'visible');
         },
 
+        toPlural: function (string) {
+            if (string.slice(-1) == 'y') {
+                return string.substr(0, string.length - 1) + 'ies';
+            } else {
+                return string + 's';
+            }
+        },
+
         afterRender: function () {
             this.getView('name').on('change', function (m) {
                 var name = this.model.get('name');
@@ -387,7 +393,7 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
                 name = name.charAt(0).toUpperCase() + name.slice(1);
 
                 this.model.set('labelSingular', name);
-                this.model.set('labelPlural', name + 's') ;
+                this.model.set('labelPlural', this.toPlural(name)) ;
                 if (name) {
                     name = name.replace(/\-/g, ' ').replace(/_/g, ' ').replace(/[^\w\s]/gi, '').replace(/ (.)/g, function (match, g) {
                         return g.toUpperCase();
@@ -613,7 +619,49 @@ Espo.define('views/admin/entity-manager/modals/edit-entity', ['views/modal', 'mo
                     }.bind(this));
                 }.bind(this));
             }, this);
-        }
+        },
+
+        getTextFiltersOptionList: function (scope) {
+            var fieldDefs = this.getMetadata().get(['entityDefs', scope, 'fields']) || {};
+
+            var filtersOptionList = Object.keys(fieldDefs).filter(function (item) {
+                var fieldType = fieldDefs[item].type;
+                if (!this.getMetadata().get(['fields', fieldType, 'textFilter'])) return false
+                if (!this.getFieldManager().isScopeFieldAvailable(scope, item)) return false;
+                if (this.getMetadata().get(['entityDefs', scope, 'fields', item, 'textFilterDisabled'])) return false;
+                return true;
+            }, this);
+
+            var linkList = Object.keys(this.getMetadata().get(['entityDefs', scope, 'links']) || {});
+            linkList.sort(function (v1, v2) {
+                return this.translate(v1, 'links', scope).localeCompare(this.translate(v2, 'links', scope));
+            }.bind(this));
+            linkList.forEach(function (link) {
+                var linkType = this.getMetadata().get(['entityDefs', scope, 'links', link, 'type']);
+                if (linkType != 'belongsTo') return;
+                var foreignEntityType = this.getMetadata().get(['entityDefs', scope, 'links', link, 'entity']);
+                if (!foreignEntityType) return;
+                var fields = this.getMetadata().get(['entityDefs', foreignEntityType, 'fields']) || {};
+                var fieldList = Object.keys(fields);
+                fieldList.sort(function (v1, v2) {
+                    return this.translate(v1, 'fields', foreignEntityType).localeCompare(this.translate(v2, 'fields', foreignEntityType));
+                }.bind(this));
+                fieldList.filter(function (item) {
+                    var fieldType = this.getMetadata().get(['entityDefs', foreignEntityType, 'fields', item, 'type']);
+                    if (!this.getMetadata().get(['fields', fieldType, 'textFilter'])) return false;
+                    if (!this.getMetadata().get(['fields', fieldType, 'textFilterForeign'])) return false;
+                    if (!this.getFieldManager().isScopeFieldAvailable(foreignEntityType, item)) return false;
+
+                    if (this.getMetadata().get(['entityDefs', foreignEntityType, 'fields', item, 'textFilterDisabled'])) return false;
+                    if (this.getMetadata().get(['entityDefs', foreignEntityType, 'fields', item, 'foreingAccessDisabled'])) return false;
+                    return true;
+                }, this).forEach(function (item) {
+                    filtersOptionList.push(link + '.' + item);
+                }, this);
+            }, this);
+
+            return filtersOptionList;
+        },
 
     });
 });

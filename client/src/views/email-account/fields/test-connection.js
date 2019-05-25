@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ Espo.define('views/email-account/fields/test-connection', 'views/fields/base', f
 
         readOnly: true,
 
-        _template: '<button class="btn btn-default disabled" data-action="testConnection">{{translate \'Test Connection\' scope=\'EmailAccount\'}}</button>',
+        templateContent: '<button class="btn btn-default disabled" data-action="testConnection">{{translate \'Test Connection\' scope=\'EmailAccount\'}}</button>',
 
         url: 'EmailAccount/action/testConnection',
 
@@ -48,9 +48,9 @@ Espo.define('views/email-account/fields/test-connection', 'views/fields/base', f
 
         checkAvailability: function () {
             if (this.model.get('host')) {
-                this.$el.find('button').removeClass('disabled');
+                this.$el.find('button').removeClass('disabled').removeAttr('disabled');
             } else {
-                this.$el.find('button').addClass('disabled');
+                this.$el.find('button').addClass('disabled').attr('disabled', 'disabled');
             }
         },
 
@@ -70,7 +70,9 @@ Espo.define('views/email-account/fields/test-connection', 'views/fields/base', f
                 'ssl': this.model.get('ssl'),
                 'username': this.model.get('username'),
                 'password': this.model.get('password') || null,
-                'id': this.model.id
+                'id': this.model.id,
+                emailAddress: this.model.get('emailAddress'),
+                userId: this.model.get('assignedUserId'),
             };
             return data;
         },

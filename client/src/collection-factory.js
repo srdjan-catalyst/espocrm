@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
- Espo.define('collection-factory', [], function () {
+ define('collection-factory', [], function () {
 
     var CollectionFactory = function (loader, modelFactory) {
         this.loader = loader;
@@ -40,24 +40,26 @@
         modelFactory: null,
 
         create: function (name, callback, context) {
-            context = context || this;
-
-            this.modelFactory.getSeed(name, function (seed) {
-
-                var asc = this.modelFactory.metadata.get('entityDefs.' + name + '.collection.asc');
-                var sortBy = this.modelFactory.metadata.get('entityDefs.' + name + '.collection.sortBy');
-
-                var className = this.modelFactory.metadata.get('clientDefs.' + name + '.collection') || 'Collection';
-
-                Espo.loader.require(className, function (collectionClass) {
-                    var collection = new collectionClass(null, {
-                        name: name,
-                        asc: asc,
-                        sortBy: sortBy
-                    });
-                    collection.model = seed;
-                    collection._user = this.modelFactory.user;
-                    callback.call(context, collection);
+            return new Promise(function (resolve) {
+                context = context || this;
+                this.modelFactory.getSeed(name, function (seed) {
+                    var orderBy = this.modelFactory.metadata.get(['entityDefs', name, 'collection', 'orderBy']);
+                    var order = this.modelFactory.metadata.get(['entityDefs', name, 'collection', 'order']);
+                    var className = this.modelFactory.metadata.get(['clientDefs', name, 'collection']) || 'collection';
+                    Espo.loader.require(className, function (collectionClass) {
+                        var collection = new collectionClass(null, {
+                            name: name,
+                            orderBy: orderBy,
+                            order: order
+                        });
+                        collection.model = seed;
+                        collection._user = this.modelFactory.user;
+                        collection.entityType = name;
+                        if (callback) {
+                            callback.call(context, collection);
+                        }
+                        resolve(collection);
+                    }.bind(this));
                 }.bind(this));
             }.bind(this));
         }
@@ -66,4 +68,3 @@
     return CollectionFactory;
 
 });
-

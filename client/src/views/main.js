@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('views/main', 'view', function (Dep) {
+define('views/main', 'view', function (Dep) {
 
     return Dep.extend({
 
@@ -38,16 +38,7 @@ Espo.define('views/main', 'view', function (Dep) {
 
         events: {
             'click .action': function (e) {
-                var $target = $(e.currentTarget);
-                var action = $target.data('action');
-                var data = $target.data();
-                if (action) {
-                    var method = 'action' + Espo.Utils.upperCaseFirst(action);
-                    if (typeof this[method] == 'function') {
-                        e.preventDefault();
-                        this[method].call(this, data, e);
-                    }
-                }
+                Espo.Utils.handleAction(this, e);
             },
         },
 
@@ -75,6 +66,8 @@ Espo.define('views/main', 'view', function (Dep) {
         },
 
         getMenu: function () {
+            if (this.menuDisabled) return {};
+
             var menu = {};
 
             if (this.menu) {
@@ -130,18 +123,23 @@ Espo.define('views/main', 'view', function (Dep) {
         },
 
         addMenuItem: function (type, item, toBeginnig, doNotReRender) {
-            item.name = item.name || item.action;
-            var name = item.name;
+            if (item) {
+                item.name = item.name || item.action;
+                var name = item.name;
 
-            var index = -1;
-            this.menu[type].forEach(function (data, i) {
-                if (data.name === name) {
-                    index = i;
-                    return;
+                if (name) {
+                    var index = -1;
+                    this.menu[type].forEach(function (data, i) {
+                        data = data || {};
+                        if (data.name === name) {
+                            index = i;
+                            return;
+                        }
+                    }, this);
+                    if (~index) {
+                        this.menu[type].splice(index, 1);
+                    }
                 }
-            }, this);
-            if (~index) {
-                this.menu[type].splice(index, 1);
             }
 
             var method = 'push';
@@ -155,20 +153,13 @@ Espo.define('views/main', 'view', function (Dep) {
             }
         },
 
-        disableMenuItem: function (name) {
-            this.$el.find('.header .header-buttons [data-name="'+name+'"]').addClass('disabled').attr('disabled');
-        },
-
-        enableMenuItem: function (name) {
-            this.$el.find('.header .header-buttons [data-name="'+name+'"]').removeClass('disabled').removeAttr('disabled');
-        },
-
         removeMenuItem: function (name, doNotReRender) {
             var index = -1;
             var type = false;
 
             ['actions', 'dropdown', 'buttons'].forEach(function (t) {
                 this.menu[t].forEach(function (item, i) {
+                    item = item || {};
                     if (item.name == name) {
                         index = i;
                         type = t;
@@ -183,6 +174,14 @@ Espo.define('views/main', 'view', function (Dep) {
             if (!doNotReRender && this.isRendered()) {
                 this.getView('header').reRender();
             }
+        },
+
+        disableMenuItem: function (name) {
+            this.$el.find('.header .header-buttons [data-name="'+name+'"]').addClass('disabled').attr('disabled');
+        },
+
+        enableMenuItem: function (name) {
+            this.$el.find('.header .header-buttons [data-name="'+name+'"]').removeClass('disabled').removeAttr('disabled');
         },
 
         actionNavigateToRoot: function (data, e) {
@@ -201,30 +200,30 @@ Espo.define('views/main', 'view', function (Dep) {
         hideHeaderActionItem: function (name) {
             ['actions', 'dropdown', 'buttons'].forEach(function (t) {
                 this.menu[t].forEach(function (item, i) {
+                    item = item || {};
                     if (item.name == name) {
                         item.hidden = true;
                     }
                 }, this);
             }, this);
             if (!this.isRendered()) return;
-            this.$el.find('.page-header li > .action[data-action="'+name+'"]').parent().addClass('hidden');
-            this.$el.find('.page-header a.action[data-action="'+name+'"]').addClass('hidden');
+            this.$el.find('.page-header li > .action[data-name="'+name+'"]').parent().addClass('hidden');
+            this.$el.find('.page-header a.action[data-name="'+name+'"]').addClass('hidden');
         },
 
         showHeaderActionItem: function (name) {
             ['actions', 'dropdown', 'buttons'].forEach(function (t) {
                 this.menu[t].forEach(function (item, i) {
+                    item = item || {};
                     if (item.name == name) {
                         item.hidden = false;
                     }
                 }, this);
             }, this);
             if (!this.isRendered()) return;
-            this.$el.find('.page-header li > .action[data-action="'+name+'"]').parent().removeClass('hidden');
-            this.$el.find('.page-header a.action[data-action="'+name+'"]').removeClass('hidden');
+            this.$el.find('.page-header li > .action[data-name="'+name+'"]').parent().removeClass('hidden');
+            this.$el.find('.page-header a.action[data-name="'+name+'"]').removeClass('hidden');
         }
 
     });
 });
-
-

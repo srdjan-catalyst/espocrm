@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ class Tester
 
     protected $portalId = null;
 
+    protected $authenticationMethod = null;
+
     protected $defaultUserPassword = '1';
 
     public function __construct(array $params)
@@ -107,11 +109,12 @@ class Tester
         return $returns;
     }
 
-    public function auth($userName, $password = null, $portalId = null)
+    public function auth($userName, $password = null, $portalId = null, $authenticationMethod = null)
     {
         $this->userName = $userName;
         $this->password = $password;
         $this->portalId = $portalId;
+        $this->authenticationMethod = $authenticationMethod;
     }
 
     public function getApplication($reload = false, $clearCache = true)
@@ -127,7 +130,7 @@ class Tester
 
             if (isset($this->userName)) {
                 $this->password = isset($this->password) ? $this->password : $this->defaultUserPassword;
-                $auth->login($this->userName, $this->password);
+                $auth->login($this->userName, $this->password, $this->authenticationMethod);
             } else {
                 $auth->useNoAuth();
             }
@@ -214,15 +217,32 @@ class Tester
 
     protected function loadData()
     {
+        $applyChanges = false;
+
         if (!empty($this->params['pathToFiles'])) {
             $this->getDataLoader()->loadFiles($this->params['pathToFiles']);
-            $this->clearVars();
-            $this->getApplication()->runRebuild();
+            $this->getApplication(true, true)->runRebuild();
         }
 
         if (!empty($this->params['dataFile'])) {
             $this->getDataLoader()->loadData($this->params['dataFile']);
+            $applyChanges = true;
         }
+
+        if (!empty($this->params['initData'])) {
+            $this->getDataLoader()->setData($this->params['initData']);
+            $applyChanges = true;
+        }
+
+        if ($applyChanges) {
+            $this->getApplication(true, true)->runRebuild();
+        }
+    }
+
+    public function setData(array $data)
+    {
+        $this->getDataLoader()->setData($data);
+        $this->getApplication(true, true)->runRebuild();
     }
 
     public function clearCache()
@@ -296,7 +316,7 @@ class Tester
         $userData['password'] = $passwordHash->hash($userData['password']);
 
         if ($isPortal) {
-            $userData['isPortalUser'] = true;
+            $userData['type'] = 'portal';
         }
 
         $user = $entityManager->getEntity('User');

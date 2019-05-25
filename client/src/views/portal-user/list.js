@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ Espo.define('views/portal-user/list', 'views/list', function (Dep) {
 
                     attributes.userName = attributes.emailAddress;
 
-                    attributes.isPortalUser = true;
+                    attributes.type = 'portal';
 
                     var router = this.getRouter();
 
@@ -96,8 +96,8 @@ Espo.define('views/portal-user/list', 'views/list', function (Dep) {
                 }, this);
 
                 this.listenToOnce(view, 'skip', function (model) {
-                    var attributes= {
-                        isPortalUser: true
+                    var attributes = {
+                        type: 'portal'
                     };
 
                     var router = this.getRouter();

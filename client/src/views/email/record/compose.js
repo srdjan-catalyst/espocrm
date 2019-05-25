@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,11 @@ Espo.define('views/email/record/compose', ['views/record/edit', 'views/email/rec
             }
 
             if (!this.options.signatureDisabled && this.hasSignature()) {
-                var body = this.prependSignature(this.model.get('body') || '', this.model.get('isHtml'));
+                var addSignatureMethod = 'prependSignature';
+                if (this.options.appendSignature) {
+                    addSignatureMethod = 'appendSignature';
+                }
+                var body = this[addSignatureMethod](this.model.get('body') || '', this.model.get('isHtml'));
                 this.model.set('body', body);
             }
 

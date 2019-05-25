@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,9 @@ class FormulaTest extends \PHPUnit\Framework\TestCase
     {
         $container = $this->container = $this->getMockBuilder('\\Espo\\Core\\Container')->disableOriginalConstructor()->getMock();
 
-        $this->functionFactory = new \Espo\Core\Formula\FunctionFactory($container);
+        $attributeFetcher = new \Espo\Core\Formula\AttributeFetcher();
+
+        $this->functionFactory = new \Espo\Core\Formula\FunctionFactory($container, $attributeFetcher);
         $this->formula = new \Espo\Core\Formula\Formula($this->functionFactory);
 
         $this->entity = $this->getEntityMock();
@@ -602,6 +604,45 @@ class FormulaTest extends \PHPUnit\Framework\TestCase
                     {
                         "type": "value",
                         "value": "Hello1"
+                    }
+                ]
+            }
+        ');
+        $actual = $this->formula->process($item, $this->entity);
+        $this->assertFalse($actual);
+    }
+
+    function testStringTest()
+    {
+        $item = json_decode('
+            {
+                "type": "string\\\\test",
+                "value": [
+                    {
+                        "type": "value",
+                        "value": "TestHelloMan"
+                    },
+                    {
+                        "type": "value",
+                        "value": "/hello/i"
+                    }
+                ]
+            }
+        ');
+        $actual = $this->formula->process($item, $this->entity);
+        $this->assertTrue($actual);
+
+        $item = json_decode('
+            {
+                "type": "string\\\\test",
+                "value": [
+                    {
+                        "type": "value",
+                        "value": "TestHelloMan"
+                    },
+                    {
+                        "type": "value",
+                        "value": "/Nope/i"
                     }
                 ]
             }

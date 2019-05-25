@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,8 @@ Espo.define('views/fields/link-multiple-with-role', 'views/fields/link-multiple'
 
             this.roleField = this.getMetadata().get('entityDefs.' + this.model.name + '.fields.' + this.name + '.columns.' + this.columnName);
 
+            this.displayRoleAsLabel = this.getMetadata().get(['entityDefs', this.model.entityType, 'fields', this.roleField, 'displayAsLabel']);
+
             if (this.roleFieldIsForeign) {
                 this.roleFieldScope = this.foreignScope;
             } else {
@@ -80,15 +82,28 @@ Espo.define('views/fields/link-multiple-with-role', 'views/fields/link-multiple'
                 role = '';
             }
             if (role != '') {
-                roleHtml = '<span class="text-muted small"> &#187; ' +
-                this.getHelper().stripTags(this.getLanguage().translateOption(role, this.roleField, this.roleFieldScope)) +
+                var style = this.getMetadata().get(['entityDefs', this.model.entityType, 'fields', this.roleField, 'style', role]);
+                var className = 'text';
+
+                if (this.displayRoleAsLabel && style && style !== 'default') {
+                    className = 'label label-sm label';
+                    if (style === 'muted') {
+                        style = 'default';
+                    }
+                } else {
+                    style = style || 'muted';
+                }
+
+                roleHtml = '<span class="test-muted small"> &#187; </span>' +
+                '<span class="'+className+'-'+style+' small">' +
+                this.getHelper().escapeString(this.getLanguage().translateOption(role, this.roleField, this.roleFieldScope)) +
                 '</span>';
             }
             var iconHtml = '';
             if (this.mode == 'detail') {
                 iconHtml = this.getIconHtml(id);
             }
-            var lineHtml = '<div>' + iconHtml + '<a href="#' + this.foreignScope + '/view/' + id + '">' + this.getHelper().stripTags(name) + '</a> ' + roleHtml + '</div>';
+            var lineHtml = '<div>' + iconHtml + '<a href="#' + this.foreignScope + '/view/' + id + '">' + this.getHelper().escapeString(name) + '</a> ' + roleHtml + '</div>';
             return lineHtml;
         },
 
@@ -149,9 +164,9 @@ Espo.define('views/fields/link-multiple-with-role', 'views/fields/link-multiple'
             var $container = this.$el.find('.link-container');
             var $el = $('<div class="form-inline list-group-item link-with-role link-group-item-with-columns clearfix">').addClass('link-' + id);
 
-            var nameHtml = '<div>' + this.getHelper().stripTags(name) + '&nbsp;' + '</div>';
+            var nameHtml = '<div>' + this.getHelper().escapeString(name) + '&nbsp;' + '</div>';
 
-            var removeHtml = '<a href="javascript:" class="pull-right" data-id="' + id + '" data-action="clearLink"><span class="glyphicon glyphicon-remove"></a>';
+            var removeHtml = '<a href="javascript:" class="pull-right" data-id="' + id + '" data-action="clearLink"><span class="fas fa-times"></a>';
 
             var $role;
 
@@ -182,7 +197,7 @@ Espo.define('views/fields/link-multiple-with-role', 'views/fields/link-multiple'
             if (this.mode == 'edit') {
                 if ($role) {
                     var fetch = function ($target) {
-                        if (!$target || !$target.size()) return;
+                        if (!$target || !$target.length) return;
 
                         var value = $target.val().toString().trim();
                         var id = $target.data('id');

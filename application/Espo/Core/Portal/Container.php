@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,17 +31,17 @@ namespace Espo\Core\Portal;
 
 class Container extends \Espo\Core\Container
 {
-    protected function getServiceClassName($name, $default)
+    public function getServiceClassName(string $name, string $default)
     {
         $metadata = $this->get('metadata');
-        $className = $metadata->get('app.serviceContainerPortal.classNames.' . $name, $default);
+        $className = $metadata->get(['app', 'serviceContainerPortal', 'classNames',  $name], $default);
         return $className;
     }
 
-    protected function getServiceMainClassName($name, $default)
+    protected function getServiceMainClassName(string $name, string $default)
     {
         $metadata = $this->get('metadata');
-        $className = $metadata->get('app.serviceContainer.classNames.' . $name, $default);
+        $className = $metadata->get(['app', 'serviceContainer', 'classNames',  $name], $default);
         return $className;
     }
 
@@ -104,7 +104,7 @@ class Container extends \Espo\Core\Container
     {
         $this->set('portal', $portal);
 
-        $data = array();
+        $data = [];
         foreach ($this->get('portal')->getSettingsAttributeList() as $attribute) {
             $data[$attribute] = $this->get('portal')->get($attribute);
         }
@@ -133,9 +133,12 @@ class Container extends \Espo\Core\Container
             unset($data['defaultCurrency']);
         }
 
+        if ($this->get('config')->get('webSocketInPortalDisabled')) {
+            $this->get('config')->set('useWebSocket', false);
+        }
+
         foreach ($data as $attribute => $value) {
             $this->get('config')->set($attribute, $value, true);
         }
     }
 }
-

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ Espo.define('crm:controllers/unsubscribe', 'controller', function (Dep) {
 
     return Dep.extend({
 
-        unsubscribe: function (data) {
+        actionUnsubscribe: function (data) {
             var viewName = this.getMetadata().get(['clientDefs', 'Campaign', 'unsubscribeView']) ||
                 'crm:views/campaign/unsubscribe';
 
@@ -41,7 +41,7 @@ Espo.define('crm:controllers/unsubscribe', 'controller', function (Dep) {
             });
         },
 
-        subscribeAgain: function (data) {
+        actionSubscribeAgain: function (data) {
             var viewName = this.getMetadata().get(['clientDefs', 'Campaign', 'subscribeAgainView']) ||
                 'crm:views/campaign/subscribe-again';
 

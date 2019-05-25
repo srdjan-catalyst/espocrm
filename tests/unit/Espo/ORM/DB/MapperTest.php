@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,28 +61,40 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
                     return "'" . $args[0] . "'";
                 }));
 
+        $metadata = $this->getMockBuilder('\\Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
+        $metadata
+            ->method('get')
+            ->will($this->returnValue(false));
+
+        $entityManager = $this->getMockBuilder('\\Espo\\ORM\\EntityManager')->disableOriginalConstructor()->getMock();
+        $entityManager
+            ->method('getMetadata')
+            ->will($this->returnValue($metadata));
 
         $this->entityFactory = $this->getMockBuilder('\\Espo\\ORM\\EntityFactory')->disableOriginalConstructor()->getMock();
-        $this->entityFactory->expects($this->any())
-                            ->method('create')
-                            ->will($this->returnCallback(function() {
-                                $args = func_get_args();
-                                $className = "\\Espo\\Entities\\" . $args[0];
-                                  return new $className();
-                            }));
+        $this->entityFactory
+            ->expects($this->any())
+            ->method('create')
+            ->will($this->returnCallback(function () use ($entityManager) {
+                $args = func_get_args();
+                $className = "\\Espo\\Entities\\" . $args[0];
+                return new $className([], $entityManager);
+            }));
 
-        $this->query = new Query($this->pdo, $this->entityFactory);
+        $this->metadata = $this->getMockBuilder('\\Espo\\ORM\\Metadata')->disableOriginalConstructor()->getMock();
 
-        $this->db = new MysqlMapper($this->pdo, $this->entityFactory, $this->query);
+        $this->query = new Query($this->pdo, $this->entityFactory, $this->metadata);
+
+        $this->db = new MysqlMapper($this->pdo, $this->entityFactory, $this->query, $this->metadata);
         $this->db->setReturnCollection(true);
 
-        $this->post = new \Espo\Entities\Post();
-        $this->comment = new \Espo\Entities\Comment();
-        $this->tag = new \Espo\Entities\Tag();
-        $this->note = new \Espo\Entities\Note();
+        $this->post = new \Espo\Entities\Post([], $entityManager);
+        $this->comment = new \Espo\Entities\Comment([], $entityManager);
+        $this->tag = new \Espo\Entities\Tag([], $entityManager);
+        $this->note = new \Espo\Entities\Note([], $entityManager);
 
-        $this->contact = new \Espo\Entities\Contact();
-        $this->account = new \Espo\Entities\Account();
+        $this->contact = new \Espo\Entities\Contact([], $entityManager);
+        $this->account = new \Espo\Entities\Account([], $entityManager);
 
     }
 
@@ -450,7 +462,7 @@ class DBMapperTest extends \PHPUnit\Framework\TestCase
 
     public function testMax()
     {
-        $query = "SELECT MAX(post.id) AS AggregateValue FROM `post` LEFT JOIN `user` AS `createdBy` ON post.created_by_id = createdBy.id";
+        $query = "SELECT MAX(post.id) AS AggregateValue FROM `post` WHERE post.deleted = '0'";
         $return = new MockDBResult(array(
             array (
                 'AggregateValue' => 10,

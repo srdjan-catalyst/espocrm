@@ -36,11 +36,13 @@
         },
         "lastAccess": {
             "type": "datetime",
-            "readOnly": true
+            "readOnly": true,
+            "hasSeconds": true
         },
         "createdAt": {
             "type": "datetime",
-            "readOnly": true
+            "readOnly": true,
+            "hasSeconds": true
         },
         "modifiedAt": {
             "type": "datetime",
@@ -63,8 +65,8 @@
         }
     },
     "collection": {
-        "sortBy": "lastAccess",
-        "asc": false,
+        "orderBy": "lastAccess",
+        "order": "desc",
         "textFilterFields": ["ipAddress", "userName"]
     },
     "indexes": {

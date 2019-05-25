@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ use Espo\Core\Utils\Util;
 
 class ManyMany extends Base
 {
-    protected function load($linkName, $entityName)
+    protected function load($linkName, $entityType)
     {
         $foreignEntityName = $this->getForeignEntityName();
         $foreignLinkName = $this->getForeignLinkName();
@@ -43,37 +43,54 @@ class ManyMany extends Base
         if (!empty($linkParams['relationName'])) {
             $relationName = $linkParams['relationName'];
         } else {
-            $relationName = $this->getJoinTable($entityName, $foreignEntityName);
+            $relationName = $this->getJoinTable($entityType, $foreignEntityName);
         }
 
-        return array(
-            $entityName => array(
-                'fields' => array(
-                       $linkName.'Ids' => array(
+        $isStub = !$this->getMetadata()->get(['entityDefs', $entityType, 'fields', $linkName]);
+
+        $key1 = lcfirst($entityType) . 'Id';
+        $key2 = lcfirst($foreignEntityName) . 'Id';
+
+        if ($key1 === $key2) {
+            if (strcmp($linkName, $foreignLinkName)) {
+                $key1 = 'leftId';
+                $key2 = 'rightId';
+            } else {
+                $key1 = 'rightId';
+                $key2 = 'leftId';
+            }
+        }
+
+        return [
+            $entityType => [
+                'fields' => [
+                    $linkName.'Ids' => [
                         'type' => 'jsonArray',
                         'notStorable' => true,
-                    ),
-                    $linkName.'Names' => array(
+                        'isLinkStub' => $isStub,
+                    ],
+                    $linkName.'Names' => [
                         'type' => 'jsonObject',
                         'notStorable' => true,
-                    ),
-                ),
-                'relations' => array(
-                    $linkName => array(
+                        'isLinkStub' => $isStub,
+                    ],
+                ],
+                'relations' => [
+                    $linkName => [
                         'type' => 'manyMany',
                         'entity' => $foreignEntityName,
                         'relationName' => $relationName,
-                        'key' => 'id', //todo specify 'key'
-                        'foreignKey' => 'id', //todo specify 'foreignKey'
-                        'midKeys' => array(
-                            lcfirst($entityName).'Id',
-                            lcfirst($foreignEntityName).'Id',
-                        ),
-                        'foreign' => $foreignLinkName
-                    ),
-                ),
-            ),
-        );
+                        'key' => 'id',
+                        'foreignKey' => 'id',
+                        'midKeys' => [
+                            $key1,
+                            $key2,
+                        ],
+                        'foreign' => $foreignLinkName,
+                    ],
+                ],
+            ],
+        ];
     }
 
     protected function getJoinTable($tableName1, $tableName2)

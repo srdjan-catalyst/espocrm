@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,7 @@ Espo.define('views/inbound-email/fields/folder', 'views/fields/base', function (
 
         events: {
             'click [data-action="selectFolder"]': function () {
-                var self = this;
-
-                this.notify('Please wait...');
+                Espo.Ui.notify(this.translate('pleaseWait', 'messages'));
 
                 var data = {
                     host: this.model.get('host'),
@@ -53,27 +51,21 @@ Espo.define('views/inbound-email/fields/folder', 'views/fields/base', function (
                     }
                 }
 
-
-                $.ajax({
-                    type: 'GET',
-                    url: 'InboundEmail/action/getFolders',
-                    data: data,
-                    error: function (xhr) {
-                        Espo.Ui.error(self.translate('couldNotConnectToImap', 'messages', 'InboundEmail'));
-                        xhr.errorIsHandled = true;
-                    },
-                }).done(function (folders) {
+                Espo.Ajax.postRequest('InboundEmail/action/getFolders', data).then(function (folders) {
                     this.createView('modal', 'views/inbound-email/modals/select-folder', {
                         folders: folders
                     }, function (view) {
-                        self.notify(false);
+                        this.notify(false);
                         view.render();
 
-                        self.listenToOnce(view, 'select', function (folder) {
+                        this.listenToOnce(view, 'select', function (folder) {
                             view.close();
-                            self.addFolder(folder);
-                        });
+                            this.addFolder(folder);
+                        }, this);
                     });
+                }.bind(this)).fail(function () {
+                    Espo.Ui.error(this.translate('couldNotConnectToImap', 'messages', 'InboundEmail'));
+                    xhr.errorIsHandled = true;
                 }.bind(this));
             }
         },

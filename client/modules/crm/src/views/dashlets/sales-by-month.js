@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/chart', function (Dep) {
+define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/chart', function (Dep) {
 
     return Dep.extend({
 
@@ -52,6 +52,10 @@ Espo.define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/ch
             return 0;
         },
 
+        isNoData: function () {
+            return this.isEmpty;
+        },
+
         prepareData: function (response) {
             var monthList = this.monthList = response.keyList;
 
@@ -65,6 +69,8 @@ Espo.define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/ch
 
             this.chartData = [];
 
+            this.isEmpty = true;
+
             var mid = 0;
             if (values.length) {
                 mid = values.reduce(function(a, b) {return a + b}) / values.length;
@@ -75,6 +81,7 @@ Espo.define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/ch
             var max = 0;
 
             values.forEach(function (value, i) {
+                if (value) this.isEmpty = false;
                 if (value && value > max) {
                     max = value;
                 }
@@ -134,7 +141,7 @@ Espo.define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/ch
                             return '';
                         }
                         if (value % 1 == 0) {
-                            return self.currencySymbol + self.formatNumber(Math.floor(value)).toString();
+                            return self.currencySymbol + self.formatNumber(Math.floor(value), false, true).toString();
                         }
                         return '';
                     }
@@ -161,11 +168,12 @@ Espo.define('crm:views/dashlets/sales-by-month', 'crm:views/dashlets/abstract/ch
                     relative: true,
                     lineColor: this.hoverColor,
                     position: 's',
+                    autoPositionVertical: true,
                     trackFormatter: function (obj) {
                         var i = parseInt(obj.x);
                         var value = '';
                         if (i in self.monthList) {
-                            value += moment(self.monthList[i] + '-01').format('MMM YYYY') + ':<br>';
+                            value += moment(self.monthList[i] + '-01').format('MMM YYYY') + '<br>';
                         }
                         return value + self.currencySymbol + self.formatNumber(obj.y, true);
                     }

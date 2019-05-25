@@ -73,8 +73,8 @@
         }
     },
     "collection": {
-        "sortBy": "parent",
-        "asc": true
+        "orderBy": "parent",
+        "order": "asc"
     },
     "additionalTables": {
         "EmailTemplateCategoryPath": {
@@ -83,8 +83,7 @@
                     "type": "id",
                     "dbType": "int",
                     "len": "11",
-                    "autoincrement": true,
-                    "unique" : true
+                    "autoincrement": true
                 },
                 "ascendorId": {
                     "type": "varchar",

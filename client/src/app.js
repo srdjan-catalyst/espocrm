@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  ************************************************************************/
 
 
-Espo.define(
+define(
     'app',
     [
         'ui',
@@ -50,7 +50,10 @@ Espo.define(
         'layout-manager',
         'theme-manager',
         'session-storage',
-        'view-helper'
+        'view-helper',
+        'web-socket-manager',
+        'ajax',
+        'number',
     ],
     function (
         Ui,
@@ -73,7 +76,10 @@ Espo.define(
         LayoutManager,
         ThemeManager,
         SessionStorage,
-        ViewHelper
+        ViewHelper,
+        WebSocketManager,
+        Ajax,
+        NumberUtil
     ) {
 
     var App = function (options, callback) {
@@ -141,7 +147,11 @@ Espo.define(
             this.modelFactory = new ModelFactory(this.loader, this.metadata, this.user);
             this.collectionFactory = new CollectionFactory(this.loader, this.modelFactory);
 
-            this.initDateTime();
+            if (this.settings.get('useWebSocket')) {
+                this.webSocketManager = new WebSocketManager(this.settings);
+            }
+
+            this.initUtils();
             this.initView();
             this.initBaseController();
 
@@ -220,8 +230,11 @@ Espo.define(
                 this.viewHelper.layoutManager.userId = this.user.id;
 
                 if (this.themeManager.isUserTheme()) {
-                    var stylesheetPath = this.basePath + this.themeManager.getStylesheet();
-                    $('#main-stylesheet').attr('href', stylesheetPath);
+                    this.loadStylesheet();
+                }
+
+                if (this.webSocketManager) {
+                    this.webSocketManager.connect(this.auth, this.user.id);
                 }
 
                 var promiseList = [];
@@ -244,9 +257,14 @@ Espo.define(
                 if (!this.themeManager.isApplied() && this.themeManager.isUserTheme()) {
                     promiseList.push(
                         new Promise(function (resolve) {
-                            (function check () {
+                            (function check (i) {
+                                i = i || 0;
                                 if (!this.themeManager.isApplied()) {
-                                    setTimeout(check.bind(this), 10);
+                                    if (i === 50) {
+                                        resolve();
+                                        return;
+                                    }
+                                    setTimeout(check.bind(this, i + 1), 10);
                                     return;
                                 }
                                 resolve();
@@ -264,7 +282,8 @@ Espo.define(
         },
 
         initRouter: function () {
-            this.router = new Router();
+            var routes = this.metadata.get(['app', 'clientRoutes']) || {};
+            this.router = new Router({routes: routes});
             this.viewHelper.router = this.router;
             this.baseController.setRouter(this.router);
             this.router.confirmLeaveOutMessage = this.language.translate('confirmLeaveOutMessage', 'messages');
@@ -364,10 +383,12 @@ Espo.define(
             this.preLoader.load(callback, this);
         },
 
-        initDateTime: function () {
+        initUtils: function () {
             this.dateTime = new DateTime();
             this.modelFactory.dateTime = this.dateTime;
             this.dateTime.setSettingsAndPreferences(this.settings, this.preferences);
+
+            this.numberUtil = new NumberUtil(this.settings, this.preferences);
         },
 
         createAclManager: function () {
@@ -396,6 +417,8 @@ Espo.define(
             helper.sessionStorage = this.sessionStorage;
             helper.basePath = this.basePath;
             helper.appParams = this.appParams;
+            helper.webSocketManager = this.webSocketManager;
+            helper.numberUtil = this.numberUtil;
 
             this.viewLoader = function (viewName, callback) {
                 Espo.require(Espo.Utils.composeViewClassName(viewName), callback);
@@ -407,6 +430,9 @@ Espo.define(
                 var path = null;
                 switch (type) {
                     case 'template':
+                        if (~name.indexOf('.')) {
+                            console.warn(name + ': template name should use slashes for a directory separator.');
+                        }
                         path = 'res/templates/' + name.split('.').join('/') + '.tpl';
                         break;
                     case 'layoutTemplate':
@@ -480,14 +506,14 @@ Espo.define(
             if (this.auth) {
                 var arr = Base64.decode(this.auth).split(':');
                 if (arr.length > 1) {
-                    $.ajax({
-                        url: 'App/action/destroyAuthToken',
-                        type: 'POST',
-                        data: JSON.stringify({
-                            token: arr[1]
-                        })
+                    Espo.Ajax.postRequest('App/action/destroyAuthToken', {
+                        token: arr[1]
                     });
                 }
+            }
+
+            if (this.webSocketManager) {
+                this.webSocketManager.close();
             }
 
             this.auth = null;
@@ -504,6 +530,15 @@ Espo.define(
             xhr.setRequestHeader('Authorization', 'Basic ' + Base64.encode('**logout:logout'));
             xhr.send('');
             xhr.abort();
+
+            this.loadStylesheet();
+        },
+
+        loadStylesheet: function () {
+            if (!this.metadata.get(['themes'])) return;
+
+            var stylesheetPath = this.basePath + this.themeManager.getStylesheet();
+            $('#main-stylesheet').attr('href', stylesheetPath);
         },
 
         setCookieAuth: function (username, token) {
@@ -583,11 +618,7 @@ Espo.define(
         },
 
         requestUserData: function (callback) {
-            $.ajax({
-                url: 'App/user',
-            }).done(function (data) {
-                callback(data);
-            }.bind(this));
+            Espo.Ajax.getRequest('App/user').then(callback);
         },
 
         setupAjax: function () {
@@ -646,6 +677,11 @@ Espo.define(
                             Espo.Ui.error(msg);
                         }
                         break;
+                    case 400:
+                        var msg = self.language.translate('Error') + ' ' + xhr.status;
+                        msg += ': ' + self.language.translate('Bad request');
+                        Espo.Ui.error(msg);
+                        break;
                     case 404:
                         if (options.main) {
                             self.baseController.error404();
@@ -675,5 +711,3 @@ Espo.define(
 
     return App;
 });
-
-

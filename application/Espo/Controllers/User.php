@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,5 +105,21 @@ class User extends \Espo\Core\Controllers\Record
 
         return $this->getService('User')->passwordChangeRequest($userName, $emailAddress, $url);
     }
-}
 
+    public function postActionGenerateNewApiKey($params, $data, $request)
+    {
+        if (empty($data->id)) throw new BadRequest();
+        if (!$this->getUser()->isAdmin()) throw new Forbidden();
+        return $this->getRecordService()->generateNewApiKeyForEntity($data->id)->getValueMap();
+    }
+
+    public function beforeCreateLink()
+    {
+        if (!$this->getUser()->isAdmin()) throw new Forbidden();
+    }
+
+    public function beforeRemoveLink($params, $data, $request)
+    {
+        if (!$this->getUser()->isAdmin()) throw new Forbidden();
+    }
+}

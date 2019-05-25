@@ -24,7 +24,9 @@
             [{"name": "ldapUserFirstNameAttribute"}, {"name": "ldapUserLastNameAttribute"}],
             [{"name": "ldapUserTitleAttribute"}, false],
             [{"name": "ldapUserEmailAddressAttribute"}, {"name": "ldapUserPhoneNumberAttribute"}],
-            [{"name": "ldapUserTeams"}, {"name": "ldapUserDefaultTeam"}]
+            [{"name": "ldapUserTeams"}, {"name": "ldapUserDefaultTeam"}],
+            [{"name": "ldapPortalUserLdapAuth"}, false],
+            [{"name": "ldapPortalUserPortals"}, {"name": "ldapPortalUserRoles"}]
         ]
     }
 ]

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -152,6 +152,7 @@ Espo.define('views/admin/layouts/base', 'view', function (Dep) {
             }, function (view) {
                 view.render();
                 this.listenToOnce(view, 'after:save', function (attributes) {
+                    this.trigger('update-item', name, attributes);
                     var $li = $("#layout ul > li[data-name='" + name + "']");
                     for (var key in attributes) {
                         $li.attr('data-' + key, attributes[key]);

@@ -9,7 +9,6 @@
             "type": "enum",
             "options": ["Planned", "Held", "Not Held"],
             "default": "Planned",
-            "view": "views/fields/enum-styled",
             "style": {
                 "Held": "success"
             },
@@ -62,8 +61,15 @@
             "type": "enum",
             "notStorable": true,
             "options": ["None", "Accepted", "Tentative", "Declined"],
+            "style": {
+                "Accepted": "success",
+                "Declined": "danger",
+                "Tentative": "warning"
+            },
             "layoutDetailDisabled": true,
             "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
+            "exportDisabled": true,
             "where": {
                 "=": {
                     "leftJoins": ["users", "contacts", "leads"],
@@ -94,26 +100,29 @@
             "columns": {
                 "status": "acceptanceStatus"
             },
+            "additionalAttributeList": ["columns"],
             "orderBy": "name"
         },
         "contacts": {
             "type": "linkMultiple",
             "layoutDetailDisabled": true,
             "layoutListDisabled": true,
-            "view": "crm:views/meeting/fields/contacts",
+            "view": "crm:views/call/fields/contacts",
             "columns": {
                 "status": "acceptanceStatus"
             },
+            "additionalAttributeList": ["columns"],
             "orderBy": "name"
         },
         "leads": {
             "type": "linkMultiple",
             "layoutDetailDisabled": true,
             "layoutListDisabled": true,
-            "view": "crm:views/meeting/fields/attendees",
+            "view": "crm:views/call/fields/leads",
             "columns": {
                 "status": "acceptanceStatus"
             },
+            "additionalAttributeList": ["columns"],
             "orderBy": "name"
         },
         "createdAt": {
@@ -133,6 +142,11 @@
             "type": "link",
             "readOnly": true,
             "view": "views/fields/user"
+        },
+        "phoneNumbersMap": {
+            "type": "jsonObject",
+            "notStorable": true,
+            "disabled": true
         },
         "assignedUser": {
             "type": "link",
@@ -209,8 +223,8 @@
         }
     },
     "collection": {
-        "sortBy": "dateStart",
-        "asc": false
+        "orderBy": "dateStart",
+        "order": "desc"
     },
     "indexes": {
         "dateStartStatus": {

@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,17 +34,20 @@ Espo.define('views/user/detail', 'views/detail', function (Dep) {
             Dep.prototype.setup.call(this);
 
             if (this.model.id == this.getUser().id || this.getUser().isAdmin()) {
-                this.menu.buttons.push({
-                    name: 'preferences',
-                    label: 'Preferences',
-                    style: 'default',
-                    action: "preferences",
-                    link: '#Preferences/edit/' + this.getUser().id
-                });
 
-                if (!this.model.get('isPortalUser')) {
+                if (this.model.isRegular() || this.model.isAdmin() || this.model.isPortal()) {
+                    this.addMenuItem('dropdown', {
+                        name: 'preferences',
+                        label: 'Preferences',
+                        style: 'default',
+                        action: "preferences",
+                        link: '#Preferences/edit/' + this.getUser().id
+                    });
+                }
+
+                if (this.model.isRegular() || this.model.isAdmin()) {
                     if ((this.getAcl().check('EmailAccountScope') && this.model.id == this.getUser().id) || this.getUser().isAdmin()) {
-                        this.menu.buttons.push({
+                        this.addMenuItem('dropdown', {
                             name: 'emailAccounts',
                             label: "Email Accounts",
                             style: 'default',
@@ -65,7 +68,7 @@ Espo.define('views/user/detail', 'views/detail', function (Dep) {
                 }
             }
 
-            if (this.getAcl().checkScope('Calendar') && !this.model.get('isPortalUser')) {
+            if (this.getAcl().checkScope('Calendar') && (this.model.isRegular() || this.model.isAdmin())) {
                 var showActivities = this.getAcl().checkUserPermission(this.model);
                 if (!showActivities) {
                     if (this.getAcl().get('userPermission') === 'team') {
@@ -101,4 +104,3 @@ Espo.define('views/user/detail', 'views/detail', function (Dep) {
         },
     });
 });
-

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ if (!$installer->checkPermission()) {
     foreach($group as $permission => $folders) {
         if ($permission == '0644-0755') $folders = '';
         $instruction .= $systemHelper->getPermissionCommands(array($folders, ''), explode('-', $permission), false, null, $changeOwner) . "<br>";
-        $instructionSU .= "&nbsp;&nbsp;" . $systemHelper->getPermissionCommands(array($folders, ''), explode('-', $permission), true, null, $changeOwner) . "<br>";
+        $instructionSU .= $systemHelper->getPermissionCommands(array($folders, ''), explode('-', $permission), true, null, $changeOwner) . "<br>";
         if ($changeOwner) {
             $changeOwner = false;
         }

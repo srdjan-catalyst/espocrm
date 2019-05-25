@@ -3,7 +3,7 @@
 <div class="list-buttons-container clearfix">
     {{#if displayTotalCount}}
         <div class="text-muted total-count">
-        {{translate 'Total'}}: <span class="total-count-span">{{totalCount}}</span>
+        {{translate 'Total'}}: <span class="total-count-span">{{totalCountFormatted}}</span>
         </div>
     {{/if}}
 
@@ -14,19 +14,24 @@
 {{/if}}
 
 <div class="list-kanban" style="min-width: {{minTableWidthPx}}px">
-    <table>
+    <div class="kanban-head-container">
+    <table class="kanban-head">
         <thead>
-            <tr>
+            <tr class="kanban-row">
                 {{#each groupDataList}}
-                <th data-name="{{name}}" class="group-header">
-                    <div>{{label}}</div>
+                <th data-name="{{name}}" class="group-header{{#if style}} group-header-{{style}}{{/if}}{{#if nextStyle}} group-header-before-{{nextStyle}}{{/if}}">
+                    <div><span class="kanban-group-label">{{label}}</span></div>
                 </th>
                 {{/each}}
             </tr>
         </thead>
+    </table>
+    </div>
+    <div class="kanban-columns-container">
+    <table class="kanban-columns">
         {{#unless isEmptyList}}
         <tbody>
-            <tr>
+            <tr class="kanban-row">
                 {{#each groupDataList}}
                 <td class="group-column" data-name="{{name}}">
                     <div>
@@ -36,7 +41,7 @@
                             {{/each}}
                         </div>
                         <div class="show-more">
-                            <a data-action="groupShowMore" data-name="{{name}}" title="{{translate 'Show more'}}" class="{{#unless hasShowMore}}hidden {{/unless}}btn btn-link btn-sm"><span class="glyphicon glyphicon-option-horizontal"></span></a>
+                            <a data-action="groupShowMore" data-name="{{name}}" title="{{translate 'Show more'}}" class="{{#unless hasShowMore}}hidden {{/unless}}btn btn-link btn-sm"><span class="fas fa-ellipsis-h fa-sm"></span></a>
                         </div>
                     </div>
                 </td>
@@ -45,6 +50,7 @@
         </tbody>
         {{/unless}}
     </table>
+    </div>
 </div>
 
 

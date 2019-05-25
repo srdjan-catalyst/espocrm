@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,10 @@ Espo.define('views/fields/formula', 'views/fields/text', function (Dep) {
 
         height: 300,
 
+        maxLineDetailCount: 80,
+
+        maxLineEditCount: 200,
+
         events: {
             'click [data-action="addAttribute"]': function () {
                 this.addAttribute();
@@ -49,6 +53,10 @@ Espo.define('views/fields/formula', 'views/fields/text', function (Dep) {
             Dep.prototype.setup.call(this);
 
             this.height = this.options.height || this.params.height || this.height;
+
+            this.maxLineDetailCount = this.options.maxLineDetailCount || this.params.maxLineDetailCount || this.maxLineDetailCount;
+            this.maxLineEditCount = this.options.maxLineEditCount || this.params.maxLineEditCount || this.maxLineEditCount;
+
             this.targetEntityType = this.options.targetEntityType || this.params.targetEntityType || this.targetEntityType;
 
             this.containerId = 'editor-' + Math.floor((Math.random() * 10000) + 1).toString();
@@ -89,13 +97,23 @@ Espo.define('views/fields/formula', 'views/fields/text', function (Dep) {
 
             this.$editor = this.$el.find('#' + this.containerId);
 
-            if (this.$editor.size() && (this.mode === 'edit' || this.mode == 'detail')) {
+            if (this.$editor.length && (this.mode === 'edit' || this.mode == 'detail' || this.mode == 'list')) {
                 this.$editor
-                    .css('height', this.height + 'px')
+                    .css('minHeight', this.height + 'px')
                     .css('fontSize', '14px');
                 var editor = this.editor = ace.edit(this.containerId);
 
-                if (this.mode == 'detail') {
+                editor.setOptions({
+                    maxLines: this.mode === 'edit' ? this.maxLineEditCount : this.maxLineDetailCount
+                });
+
+                if (this.isEditMode()) {
+                    editor.getSession().on('change', function () {
+                        this.trigger('change', {ui: true});
+                    }.bind(this));
+                }
+
+                if (this.isReadMode()) {
                     editor.setReadOnly(true);
                     editor.renderer.$cursorLayer.element.style.display = "none";
                     editor.renderer.setShowGutter(false);

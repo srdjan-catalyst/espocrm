@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,9 +56,9 @@ class Email extends \Espo\Core\Notificators\Base
         return $this->streamService;
     }
 
-    public function process(Entity $entity)
+    public function process(Entity $entity, array $options = [])
     {
-        if ($entity->get('status') !== 'Archived' && $entity->get('status') !== 'Sent') {
+        if (!in_array($entity->get('status'), ['Archived', 'Sent', 'Being Imported'])) {
             return;
         }
 
@@ -95,10 +95,10 @@ class Email extends \Espo\Core\Notificators\Base
             }
         }
 
-        $data = array(
+        $data = [
             'emailId' => $entity->id,
             'emailName' => $entity->get('name'),
-        );
+        ];
 
         if (!$entity->has('from')) {
             $this->getEntityManager()->getRepository('Email')->loadFromField($entity);
@@ -145,14 +145,14 @@ class Email extends \Espo\Core\Notificators\Base
             if ($userIdFrom === $userId) continue;
             if ($entity->getLinkMultipleColumn('users', 'inTrash', $userId)) continue;
 
-            if ($entity->get('isBeingImported')) {
+            if (!empty($options['isBeingImported'])) {
                 $folderId = $entity->getLinkMultipleColumn('users', 'folderId', $userId);
                 if ($folderId) {
                     if (
-                        $this->getEntityManager()->getRepository('EmailFolder')->where(array(
+                        $this->getEntityManager()->getRepository('EmailFolder')->where([
                             'id' => $folderId,
                             'skipNotifications' => true
-                        ))->count()
+                        ])->count()
                     ) {
                         continue;
                     }
@@ -161,11 +161,11 @@ class Email extends \Espo\Core\Notificators\Base
 
             $user = $this->getEntityManager()->getEntity('User', $userId);
             if (!$user) continue;
-            if ($user->get('isPortalUser')) continue;
+            if ($user->isPortal()) continue;
             if (!$this->getAclManager()->checkScope($user, 'Email')) {
                 continue;
             }
-            if ($entity->get('status') == 'Archived') {
+            if ($entity->get('status') == 'Archived' || !empty($options['isBeingImported'])) {
                 if ($parent) {
                     if ($this->getStreamService()->checkIsFollowed($parent, $userId)) {
                         continue;
@@ -177,17 +177,24 @@ class Email extends \Espo\Core\Notificators\Base
                     }
                 }
             }
+            if (
+                $this->getEntityManager()->getRepository('Notification')->where([
+                    'type' => 'EmailReceived',
+                    'userId' => $userId,
+                    'relatedId' => $entity->id,
+                    'relatedType' => 'Email'
+                ])->select(['id'])->findOne()
+            ) continue;
+
             $notification = $this->getEntityManager()->getEntity('Notification');
-            $notification->set(array(
+            $notification->set([
                 'type' => 'EmailReceived',
                 'userId' => $userId,
                 'data' => $data,
                 'relatedId' => $entity->id,
                 'relatedType' => 'Email'
-            ));
+            ]);
             $this->getEntityManager()->saveEntity($notification);
         }
     }
-
 }
-

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -222,7 +222,7 @@ class Preferences extends \Espo\Core\ORM\Repository
         $pdo->query($sql);
 
         $user = $this->getEntityManger()->getEntity('User', $entity->id);
-        if ($user && !$user->get('isPortalUser')) {
+        if ($user && !$user->isPortal()) {
             $this->storeAutoFollowEntityTypeList($entity);
         }
 

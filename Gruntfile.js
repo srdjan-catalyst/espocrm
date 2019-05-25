@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,15 @@ module.exports = function (grunt) {
         'client/lib/jquery-ui.min.js',
         'client/lib/jquery.ui.touch-punch.min.js',
         'client/lib/moment.min.js',
-        'client/lib/moment-timezone-with-data.min.js',
+        'client/lib/moment-timezone.min.js',
+        'client/lib/moment-timezone-data.js',
         'client/lib/jquery.timepicker.min.js',
         'client/lib/jquery.autocomplete.js',
         'client/lib/bootstrap.min.js',
         'client/lib/bootstrap-datepicker.js',
         'client/lib/bull.js',
         'client/lib/marked.min.js',
+        'client/lib/autobahn.js',
 
         'client/src/namespace.js',
         'client/src/exceptions.js',
@@ -87,12 +89,16 @@ module.exports = function (grunt) {
         themeList.push(file.substr(0, file.length - 5));
     });
 
+    var cssminFilesData = {};
     var lessData = {};
     themeList.forEach(function (theme) {
         var name = camelCaseToHyphen(theme);
         var files = {};
         files['client/css/espo/'+name+'.css'] = 'frontend/less/'+name+'/main.less';
         files['client/css/espo/'+name+'-iframe.css'] = 'frontend/less/'+name+'/iframe/main.less';
+
+        cssminFilesData['client/css/espo/'+name+'.css'] = 'client/css/espo/'+name+'.css';
+        cssminFilesData['client/css/espo/'+name+'-iframe.css'] = 'client/css/espo/'+name+'-iframe.css';
         var o = {
             options: {
                 yuicompress: true,
@@ -117,16 +123,22 @@ module.exports = function (grunt) {
             }
         },
         clean: {
-            start: ['build/*'],
+            start: ['build/EspoCRM-*'],
             final: ['build/tmp'],
             beforeFinal: {
                 src: ['build/tmp/custom/Espo/Custom/*', '!build/tmp/custom/Espo/Custom/.htaccess']
             }
         },
         less: lessData,
+        cssmin: {
+            themes: {
+                files: cssminFilesData
+            }
+        },
         uglify: {
             options: {
                 mangle: false,
+                sourceMap: true,
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
             },
             'build/tmp/client/espo.min.js': jsFilesToMinify.map(function (item) {
@@ -171,10 +183,13 @@ module.exports = function (grunt) {
                     'html/**',
                     'bootstrap.php',
                     'cron.php',
+                    'daemon.php',
                     'rebuild.php',
                     'clear_cache.php',
                     'upgrade.php',
                     'extension.php',
+                    'websocket.php',
+                    'command.php',
                     'index.php',
                     'LICENSE.txt',
                     '.htaccess',
@@ -225,26 +240,6 @@ module.exports = function (grunt) {
             }
         },
         replace: {
-            timestamp: {
-                options: {
-                    patterns: [
-                        {
-                            match: 'timestamp',
-                            replacement: '<%= new Date().getTime() %>'
-                        }
-                    ]
-                },
-                files: [
-                    {
-                        src: 'build/tmp/html/main.html',
-                        dest: 'build/tmp/html/main.html'
-                    },
-                    {
-                        src: 'build/tmp/html/portal.html',
-                        dest: 'build/tmp/html/portal.html'
-                    }
-                ]
-            },
             version: {
                 options: {
                     patterns: [
@@ -289,6 +284,7 @@ module.exports = function (grunt) {
         'clean:start',
         'mkdir:tmp',
         'less',
+        'cssmin',
         'uglify',
         'copy:frontendFolders',
         'copy:frontendLib',
@@ -299,5 +295,4 @@ module.exports = function (grunt) {
         'chmod',
         'clean:final'
     ]);
-
 };

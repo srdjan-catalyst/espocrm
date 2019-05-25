@@ -17,5 +17,25 @@
             "controller": "Activities",
             "action": "listCalendarEvents"
         }
+    },
+    {
+        "route": "/Timeline",
+        "method": "get",
+        "params": {
+            "controller": "Activities",
+            "action": "getTimeline"
+        }
+    },
+    {
+        "route": "/Activities/:scope/:id/:name/list/:entityType",
+        "method": "get",
+        "params": {
+            "controller": "Activities",
+            "action": "entityTypeList",
+            "scope": ":scope",
+            "id": ":id",
+            "name": ":name",
+            "entityType": ":entityType"
+        }
     }
 ]

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ class EntityManager extends \Espo\Core\Controllers\Base
             $params['iconClass'] = $data['iconClass'];
         }
         if (isset($data['fullTextSearch'])) {
-            $params['fullTestSearch'] = $data['fullTextSearch'];
+            $params['fullTextSearch'] = $data['fullTextSearch'];
         }
 
         $params['kanbanViewMode'] = !empty($data['kanbanViewMode']);
@@ -129,10 +129,6 @@ class EntityManager extends \Espo\Core\Controllers\Base
         }
         $name = $data['name'];
         $name = filter_var($name, \FILTER_SANITIZE_STRING);
-
-        if (!empty($data['sortDirection'])) {
-            $data['asc'] = $data['sortDirection'] === 'asc';
-        }
 
         $result = $this->getContainer()->get('entityManagerUtil')->update($name, $data);
 

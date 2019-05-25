@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,9 @@ class Invitations
 
     protected $ics;
 
-    public function __construct($entityManager, $smtpParams, $mailSender, $config, $fileManager, $dateTime, $number, $language)
+    protected $templateFileManager;
+
+    public function __construct($entityManager, $smtpParams, $mailSender, $config, $fileManager, $dateTime, $number, $language, $templateFileManager)
     {
         $this->entityManager = $entityManager;
         $this->smtpParams = $smtpParams;
@@ -57,6 +59,7 @@ class Invitations
         $this->language = $language;
         $this->number = $number;
         $this->fileManager = $fileManager;
+        $this->templateFileManager = $templateFileManager;
     }
 
     protected function getEntityManager()
@@ -69,34 +72,16 @@ class Invitations
         return $this->config;
     }
 
-    protected function getTemplate($name)
-    {
-        $systemLanguage = $this->config->get('language');
-
-        $fileName = "custom/Espo/Custom/Resources/templates/invitation/{$systemLanguage}/{$name}.tpl";
-        if (!file_exists($fileName)) {
-            $fileName = "application/Espo/Modules/Crm/Resources/templates/invitation/{$systemLanguage}/{$name}.tpl";
-        }
-        if (!file_exists($fileName)) {
-            $fileName = "custom/Espo/Custom/Resources/templates/invitation/en_US/{$name}.tpl";
-        }
-        if (!file_exists($fileName)) {
-            $fileName = "application/Espo/Modules/Crm/Resources/templates/invitation/en_US/{$name}.tpl";
-        }
-
-        return file_get_contents($fileName);
-    }
-
     public function sendInvitation(Entity $entity, Entity $invitee, $link)
     {
         $uid = $this->getEntityManager()->getEntity('UniqueId');
-        $uid->set('data', array(
+        $uid->set('data', [
             'eventType' => $entity->getEntityType(),
             'eventId' => $entity->id,
             'inviteeId' => $invitee->id,
             'inviteeType' => $invitee->getEntityType(),
             'link' => $link
-        ));
+        ]);
 
         if ($entity->get('dateEnd')) {
             $terminateAt = $entity->get('dateEnd');
@@ -122,11 +107,12 @@ class Invitations
         $email = $this->getEntityManager()->getEntity('Email');
         $email->set('to', $emailAddress);
 
-        $subjectTpl = $this->getTemplate('subject');
-        $bodyTpl = $this->getTemplate('body');
-        $subjectTpl = str_replace(array("\n", "\r"), '', $subjectTpl);
+        $subjectTpl = $this->templateFileManager->getTemplate('invitation', 'subject', $entity->getEntityType(), 'Crm');
+        $bodyTpl = $this->templateFileManager->getTemplate('invitation', 'body', $entity->getEntityType(), 'Crm');
 
-        $data = array();
+        $subjectTpl = str_replace(["\n", "\r"], '', $subjectTpl);
+
+        $data = [];
 
         $siteUrl = rtrim($this->getConfig()->get('siteUrl'), '/');
         $recordUrl = $siteUrl . '/#' . $entity->getEntityType() . '/view/' . $entity->id;
@@ -159,29 +145,28 @@ class Invitations
         $htmlizer = new \Espo\Core\Htmlizer\Htmlizer($this->fileManager, $dateTime, $this->number, null);
 
         $subject = $htmlizer->render($entity, $subjectTpl, 'invitation-email-subject-' . $entity->getEntityType(), $data, true);
-        $body = $htmlizer->render($entity, $bodyTpl, 'invitation-email-body-' . $entity->getEntityType(), $data, true);
+        $body = $htmlizer->render($entity, $bodyTpl, 'invitation-email-body-' . $entity->getEntityType(), $data, false);
 
         $email->set('subject', $subject);
         $email->set('body', $body);
         $email->set('isHtml', true);
-        $this->getEntityManager()->saveEntity($email);
 
         $attachmentName = ucwords($this->language->translate($entity->getEntityType(), 'scopeNames')).'.ics';
         $attachment = $this->getEntityManager()->getEntity('Attachment');
-        $attachment->set(array(
+        $attachment->set([
             'name' => $attachmentName,
             'type' => 'text/calendar',
             'contents' => $this->getIscContents($entity),
-        ));
+        ]);
 
-        $email->addAttachment($attachment);
+        $message = new \Zend\Mail\Message();
 
         $emailSender = $this->mailSender;
 
         if ($this->smtpParams) {
             $emailSender->useSmtp($this->smtpParams);
         }
-        $emailSender->send($email);
+        $emailSender->send($email, [], $message, [$attachment]);
 
         $this->getEntityManager()->removeEntity($email);
     }
@@ -197,7 +182,7 @@ class Invitations
             $email = $user->get('emailAddress');
         }
 
-        $ics = new Ics('//EspoCRM//EspoCRM Calendar//EN', array(
+        $ics = new Ics('//EspoCRM//EspoCRM Calendar//EN', [
             'startDate' => strtotime($entity->get('dateStart')),
             'endDate' => strtotime($entity->get('dateEnd')),
             'uid' => $entity->id,
@@ -205,10 +190,8 @@ class Invitations
             'who' => $who,
             'email' => $email,
             'description' => $entity->get('description'),
-        ));
+        ]);
 
         return $ics->get();
     }
-
 }
-

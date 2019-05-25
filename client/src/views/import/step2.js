@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ Espo.define('views/import/step2', 'view', function (Dep) {
                 $cell = $('<td>').append($select);
                 $row.append($cell);
 
-                var value = d.value;
+                var value = d.value || '';
                 if (value.length > 200) {
                     value = value.substr(0, 200) + '...';
                 }
@@ -200,12 +200,19 @@ Espo.define('views/import/step2', 'view', function (Dep) {
                 }
 
                 if (d.type == 'phone') {
-                    (this.getMetadata().get('entityDefs.' + this.scope + '.fields.' + field + '.typeList' ) || []).map(function (item) {
+                    attributeList.push(field);
+                    (this.getMetadata().get('entityDefs.' + this.scope + '.fields.' + field + '.typeList') || []).map(function (item) {
                         return item.replace(/\s/g, '_');
                     }, this).forEach(function (item) {
                         attributeList.push(field + Espo.Utils.upperCaseFirst(item));
                     }, this);
                     continue;
+                }
+
+                if (d.type == 'email') {
+                    attributeList.push(field + '2');
+                    attributeList.push(field + '3');
+                    attributeList.push(field + '4');
                 }
 
                 if (d.type == 'link') {
@@ -277,6 +284,9 @@ Espo.define('views/import/step2', 'view', function (Dep) {
                         var phoneNumberType = field.substr(11);
                         var phoneNumberTypeLabel = this.getLanguage().translateOption(phoneNumberType, 'phoneNumber', scope);
                         label = this.translate('phoneNumber', 'fields', scope) + ' (' + phoneNumberTypeLabel + ')';
+                    } else if (field.indexOf('emailAddress') === 0 && parseInt(field.substr(12)).toString() === field.substr(12)) {
+                        var emailAddressNum = field.substr(12);
+                        label = this.translate('emailAddress', 'fields', scope) + ' ' + emailAddressNum.toString();;
                     }
                 }
 
@@ -307,7 +317,7 @@ Espo.define('views/import/step2', 'view', function (Dep) {
             this.notify('Loading...');
             var label = this.translate(name, 'fields', this.scope);
 
-            var removeLink = '<a href="javascript:" class="pull-right" data-action="removeField" data-name="'+name+'"><span class="glyphicon glyphicon-remove"></span></a>';
+            var removeLink = '<a href="javascript:" class="pull-right" data-action="removeField" data-name="'+name+'"><span class="fas fa-times"></span></a>';
 
             var html = '<div class="cell form-group col-sm-3">'+removeLink+'<label class="control-label">' + label + '</label><div class="field" data-name="'+name+'"/></div>';
             $('#default-values-container').append(html);
@@ -325,7 +335,8 @@ Espo.define('views/import/step2', 'view', function (Dep) {
                 defs: {
                     name: name,
                 },
-                mode: 'edit'
+                mode: 'edit',
+                readOnlyDisabled: true
             }, function (view) {
                 this.additionalFields.push(name);
                 view.render();

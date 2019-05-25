@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ use Espo\Core\Utils\Util;
 
 class Meeting extends \Espo\Core\Repositories\Event
 {
-    protected function beforeSave(Entity $entity, array $options = array())
+    protected function beforeSave(Entity $entity, array $options = [])
     {
         if (!$entity->isNew() && $entity->isAttributeChanged('parentId')) {
             $entity->set('accountId', null);
@@ -95,62 +95,26 @@ class Meeting extends \Espo\Core\Repositories\Event
             }
         }
 
-        if (!$entity->isNew()) {
-            if ($entity->isAttributeChanged('dateStart') && $entity->isAttributeChanged('dateStart') && !$entity->isAttributeChanged('dateEnd')) {
-                $dateEndPrevious = $entity->getFetched('dateEnd');
-                $dateStartPrevious = $entity->getFetched('dateStart');
-                if ($dateStartPrevious && $dateEndPrevious) {
-                    $dtStart = new \DateTime($dateStartPrevious);
-                    $dtEnd = new \DateTime($dateEndPrevious);
-                    $dt = new \DateTime($entity->get('dateStart'));
+        parent::beforeSave($entity, $options);
 
-                    if ($dtStart && $dtEnd && $dt) {
-                        $duration = ($dtEnd->getTimestamp() - $dtStart->getTimestamp());
-                        $dt->modify('+' . $duration . ' seconds');
-                        $dateEnd = $dt->format('Y-m-d H:i:s');
-                        $entity->set('dateEnd', $dateEnd);
-                    }
-                }
+        if ($entity->hasLinkMultipleField('assignedUsers')) {
+            $assignedUserIdList = $entity->getLinkMultipleIdList('assignedUsers');
+            foreach ($assignedUserIdList as $assignedUserId) {
+                $entity->addLinkMultipleId('users', $assignedUserId);
+                $entity->setLinkMultipleName('users', $assignedUserId, $entity->getLinkMultipleName('assignedUsers', $assignedUserId));
+            }
+        } else {
+            $assignedUserId = $entity->get('assignedUserId');
+            if ($assignedUserId) {
+                $entity->addLinkMultipleId('users', $assignedUserId);
+                $entity->setLinkMultipleName('users', $assignedUserId, $entity->get('assignedUserName'));
             }
         }
 
-        parent::beforeSave($entity, $options);
-
-        $assignedUserId = $entity->get('assignedUserId');
-        if ($assignedUserId) {
-            if ($entity->has('usersIds')) {
-                $usersIds = $entity->get('usersIds');
-                if (!is_array($usersIds)) {
-                    $usersIds = [];
-                }
-                if (!in_array($assignedUserId, $usersIds)) {
-                    $usersIds[] = $assignedUserId;
-                    $entity->set('usersIds', $usersIds);
-                    $hash = $entity->get('usersNames');
-                    if ($hash instanceof \StdClass) {
-                        $hash->$assignedUserId = $entity->get('assignedUserName');
-                        $entity->set('usersNames', $hash);
-                    }
-                }
-            } else {
-                $entity->addLinkMultipleId('users', $assignedUserId);
-            }
-            if ($entity->isNew()) {
-                $currentUserId = $this->getEntityManager()->getUser()->id;
-                if (isset($usersIds) && in_array($currentUserId, $usersIds)) {
-                    $usersColumns = $entity->get('usersColumns');
-                    if (empty($usersColumns)) {
-                        $usersColumns = new \StdClass();
-                    }
-                    if ($usersColumns instanceof \StdClass) {
-                        if (empty($usersColumns->$currentUserId) || !($usersColumns->$currentUserId instanceof \StdClass)) {
-                            $usersColumns->$currentUserId = new \StdClass();
-                        }
-                        if (empty($usersColumns->$currentUserId->status)) {
-                            $usersColumns->$currentUserId->status = 'Accepted';
-                        }
-                    }
-                }
+        if ($entity->isNew()) {
+            $currentUserId = $this->getEntityManager()->getUser()->id;
+            if ($entity->hasLinkMultipleId('users', $currentUserId)) {
+                $entity->setLinkMultipleColumn('users', 'status', $currentUserId, 'Accepted');
             }
         }
     }

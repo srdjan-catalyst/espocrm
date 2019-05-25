@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,14 @@ Espo.define('views/fields/address', 'views/fields/base', function (Dep) {
 
             if (this.mode == 'detail' || this.mode == 'list') {
                 data.formattedAddress = this.getFormattedAddress();
+            }
+
+            if (this.isEditMode()) {
+                data.stateMaxLength = this.stateMaxLength;
+                data.streetMaxLength = this.streetMaxLength;
+                data.postalCodeMaxLength = this.postalCodeMaxLength;
+                data.cityMaxLength = this.cityMaxLength;
+                data.countryMaxLength = this.countryMaxLength;
             }
 
             var isNotEmpty = false;
@@ -278,11 +286,11 @@ Espo.define('views/fields/address', 'views/fields/base', function (Dep) {
             var self = this;
 
             if (this.mode == 'edit') {
-                this.$street = this.$el.find('[name="' + this.streetField + '"]');
-                this.$postalCode = this.$el.find('[name="' + this.postalCodeField + '"]');
-                this.$state = this.$el.find('[name="' + this.stateField + '"]');
-                this.$city = this.$el.find('[name="' + this.cityField + '"]');
-                this.$country = this.$el.find('[name="' + this.countryField + '"]');
+                this.$street = this.$el.find('[data-name="' + this.streetField + '"]');
+                this.$postalCode = this.$el.find('[data-name="' + this.postalCodeField + '"]');
+                this.$state = this.$el.find('[data-name="' + this.stateField + '"]');
+                this.$city = this.$el.find('[data-name="' + this.cityField + '"]');
+                this.$country = this.$el.find('[data-name="' + this.countryField + '"]');
 
                 this.$street.on('change', function () {
                     self.trigger('change');
@@ -300,19 +308,140 @@ Espo.define('views/fields/address', 'views/fields/base', function (Dep) {
                     self.trigger('change');
                 });
 
-                this.$street.on('input', function (e) {
-                    var numberOfLines = e.currentTarget.value.split('\n').length;
-                    var numberOfRows = this.$street.prop('rows');
+                var countryList = this.getConfig().get('addressCountryList') || [];
+                if (countryList.length) {
+                    this.$country.autocomplete({
+                        minChars: 0,
+                        lookup: countryList,
+                        maxHeight: 200,
+                        formatResult: function (suggestion) {
+                            return this.getHelper().escapeString(suggestion.value);
+                        }.bind(this),
+                        lookupFilter: function (suggestion, query, queryLowerCase) {
+                            if (suggestion.value.toLowerCase().indexOf(queryLowerCase) === 0) {
+                                if (suggestion.value.length === queryLowerCase.length) return false;
+                                return true;
+                            }
+                            return false;
+                        },
+                        onSelect: function () {
+                            this.trigger('change');
+                        }.bind(this)
+                    });
+                    this.$country.on('focus', function () {
+                        if (this.$country.val()) return;
+                        this.$country.autocomplete('onValueChange');
+                    }.bind(this));
+                    this.once('render', function () {
+                        this.$country.autocomplete('dispose');
+                    }, this);
+                    this.once('remove', function () {
+                        this.$country.autocomplete('dispose');
+                    }, this);
+                    this.$country.attr('autocomplete', 'espo-country');
+                }
 
-                    if (numberOfRows < numberOfLines) {
-                        this.$street.prop('rows', numberOfLines);
-                    } else if (numberOfRows > numberOfLines) {
-                        this.$street.prop('rows', numberOfLines);
-                    }
+                this.controlStreetTextareaHeight();
+                this.$street.on('input', function (e) {
+                    this.controlStreetTextareaHeight();
                 }.bind(this));
 
-                var numberOfLines = this.$street.val().split('\n').length;
-                this.$street.prop('rows', numberOfLines);
+                var cityList = this.getConfig().get('addressCityList') || [];
+                if (cityList.length) {
+                    this.$city.autocomplete({
+                        minChars: 0,
+                        lookup: cityList,
+                        maxHeight: 200,
+                        formatResult: function (suggestion) {
+                            return this.getHelper().escapeString(suggestion.value);
+                        }.bind(this),
+                        lookupFilter: function (suggestion, query, queryLowerCase) {
+                            if (suggestion.value.toLowerCase().indexOf(queryLowerCase) === 0) {
+                                if (suggestion.value.length === queryLowerCase.length) return false;
+                                return true;
+                            }
+                            return false;
+                        },
+                        onSelect: function () {
+                            this.trigger('change');
+                        }.bind(this)
+                    });
+                    this.$city.on('focus', function () {
+                        if (this.$city.val()) return;
+                        this.$city.autocomplete('onValueChange');
+                    }.bind(this));
+                    this.once('render', function () {
+                        this.$city.autocomplete('dispose');
+                    }, this);
+                    this.once('remove', function () {
+                        this.$city.autocomplete('dispose');
+                    }, this);
+                    this.$city.attr('autocomplete', 'espo-city');
+                }
+
+                this.controlStreetTextareaHeight();
+                this.$street.on('input', function (e) {
+                    this.controlStreetTextareaHeight();
+                }.bind(this));
+
+                var stateList = this.getConfig().get('addressStateList') || [];
+                if (stateList.length) {
+                    this.$state.autocomplete({
+                        minChars: 0,
+                        lookup: stateList,
+                        maxHeight: 200,
+                        formatResult: function (suggestion) {
+                            return this.getHelper().escapeString(suggestion.value);
+                        }.bind(this),
+                        lookupFilter: function (suggestion, query, queryLowerCase) {
+                            if (suggestion.value.toLowerCase().indexOf(queryLowerCase) === 0) {
+                                if (suggestion.value.length === queryLowerCase.length) return false;
+                                return true;
+                            }
+                            return false;
+                        },
+                        onSelect: function () {
+                            this.trigger('change');
+                        }.bind(this)
+                    });
+                    this.$state.on('focus', function () {
+                        if (this.$state.val()) return;
+                        this.$state.autocomplete('onValueChange');
+                    }.bind(this));
+                    this.once('render', function () {
+                        this.$state.autocomplete('dispose');
+                    }, this);
+                    this.once('remove', function () {
+                        this.$state.autocomplete('dispose');
+                    }, this);
+                    this.$state.attr('autocomplete', 'espo-state');
+                }
+
+                this.controlStreetTextareaHeight();
+                this.$street.on('input', function (e) {
+                    this.controlStreetTextareaHeight();
+                }.bind(this));
+            }
+        },
+
+        controlStreetTextareaHeight: function (lastHeight) {
+            var scrollHeight = this.$street.prop('scrollHeight');
+            var clientHeight = this.$street.prop('clientHeight');
+
+            if (typeof lastHeight === 'undefined' && clientHeight === 0) {
+                setTimeout(this.controlStreetTextareaHeight.bind(this), 10);
+                return;
+            }
+
+            if (clientHeight === lastHeight) return;
+
+            if (scrollHeight > clientHeight + 1) {
+                var rows = this.$street.prop('rows');
+                this.$street.attr('rows', rows + 1);
+                this.controlStreetTextareaHeight(clientHeight);
+            }
+            if (this.$street.val().length === 0) {
+                this.$street.attr('rows', 1);
             }
         },
 
@@ -327,6 +456,8 @@ Espo.define('views/fields/address', 'views/fields/base', function (Dep) {
                 this.addressAttributeList.push(attribute);
                 this.addressPartList.push(item);
                 this[item + 'Field'] = attribute;
+
+                this[item + 'MaxLength'] = this.getMetadata().get(['entityDefs', this.model.name, 'fields', attribute, 'maxLength']);
             }, this);
         },
 
@@ -335,7 +466,7 @@ Espo.define('views/fields/address', 'views/fields/base', function (Dep) {
                 if (this.model.isRequired(name)) {
                     if (this.model.get(name) === '') {
                         var msg = this.translate('fieldIsRequired', 'messages').replace('{field}', this.translate(name, 'fields', this.model.name));
-                        this.showValidationMessage(msg, '[name="'+name+'"]');
+                        this.showValidationMessage(msg, '[data-name="'+name+'"]');
                         return true;
                     }
                 }
@@ -369,7 +500,7 @@ Espo.define('views/fields/address', 'views/fields/base', function (Dep) {
         },
 
         fetchSearch: function () {
-            var value = this.$el.find('[name="'+this.name+'"]').val().toString().trim();
+            var value = this.$el.find('input.main-element').val().toString().trim();
             if (value) {
                 var data = {
                     type: 'or',

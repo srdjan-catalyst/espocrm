@@ -9,7 +9,7 @@
             "type": "varchar"
         },
         "body": {
-            "type": "text",
+            "type": "wysiwyg",
             "view": "views/fields/wysiwyg",
             "useIframe": true
         },
@@ -84,8 +84,8 @@
         }
     },
     "collection": {
-        "sortBy": "createdAt",
-        "asc": false,
+        "orderBy": "createdAt",
+        "order": "desc",
         "textFilterFields": ["name", "bodyPlain", "body", "subject"]
     }
 }

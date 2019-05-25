@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,9 +86,35 @@ class FieldManagerUtil
         return $fieldList;
     }
 
+    public function getAdditionalActualAttributeList($scope, $name)
+    {
+        $attributeList = [];
+
+        $list = $this->getMetadata()->get(['entityDefs', $scope, 'fields', $name, 'additionalAttributeList']);
+        if (empty($list)) return [];
+
+        $type = $this->getMetadata()->get(['entityDefs', $scope, 'fields', $name, 'type']);
+        if (!$type) return [];
+
+        $naming = $this->getMetadata()->get(['fields', $type, 'naming'], 'suffix');
+
+        if ($naming == 'prefix') {
+            foreach ($list as $f) {
+                $attributeList[] = $f . ucfirst($name);
+            }
+        } else {
+            foreach ($list as $f) {
+                $attributeList[] = $name . ucfirst($f);
+            }
+        }
+
+        return $attributeList;
+
+    }
+
     public function getActualAttributeList($scope, $name)
     {
-        return $this->getAttributeListByType($scope, $name, 'actual');
+        return array_merge($this->getAttributeListByType($scope, $name, 'actual'), $this->getAdditionalActualAttributeList($scope, $name));
     }
 
     public function getNotActualAttributeList($scope, $name)
@@ -119,5 +145,54 @@ class FieldManagerUtil
         }
 
         return $this->fieldByTypeListCache[$scope][$type];
+    }
+
+    private function getFieldTypeAttributeListByType($fieldType, $name, $type)
+    {
+        $defs = $this->getMetadata()->get(['fields', $fieldType]);
+        if (!$defs) return [];
+
+        $attributeList = [];
+
+        if (isset($defs[$type . 'Fields'])) {
+            $list = $defs[$type . 'Fields'];
+            $naming = 'suffix';
+            if (isset($defs['naming'])) {
+                $naming = $defs['naming'];
+            }
+            if ($naming == 'prefix') {
+                foreach ($list as $f) {
+                    $attributeList[] = $f . ucfirst($name);
+                }
+            } else {
+                foreach ($list as $f) {
+                    $attributeList[] = $name . ucfirst($f);
+                }
+            }
+        } else {
+            if ($type == 'actual') {
+                $attributeList[] = $name;
+            }
+        }
+
+        return $attributeList;
+    }
+
+    public function getFieldTypeAttributeList($fieldType, $name)
+    {
+        return array_merge(
+            $this->getFieldTypeAttributeListByType($fieldType, $name, 'actual'),
+            $this->getFieldTypeAttributeListByType($fieldType, $name, 'notActual')
+        );
+    }
+
+    public function getEntityTypeFieldList($entityType)
+    {
+        return array_keys($this->getMetadata()->get(['entityDefs', $entityType, 'fields'], []));
+    }
+
+    public function getEntityTypeFieldParam($entityType, $field, $param)
+    {
+        return $this->getMetadata()->get(['entityDefs', $entityType, 'fields', $field, $param]);
     }
 }

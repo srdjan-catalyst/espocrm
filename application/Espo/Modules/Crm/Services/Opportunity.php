@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,24 +64,28 @@ class Opportunity extends \Espo\Services\Record
             $stageField = 'lastStage';
         }
 
-        $selectParams = [
-            'select' => [$stageField, ['SUM:amountConverted', 'amount']],
-            'whereClause' => [
-                [$stageField . '!=' => $lostStageList],
-                [$stageField . '!=' => null]
-            ],
-            'orderBy' => 'LIST:'.$stageField.':' . implode(',', $options),
-            'groupBy' => [$stageField]
+        $whereClause = [
+            [$stageField . '!=' => $lostStageList],
+            [$stageField . '!=' => null]
         ];
 
         if ($dateFilter !== 'ever') {
-            $selectParams['whereClause'][] = [
+            $whereClause[] = [
                 'closeDate>=' => $dateFrom,
                 'closeDate<' => $dateTo
             ];
         }
 
+        $selectParams = [
+            'select' => [$stageField, ['SUM:amountConverted', 'amount']],
+            'whereClause' => $whereClause,
+            'orderBy' => 'LIST:'.$stageField.':' . implode(',', $options),
+            'groupBy' => [$stageField]
+        ];
+
         $selectManager->applyAccess($selectParams);
+
+        $this->handleDistinctReportSelectParams($selectParams, $whereClause);
 
         $this->getEntityManager()->getRepository('Opportunity')->handleSelectParams($selectParams);
 
@@ -92,12 +96,29 @@ class Opportunity extends \Espo\Services\Record
 
         $rows = $sth->fetchAll(\PDO::FETCH_ASSOC);
 
-        $result = array();
+        $data = [];
         foreach ($rows as $row) {
-            $result[$row[$stageField]] = floatval($row['amount']);
+            $data[$row[$stageField]] = floatval($row['amount']);
         }
 
-        return $result;
+        $dataList = [];
+
+        $stageList = $this->getMetadata()->get('entityDefs.Opportunity.fields.stage.options', []);
+        foreach ($stageList as $stage) {
+            if (in_array($stage, $lostStageList)) continue;
+            if (!in_array($stage, $lostStageList) && !isset($data[$stage])) {
+                $data[$stage] = 0.0;
+            }
+
+            $dataList[] = [
+                'stage' => $stage,
+                'value' => $data[$stage]
+            ];
+        }
+
+        return [
+            'dataList' => $dataList
+        ];
     }
 
     public function reportByLeadSource($dateFilter, $dateFrom = null, $dateTo = null)
@@ -119,25 +140,29 @@ class Opportunity extends \Espo\Services\Record
 
         $selectManager = $this->getSelectManagerFactory()->create('Opportunity');
 
-        $selectParams = [
-            'select' => ['leadSource', ['SUM:amountWeightedConverted', 'amount']],
-            'whereClause' => [
-                'stage!=' => $this->getLostStageList(),
-                ['leadSource!=' => ''],
-                ['leadSource!=' => null]
-            ],
-            'orderBy' => 'LIST:leadSource:' . implode(',', $options),
-            'groupBy' => ['leadSource']
+        $whereClause = [
+            ['stage!=' => $this->getLostStageList()],
+            ['leadSource!=' => ''],
+            ['leadSource!=' => null]
         ];
 
         if ($dateFilter !== 'ever') {
-            $selectParams['whereClause'][] = [
+            $whereClause[] = [
                 'closeDate>=' => $dateFrom,
                 'closeDate<' => $dateTo
             ];
         }
 
+        $selectParams = [
+            'select' => ['leadSource', ['SUM:amountWeightedConverted', 'amount']],
+            'whereClause' => $whereClause,
+            'orderBy' => 'LIST:leadSource:' . implode(',', $options),
+            'groupBy' => ['leadSource']
+        ];
+
         $selectManager->applyAccess($selectParams);
+
+        $this->handleDistinctReportSelectParams($selectParams, $whereClause);
 
         $this->getEntityManager()->getRepository('Opportunity')->handleSelectParams($selectParams);
 
@@ -172,30 +197,30 @@ class Opportunity extends \Espo\Services\Record
 
         $selectManager = $this->getSelectManagerFactory()->create('Opportunity');
 
-        $selectParams = [
-            'select' => ['stage', ['SUM:amountConverted', 'amount']],
-            'whereClause' => [
-                [
-                    'stage!=' => $this->getLostStageList()
-                ],
-                [
-                    'stage!=' => $this->getWonStageList()
-                ]
-            ],
-            'orderBy' => 'LIST:stage:' . implode(',', $options),
-            'groupBy' => ['stage']
+        $whereClause = [
+            ['stage!=' => $this->getLostStageList()],
+            ['stage!=' => $this->getWonStageList()]
         ];
 
         if ($dateFilter !== 'ever') {
-            $selectParams['whereClause'][] = [
+            $whereClause[] = [
                 'closeDate>=' => $dateFrom,
                 'closeDate<' => $dateTo
             ];
         }
 
+        $selectParams = [
+            'select' => ['stage', ['SUM:amountConverted', 'amount']],
+            'whereClause' => $whereClause,
+            'orderBy' => 'LIST:stage:' . implode(',', $options),
+            'groupBy' => ['stage']
+        ];
+
         $stageIgnoreList = array_merge($this->getLostStageList(), $this->getWonStageList());
 
         $selectManager->applyAccess($selectParams);
+
+        $this->handleDistinctReportSelectParams($selectParams, $whereClause);
 
         $this->getEntityManager()->getRepository('Opportunity')->handleSelectParams($selectParams);
 
@@ -210,6 +235,12 @@ class Opportunity extends \Espo\Services\Record
         foreach ($rows as $row) {
             if (in_array($row['stage'], $stageIgnoreList)) continue;
             $result[$row['stage']] = floatval($row['amount']);
+        }
+
+        foreach ($options as $stage) {
+            if (in_array($stage, $stageIgnoreList)) continue;
+            if (array_key_exists($stage, $result)) continue;
+            $result[$stage] = 0.0;
         }
 
         return $result;
@@ -229,28 +260,31 @@ class Opportunity extends \Espo\Services\Record
 
         $selectManager = $this->getSelectManagerFactory()->create('Opportunity');
 
-        $selectParams = [
-            'select' => [['MONTH:closeDate', 'month'], ['SUM:amountConverted', 'amount']],
-            'whereClause' => [
-                'stage' => $this->getWonStageList()
-            ],
-            'orderBy' => 1,
-            'groupBy' => ['MONTH:closeDate']
+        $whereClause = [
+            ['stage' => $this->getWonStageList()]
         ];
 
         if ($dateFilter !== 'ever') {
-            $selectParams['whereClause'][] = [
+            $whereClause[] = [
                 'closeDate>=' => $dateFrom,
                 'closeDate<' => $dateTo
             ];
         }
 
+        $selectParams = [
+            'select' => [['MONTH:closeDate', 'month'], ['SUM:amountConverted', 'amount']],
+            'whereClause' => $whereClause,
+            'orderBy' => 1,
+            'groupBy' => ['MONTH:closeDate']
+        ];
+
         $selectManager->applyAccess($selectParams);
+
+        $this->handleDistinctReportSelectParams($selectParams, $whereClause);
 
         $this->getEntityManager()->getRepository('Opportunity')->handleSelectParams($selectParams);
 
         $sql = $this->getEntityManager()->getQuery()->createSelectQuery('Opportunity', $selectParams);
-
 
         $sth = $pdo->prepare($sql);
         $sth->execute();
@@ -274,7 +308,7 @@ class Opportunity extends \Espo\Services\Record
 
         if ($dt && $dtTo) {
             $interval = new \DateInterval('P1M');
-            while ($dt->getTimestamp() <= $dtTo->getTimestamp()) {
+            while ($dt->getTimestamp() < $dtTo->getTimestamp()) {
                 $month = $dt->format('Y-m');
                 if (!array_key_exists($month, $result)) {
                     $result[$month] = 0;
@@ -288,7 +322,7 @@ class Opportunity extends \Espo\Services\Record
 
         $today = new \DateTime();
 
-        $endPosition = count($keyList) - 1;
+        $endPosition = count($keyList);
         for ($i = count($keyList) - 1; $i >= 0; $i--) {
             $key = $keyList[$i];
             $dt = new \DateTime($key . '-01');
@@ -309,6 +343,30 @@ class Opportunity extends \Espo\Services\Record
             'keyList' => $keyList,
             'dataMap' => $result
         ];
+    }
+
+    protected function handleDistinctReportSelectParams(&$selectParams, $whereClause)
+    {
+        if (!empty($selectParams['distinct'])) {
+            $selectParamsSubQuery = $selectParams;
+
+            unset($selectParams['distinct']);
+            $selectParams['leftJoins'] = [];
+            $selectParams['joins'] = [];
+            $selectParams['whereClause'] = $whereClause;
+
+            $selectParamsSubQuery['select'] = ['id'];
+            unset($selectParamsSubQuery['groupBy']);
+            unset($selectParamsSubQuery['orderBy']);
+            unset($selectParamsSubQuery['order']);
+
+            $selectParams['whereClause'][] = [
+                'id=s' => [
+                    'entityType' => 'Opportunity',
+                    'selectParams' => $selectParamsSubQuery
+                ]
+            ];
+        }
     }
 
     protected function getDateRangeByFilter($dateFilter)
@@ -333,6 +391,37 @@ class Opportunity extends \Espo\Services\Record
                 return [
                     $dt->modify('first day of this month')->format('Y-m-d'),
                     $dt->add(new \DateInterval('P1M'))->format('Y-m-d')
+                ];
+            case 'currentFiscalYear':
+                $dtToday = new \DateTime();
+                $dt = new \DateTime();
+                $fiscalYearShift = $this->getConfig()->get('fiscalYearShift', 0);
+                $dt->modify('first day of January this year')->modify('+' . $fiscalYearShift . ' months');
+                if (intval($dtToday->format('m')) < $fiscalYearShift + 1) {
+                    $dt->modify('-1 year');
+                }
+                return [
+                    $dt->format('Y-m-d'),
+                    $dt->add(new \DateInterval('P1Y'))->format('Y-m-d')
+                ];
+            case 'currentFiscalQuarter':
+                $dtToday = new \DateTime();
+                $dt = new \DateTime();
+                $fiscalYearShift = $this->getConfig()->get('fiscalYearShift', 0);
+                $dt->modify('first day of January this year')->modify('+' . $fiscalYearShift . ' months');
+                $month = intval($dtToday->format('m'));
+                $quarterShift = floor(($month - $fiscalYearShift - 1) / 3);
+                if ($quarterShift) {
+                    if ($quarterShift >= 0) {
+                        $dt->add(new \DateInterval('P'.($quarterShift * 3).'M'));
+                    } else {
+                        $quarterShift *= -1;
+                        $dt->sub(new \DateInterval('P'.($quarterShift * 3).'M'));
+                    }
+                }
+                return [
+                    $dt->format('Y-m-d'),
+                    $dt->add(new \DateInterval('P3M'))->format('Y-m-d')
                 ];
         }
         return [0, 0];

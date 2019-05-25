@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,7 +205,6 @@ class Converter
             }
 
             $primaryColumns = array();
-            $uniqueColumns = array();
 
             foreach ($entityParams['fields'] as $fieldName => $fieldParams) {
 
@@ -234,26 +233,24 @@ class Converter
                 if (!$tables[$entityName]->hasColumn($columnName)) {
                     $tables[$entityName]->addColumn($columnName, $fieldType, $this->getDbFieldParams($fieldParams));
                 }
-
-                //add unique
-                if ($fieldParams['type'] != 'id' && isset($fieldParams['unique'])) {
-                    $uniqueColumns = $this->getKeyList($columnName, $fieldParams['unique'], $uniqueColumns);
-                } //END: add unique
             }
 
             $tables[$entityName]->setPrimaryKey($primaryColumns);
 
             if (!empty($indexList[$entityName])) {
                 foreach($indexList[$entityName] as $indexName => $indexParams) {
-                    $indexColumnList = $indexParams['columns'];
-                    $indexFlagList = isset($indexParams['flags']) ? $indexParams['flags'] : array();
-                    $tables[$entityName]->addIndex($indexColumnList, $indexName, $indexFlagList);
-                }
-            }
 
-            if (!empty($uniqueColumns)) {
-                foreach($uniqueColumns as $uniqueItem) {
-                    $tables[$entityName]->addUniqueIndex($uniqueItem);
+                    switch ($indexParams['type']) {
+                        case 'index':
+                        case 'fulltext':
+                            $indexFlagList = isset($indexParams['flags']) ? $indexParams['flags'] : array();
+                            $tables[$entityName]->addIndex($indexParams['columns'], $indexName, $indexFlagList);
+                            break;
+
+                        case 'unique':
+                            $tables[$entityName]->addUniqueIndex($indexParams['columns'], $indexName);
+                            break;
+                    }
                 }
             }
         }
@@ -306,7 +303,7 @@ class Converter
 
         $table = $this->getSchema()->createTable($tableName);
         $table->addColumn('id', 'int', $this->getDbFieldParams(array(
-            'type' => 'int',
+            'type' => 'id',
             'len' => $this->defaultLength['int'],
             'autoincrement' => true,
         )));
@@ -320,7 +317,7 @@ class Converter
                 'type' => 'foreignId',
                 'len' => $this->idParams['len'],
             )));
-            $table->addIndex(array($columnName));
+            $table->addIndex(array($columnName), SchemaUtils::generateIndexName($columnName));
 
             $uniqueIndex[] = $columnName;
         }
@@ -349,7 +346,7 @@ class Converter
         }
 
         if (!empty($uniqueIndex)) {
-            $table->addUniqueIndex($uniqueIndex);
+            $table->addUniqueIndex($uniqueIndex, SchemaUtils::generateIndexName($columnName, 'unique'));
         }
         //END: add unique indexes
 
@@ -371,6 +368,13 @@ class Converter
             if (isset($fieldParams[$espoName])) {
                 $dbFieldParams[$dbalName] = $fieldParams[$espoName];
             }
+        }
+
+        $databaseParams = $this->getConfig()->get('database');
+        if (!isset($databaseParams['charset']) || $databaseParams['charset'] == 'utf8mb4') {
+            $dbFieldParams['platformOptions'] = array(
+                'collation' => 'utf8mb4_unicode_ci',
+            );
         }
 
         switch ($fieldParams['type']) {
@@ -398,9 +402,10 @@ class Converter
                 break;
         }
 
-        if (isset($fieldParams['autoincrement']) && $fieldParams['autoincrement']) {
+        if ($fieldParams['type'] != 'id' && isset($fieldParams['autoincrement']) && $fieldParams['autoincrement']) {
             $dbFieldParams['unique'] = true;
             $dbFieldParams['notnull'] = true;
+            $dbFieldParams['unsigned'] = true;
         }
 
         if (isset($fieldParams['utf8mb3']) && $fieldParams['utf8mb3']) {
@@ -413,26 +418,7 @@ class Converter
     }
 
     /**
-     * Get key list (index, unique). Ex. index => true OR index => 'somename'
-     * @param  string $columnName Column name (underscore field name)
-     * @param  bool | string $keyValue
-     * @return array
-     */
-    protected function getKeyList($columnName, $keyValue, array $keyList)
-    {
-        if ($keyValue === true) {
-            $tableIndexName = SchemaUtils::generateIndexName($columnName);
-            $keyList[$tableIndexName] = array($columnName);
-        } else if (is_string($keyValue)) {
-            $tableIndexName = SchemaUtils::generateIndexName($keyValue);
-            $keyList[$tableIndexName][] = $columnName;
-        }
-
-        return $keyList;
-    }
-
-    /**
-     * Get custom table defenition in "application/Espo/Core/Utils/Database/Schema/tables/" and in metadata 'additionalTables'
+     * Get custom table definition in "application/Espo/Core/Utils/Database/Schema/tables/" and in metadata 'additionalTables'
      *
      * @param  array  $ormMeta
      *

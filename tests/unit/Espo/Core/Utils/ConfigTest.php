@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -164,53 +164,5 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
 
         $this->assertArrayHasKey('systemItems', $configData);
         $this->assertArrayHasKey('adminItems', $configData);
-    }
-
-    public function testUnauthorizedGetData()
-    {
-        $data = $this->object->getData();
-
-        $this->assertArrayNotHasKey('quickCreateList', $data);
-        $this->assertArrayNotHasKey('tabList', $data);
-        $this->assertArrayNotHasKey('timeFormat', $data);
-
-        $this->assertArrayNotHasKey('smtpSecurity', $data);
-        $this->assertArrayNotHasKey('cron', $data);
-        $this->assertArrayNotHasKey('smtpServer', $data);
-
-        $this->assertArrayNotHasKey('database', $data);
-        $this->assertArrayNotHasKey('isInstalled', $data);
-    }
-
-    public function testUserGetData()
-    {
-        $data = $this->object->getData(false);
-
-        $this->assertArrayHasKey('quickCreateList', $data);
-        $this->assertArrayHasKey('tabList', $data);
-        $this->assertArrayHasKey('timeFormat', $data);
-
-        $this->assertArrayNotHasKey('smtpSecurity', $data);
-        $this->assertArrayNotHasKey('cron', $data);
-        $this->assertArrayNotHasKey('smtpServer', $data);
-
-        $this->assertArrayNotHasKey('database', $data);
-        $this->assertArrayNotHasKey('isInstalled', $data);
-    }
-
-    public function testAdminGetData()
-    {
-        $data = $this->object->getData(true);
-
-        $this->assertArrayHasKey('quickCreateList', $data);
-        $this->assertArrayHasKey('tabList', $data);
-        $this->assertArrayHasKey('timeFormat', $data);
-
-        $this->assertArrayHasKey('smtpSecurity', $data);
-        $this->assertArrayHasKey('cron', $data);
-        $this->assertArrayHasKey('smtpServer', $data);
-
-        $this->assertArrayNotHasKey('database', $data);
-        $this->assertArrayNotHasKey('isInstalled', $data);
     }
 }

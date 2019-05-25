@@ -14,7 +14,6 @@
         "status": {
             "type": "enum",
             "options": ["Active", "Draft", "Expired", "Canceled"],
-            "view": "views/fields/enum-styled",
             "style": {
                 "Canceled": "danger",
                 "Expired": "danger"
@@ -121,7 +120,7 @@
         }
     },
     "collection": {
-        "sortBy": "createdAt",
-        "asc": false
+        "orderBy": "createdAt",
+        "order": "desc"
     }
 }

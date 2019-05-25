@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,8 +40,10 @@ class Preferences extends \Espo\Core\ORM\Entity
             $smtpParams['server'] = $this->get('smtpServer');
             $smtpParams['auth'] = $this->get('smtpAuth');
             $smtpParams['security'] = $this->get('smtpSecurity');
-            $smtpParams['username'] = $this->get('smtpUsername');
-            $smtpParams['password'] = $this->get('smtpPassword');
+            if ($this->get('smtpAuth')) {
+                $smtpParams['username'] = $this->get('smtpUsername');
+                $smtpParams['password'] = $this->get('smtpPassword');
+            }
             return $smtpParams;
         } else {
             return false;

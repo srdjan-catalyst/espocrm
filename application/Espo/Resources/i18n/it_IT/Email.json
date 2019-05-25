@@ -5,20 +5,15 @@
     "dateSent": "Data invio",
     "from": "Da",
     "to": "A",
-    "cc": "CC",
-    "bcc": "BCC",
     "replyTo": "Rispondi a",
     "replyToString": "Rispondi da (String)",
     "isHtml": "È Html",
     "body": "Corpo",
-    "subject": "Soggetto",
     "attachments": "Allegato",
     "selectTemplate": "Seleziona Modello",
-    "fromEmailAddress": "Indirizzo mittente",
-    "toEmailAddresses": "Indirizzo destinatario",
+    "fromAddress": "Indirizzo mittente",
     "emailAddress": "Indirizzo email",
     "deliveryDate": "Data di consegna",
-    "account": "Account",
     "users": "Utenti",
     "replied": "Risposta",
     "replies": "Risposte",
@@ -35,7 +30,18 @@
     "emailAccounts": "Account Personale",
     "hasAttachment": "Ha allegato",
     "sentBy": "Inviato da",
-    "assignedUsers": "Utenti assegnati"
+    "assignedUsers": "Utenti assegnati",
+    "bodyPlain": "Corpo (semplice)",
+    "ccEmailAddresses": "Indirizzo email CC",
+    "messageId": "ID messaggio",
+    "messageIdInternal": "ID messaggio (Interno)",
+    "folderId": "ID Cartella",
+    "fromName": "DA Nome",
+    "fromString": "DA Stringa",
+    "isSystem": "È Sistema",
+    "toEmailAddresses": "A Email Destinatario",
+    "bccEmailAddresses": "CCN Email Destinatario",
+    "replyToEmailAddresses": "Rispondi-A Indirizzo email"
   },
   "links": {
     "replied": "Risposto",
@@ -43,7 +49,13 @@
     "inboundEmails": "Gruppi di Account",
     "emailAccounts": "Account Personali",
     "assignedUsers": "Utenti assegnati",
-    "sentBy": "Inviato da"
+    "sentBy": "Inviato da",
+    "attachments": "Allegati",
+    "fromEmailAddress": "Indirizzo email mittente",
+    "toEmailAddresses": "A Indirizzo email",
+    "ccEmailAddresses": "CC Indirizzi Email",
+    "bccEmailAddresses": "CCN Indirizzi email",
+    "replyToEmailAddresses": "Risposta-A Indirizzo Email"
   },
   "options": {
     "status": {
@@ -87,15 +99,16 @@
     "noSmtpSetup": "Nessun setup per l'SMTP. {link}.",
     "testEmailSent": "L'email di prova è stata inviata",
     "emailSent": "L'email è stata inviata",
-    "savedAsDraft": "Salvato come bozza."
+    "savedAsDraft": "Salvato come bozza.",
+    "confirmInsertTemplate": "Il corpo dell'email andrà perso. Sei sicuro di voler inserire il modello?"
   },
   "presetFilters": {
     "sent": "Inviato",
     "archived": "Archiviato",
-    "inbox": "Inbox",
+    "inbox": "Posta in arrivo",
     "drafts": "Bozze",
     "trash": "Cestino",
-    "important": "Importantw"
+    "important": "Importante"
   },
   "massActions": {
     "markAsRead": "Contrassegna come Letto",

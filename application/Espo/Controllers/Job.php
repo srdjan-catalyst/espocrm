@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,37 +41,37 @@ class Job extends \Espo\Core\Controllers\Record
         }
     }
 
-    public function actionCreate($params, $data, $request)
+    public function beforeCreate()
     {
         throw new Forbidden();
     }
 
-    public function actionUpdate($params, $data, $request)
+    public function beforeUpdate()
     {
         throw new Forbidden();
     }
 
-    public function actionPatch($params, $data, $request)
+    public function beforePatch()
     {
         throw new Forbidden();
     }
 
-    public function actionListLinked($params, $data, $request)
+    public function beforeListLinked()
     {
         throw new Forbidden();
     }
 
-    public function actionMassUpdate($params, $data, $request)
+    public function beforeMassUpdate()
     {
         throw new Forbidden();
     }
 
-    public function actionCreateLink($params, $data, $request)
+    public function beforeCreateLink()
     {
         throw new Forbidden();
     }
 
-    public function actionRemoveLink($params, $data, $request)
+    public function beforeRemoveLink()
     {
         throw new Forbidden();
     }

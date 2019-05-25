@@ -56,7 +56,20 @@
     "Email Filters": "El. pašto filtrai",
     "Portal Users": "Portalo vartotojai",
     "Action History": "Veiksmų istorija",
-    "Label Manager": "Etikečių tvarkyklė"
+    "Label Manager": "Etikečių tvarkyklė",
+    "Auth Log": "Auth Prisijungti",
+    "Lead Capture": "\"Lead Capture\"",
+    "Attachments": "Priedai",
+    "API Users": "API Vartotojai",
+    "Template Manager": "Šablonų tvarkyklė",
+    "System Requirements": "Sistemos reikalavima\n",
+    "PHP Settings": "PHP nustatymai",
+    "Database Settings": "Duomenų bazės nustatymai",
+    "Permissions": "Teisės",
+    "Success": "Pavyko",
+    "Fail": "Nepavyko",
+    "is recommended": "rekomenduojama",
+    "extension is missing": "trūksta plėtinio"
   },
   "layouts": {
     "list": "Sąrašas",
@@ -72,7 +85,9 @@
     "sidePanelsEditSmall": "Šoninės panelės (redaguoti smulkias)",
     "detailPortal": "Plati informacija (Portalas)",
     "detailSmallPortal": "Plati informacija (mažesnis variantas, portalas)",
-    "listPortal": "Sąrašas (Portalas)"
+    "listSmallPortal": "Sąrašas (mažas, portalas)",
+    "listPortal": "Sąrašas (Portalas)",
+    "relationshipsPortal": "Santykių grupės (portalas)"
   },
   "fieldTypes": {
     "address": "Adresas",
@@ -85,8 +100,6 @@
     "bool": "Būlis",
     "currency": "Valiuta",
     "date": "Data",
-    "datetime": "DataLaikas",
-    "datetimeOptional": "Data/Data laikas",
     "email": "El. paštas",
     "enumInt": "Sąrašas",
     "enumFloat": "Sąrašo padėtis",
@@ -104,7 +117,12 @@
     "rangeCurrency": "Valiutų gruopė",
     "map": "Žemėlapis",
     "currencyConverted": "Valiuta (konvertuota)",
-    "colorpicker": "Spalvos pasirinkimas"
+    "colorpicker": "Spalvos pasirinkimas",
+    "int": "Skaitmuo",
+    "number": "Numeris (automatinis prieaugis)",
+    "jsonObject": "Json objektas",
+    "datetime": "Data-laikas",
+    "datetimeOptional": "Data / data-laikas"
   },
   "fields": {
     "type": "Tipas",
@@ -145,7 +163,11 @@
     "probabilityMap": "Tikimybių etapai (%)",
     "readOnly": "Tik skaitymui",
     "noEmptyString": "Tuščios eilutės reikšmė neleidžiama",
-    "maxFileSize": "Maksimalus failo dydis (Mb)"
+    "maxFileSize": "Maksimalus failo dydis (Mb)",
+    "isPersonalData": "Ar asmeniniai duomenys",
+    "useIframe": "Naudokite \"Iframe\"",
+    "useNumericFormat": "Naudokite skaitmeninį formatą",
+    "strip": "Juostos juosta"
   },
   "messages": {
     "selectEntityType": "Pasirinkite objekto tipą kairiajame meniu.",
@@ -161,7 +183,9 @@
     "thousandSeparatorEqualsDecimalMark": "Tūkstančių skirtukų simbolis negali būti toks pat kaip dešimtainio skirtuko simbolis.",
     "userHasNoEmailAddress": "Vartotojas neturi el. pašto adreso.",
     "newVersionIsAvailable": "Nauja EspoCRM versija {latestVersion} yra prieinama.",
-    "newExtensionVersionIsAvailable": "Yra {extensionName} nauja versija {latestVersion}."
+    "uninstallConfirmation": "Ar tikrai norite pašalinti plėtinį?",
+    "cronIsNotConfigured": "Numatytos darbo vietos neveikia. Taigi įeinantys laiškai, pranešimai ir priminimai neveikia. Prašome laikytis [instrukcijų] (https://www.espocrm.com/documentation/administration/server-configuration/#user-content-setup-a-crontab) nustatyti cron darbą.",
+    "newExtensionVersionIsAvailable": "Yra nauja {extensionName} versija {latestVersion}."
   },
   "descriptions": {
     "settings": "Sistemos programos nustatymai.",
@@ -192,7 +216,13 @@
     "entityManager": "Sukurkite ir redaguokite pritaikytus vedinius. Tvarkykite laukelius ir sąsajas.",
     "emailFilters": "El. pašto laiškai, atitinkantys nurodytą filtrą, nebus importuoti.",
     "actionHistory": "Vartotojo veiksmų žurnalas.",
-    "labelManager": "Prisitaikykite aplikacijų etiketes"
+    "labelManager": "Prisitaikykite aplikacijų etiketes",
+    "authLog": "Prisijungimo istorija.",
+    "leadCapture": "API prisijungimo taškai \"Web-to-Lead\".",
+    "attachments": "Visi failo priedai, saugomi sistemoje.",
+    "templateManager": "Koreguoti pranešimų šablonus.",
+    "systemRequirements": "EspoCRM sistemos reikalavimai",
+    "apiUsers": "Atskirti naudotojus integracijos tikslais."
   },
   "options": {
     "previewSize": {
@@ -206,5 +236,25 @@
     "and": "IR",
     "or": "ARBA",
     "not": "NE"
+  },
+  "systemRequirements": {
+    "requiredPhpVersion": "PHP versija",
+    "requiredMysqlVersion": "MySQL versija",
+    "host": "Serverio pavadinimas",
+    "dbname": "Duomenų bazės pavadinimas",
+    "user": "Naudotojo vardas",
+    "writable": "Įrašoma",
+    "readable": "Skaitoma"
+  },
+  "templates": {
+    "accessInfo": "Priegos informacija",
+    "accessInfoPortal": "Prieiga prie informacijos portalams",
+    "assignment": "Priskyrimai",
+    "mention": "Paminėti",
+    "noteEmailRecieved": "Pranešimas apie gautą el. laišką",
+    "notePost": "Pranešimas apie įrašą",
+    "notePostNoParent": "Pranešimas apie įrašą (be susijusių)",
+    "noteStatus": "Pranešimas apie statuso atnaujinimą",
+    "passwordChangeLink": "Slaptažodžio keitimo nuoroda"
   }
 }

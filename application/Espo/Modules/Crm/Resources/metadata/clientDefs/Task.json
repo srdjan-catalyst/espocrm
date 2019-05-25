@@ -8,6 +8,9 @@
         "list": "crm:views/task/list",
         "detail": "crm:views/task/detail"
     },
+    "modalViews": {
+        "detail": "crm:views/task/modals/detail"
+    },
     "dynamicLogic": {
         "fields": {
             "dateCompleted": {
@@ -28,12 +31,17 @@
                             "type": "and",
                             "value": [
                                 {
-                                    "type": "isNotEmpty",
-                                    "attribute": "dateEnd"
-                                },
-                                {
-                                    "type": "isEmpty",
-                                    "attribute": "dateEndDate"
+                                    "type": "or",
+                                    "value": [
+                                        {
+                                            "type": "isNotEmpty",
+                                            "attribute": "dateEnd"
+                                        },
+                                         {
+                                            "type": "isNotEmpty",
+                                            "attribute": "dateEndDate"
+                                        }
+                                    ]
                                 },
                                 {
                                     "type": "notEquals",

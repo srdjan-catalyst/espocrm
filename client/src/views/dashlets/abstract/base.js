@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -122,17 +122,17 @@ Espo.define('views/dashlets/abstract/base', 'view', function (Dep) {
             {
                 name: 'refresh',
                 label: 'Refresh',
-                iconHtml: '<span class="glyphicon glyphicon-refresh"></span>',
+                iconHtml: '<span class="fas fa-sync-alt"></span>',
             },
             {
                 name: 'options',
                 label: 'Options',
-                iconHtml: '<span class="glyphicon glyphicon-pencil"></span>',
+                iconHtml: '<span class="fas fa-pencil-alt fa-sm"></span>',
             },
             {
                 name: 'remove',
                 label: 'Remove',
-                iconHtml: '<span class="glyphicon glyphicon-remove"></span>',
+                iconHtml: '<span class="fas fa-times"></span>',
             }
         ],
 
@@ -144,11 +144,21 @@ Espo.define('views/dashlets/abstract/base', 'view', function (Dep) {
 
         setupButtonList: function () {},
 
+        hasOption: function (key) {
+            return key in this.optionsData;
+        },
+
         getOption: function (key) {
             return this.optionsData[key];
-        }
+        },
+
+        getTitle: function () {
+            var title = this.getOption('title');
+            if (!title) {
+                title = null;
+            }
+            return title;
+        },
 
     });
 });
-
-

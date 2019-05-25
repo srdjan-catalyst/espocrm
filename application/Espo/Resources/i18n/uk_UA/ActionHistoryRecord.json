@@ -5,11 +5,13 @@
     "createdAt": "Дата",
     "target": "Ціль",
     "targetType": "Тип цілі",
-    "authToken": "Токен аутентифікації",
-    "ipAddress": "IP адреса"
+    "authToken": "Токен автентифікації",
+    "ipAddress": "IP адреса",
+    "authLogRecord": "Запис журналу автентифікації"
   },
   "links": {
-    "authToken": "Токен аутентифікації",
+    "authToken": "Токен автентифікації",
+    "authLogRecord": "Запис журналу автентифікації",
     "user": "Користувач",
     "target": "Ціль"
   },

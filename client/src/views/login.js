@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ Espo.define('views/login', 'view', function (Dep) {
             if (!companyLogoId) {
                 return this.getBasePath() + ('client/img/logo.png');
             }
-            return this.getBasePath() + '?entryPoint=LogoImage&id='+companyLogoId+'&t=' + companyLogoId;
+            return this.getBasePath() + '?entryPoint=LogoImage&id='+companyLogoId;
         },
 
         login: function () {
@@ -76,21 +76,27 @@ Espo.define('views/login', 'view', function (Dep) {
                 var $submit = this.$el.find('#btn-login');
 
                 if (userName == '') {
+
+                    this.isPopoverDestroyed = false;
                     var $el = $("#field-userName");
 
                     var message = this.getLanguage().translate('userCantBeEmpty', 'messages', 'User');
+
                     $el.popover({
                         placement: 'bottom',
+                        container: 'body',
                         content: message,
                         trigger: 'manual',
                     }).popover('show');
 
                     var $cell = $el.closest('.form-group');
                     $cell.addClass('has-error');
-                    this.$el.one('mousedown click', function () {
+                    $el.one('mousedown click', function () {
                         $cell.removeClass('has-error');
+                        if (this.isPopoverDestroyed) return;
                         $el.popover('destroy');
-                    });
+                        this.isPopoverDestroyed = true;
+                    }.bind(this));
                     return;
                 }
 

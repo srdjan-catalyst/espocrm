@@ -24,7 +24,8 @@
         },
         "createdAt": {
             "type": "datetime",
-            "readOnly": true
+            "readOnly": true,
+            "hasSeconds": true
         },
         "isDenied": {
             "type": "bool",
@@ -54,6 +55,10 @@
             "field": "isActive",
             "readOnly": true,
             "view": "views/fields/foreign-bool"
+        },
+        "authenticationMethod": {
+            "type": "enum",
+            "options": ["Espo", "LDAP", "ApiKey", "Hmac"]
         }
     },
     "links": {

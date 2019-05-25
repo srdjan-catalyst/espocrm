@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,19 @@ Espo.define('views/fields/enum', ['views/fields/base', 'lib!Selectize'], functio
             var data = Dep.prototype.data.call(this);
             data.translatedOptions = this.translatedOptions;
             var value = this.model.get(this.name);
+
+            if (this.isReadMode() && this.styleMap && (value || value === '')) {
+                data.style = this.styleMap[value] || 'default';
+            }
+
+            if (this.isReadMode()) {
+                if (this.params.displayAsLabel && data.style && data.style !== 'default') {
+                    data.class = 'label label-md label';
+                } else {
+                    data.class = 'text';
+                }
+            }
+
             if (
                 value !== null
                 &&
@@ -69,6 +82,8 @@ Espo.define('views/fields/enum', ['views/fields/base', 'lib!Selectize'], functio
                     this.params.options = this.model[methodName].call(this.model);
                 }
             }
+
+            this.styleMap = this.model.getFieldParam(this.name, 'style') || {};
 
             this.setupOptions();
 
@@ -195,7 +210,7 @@ Espo.define('views/fields/enum', ['views/fields/base', 'lib!Selectize'], functio
 
             if (this.mode == 'search') {
 
-                var $element = this.$element = this.$el.find('[name="' + this.name + '"]');
+                var $element = this.$element = this.$el.find('.main-element');
 
                 var type = this.$el.find('select.search-type').val();
                 this.handleSearchType(type);
@@ -252,9 +267,15 @@ Espo.define('views/fields/enum', ['views/fields/base', 'lib!Selectize'], functio
         },
 
         fetch: function () {
-            var value = this.$el.find('[name="' + this.name + '"]').val();
+            var value = this.$element.val();
+
+            if (this.fetchEmptyValueAsNull && !value) {
+                value = null;
+            }
+
             var data = {};
             data[this.name] = value;
+
             return data;
         },
 
@@ -263,7 +284,7 @@ Espo.define('views/fields/enum', ['views/fields/base', 'lib!Selectize'], functio
         },
 
         fetchSearch: function () {
-            var type = this.$el.find('[name="'+this.name+'-type"]').val();
+            var type = this.fetchSearchType();
 
             var list = this.$element.val().split(':,:');
             if (list.length === 1 && list[0] == '') {
@@ -363,4 +384,3 @@ Espo.define('views/fields/enum', ['views/fields/base', 'lib!Selectize'], functio
 
     });
 });
-

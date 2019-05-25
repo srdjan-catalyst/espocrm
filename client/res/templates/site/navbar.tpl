@@ -1,11 +1,10 @@
 <div class="navbar navbar-inverse" role="navigation">
     <div class="navbar-header">
-        <a class="navbar-brand nav-link" href="#"><img src="{{logoSrc}}" class="logo"><span class="home-icon glyphicon glyphicon-th-large" title="{{translate 'Home'}}"></span></a>
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-body">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
+            <span class="fas fa-bars"></span>
         </button>
+        <div class="navbar-logo-container"><a class="navbar-brand nav-link" href="#"><img src="{{logoSrc}}" class="logo"></span></a></div>
+        <a href="javascript:" class="side-menu-button"><span class="fas fa-bars"></span></a>
     </div>
 
     <div class="collapse navbar-collapse navbar-body">
@@ -14,7 +13,6 @@
             {{#unless isInMore}}
             <li data-name="{{name}}" class="not-in-more tab">
                 <a href="{{link}}" class="nav-link"{{#if color}} style="border-color: {{color}}"{{/if}}>
-                    <span class="full-label">{{label}}</span>
                     <span class="short-label" title="{{label}}"{{#if color}} style="color: {{color}}"{{/if}}>
                         {{#if iconClass}}
                         <span class="{{iconClass}}"></span>
@@ -25,12 +23,13 @@
                         <span class="short-label-text">{{shortLabel}}</span>
                         {{/if}}
                     </span>
+                    <span class="full-label">{{label}}</span>
                 </a>
             </li>
             {{/unless}}
             {{/each}}
             <li class="dropdown more">
-                <a id="nav-more-tabs-dropdown" class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon glyphicon-option-horizontal more-icon"></span></a>
+                <a id="nav-more-tabs-dropdown" class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="fas fa-ellipsis-h more-icon"></span></a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="nav-more-tabs-dropdown">
                 {{#each tabDefsList}}
                 {{#if isInMore}}
@@ -54,6 +53,7 @@
                 </ul>
             </li>
         </ul>
+        <div class="navbar-right-container">
         <ul class="nav navbar-nav navbar-right">
             <li class="nav navbar-nav navbar-form global-search-container">
                 {{{globalSearch}}}
@@ -63,7 +63,7 @@
             </li>
             {{#if enableQuickCreate}}
             <li class="dropdown hidden-xs quick-create-container">
-                <a id="nav-quick-create-dropdown" class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="glyphicon glyphicon-plus"></i></a>
+                <a id="nav-quick-create-dropdown" class="dropdown-toggle" data-toggle="dropdown" href="#" title="{{translate 'Create'}}"><i class="fas fa-plus"></i></a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="nav-quick-create-dropdown">
                     <li class="dropdown-header">{{translate 'Create'}}</li>
                     {{#each quickCreateList}}
@@ -73,7 +73,7 @@
             </li>
             {{/if}}
             <li class="dropdown menu-container">
-                <a id="nav-menu-dropdown" class="dropdown-toggle" data-toggle="dropdown" href="#" title="{{translate 'Menu'}}"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
+                <a id="nav-menu-dropdown" class="dropdown-toggle" data-toggle="dropdown" href="#" title="{{translate 'Menu'}}"><span class="fas fa-ellipsis-v"></span></a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="nav-menu-dropdown">
                     {{#each menuDataList}}
                         {{#unless divider}}
@@ -85,9 +85,10 @@
                 </ul>
             </li>
         </ul>
+        </div>
         <a class="minimizer" href="javascript:">
-            <span class="glyphicon glyphicon glyphicon-menu-right right"></span>
-            <span class="glyphicon glyphicon glyphicon-menu-left left"></span>
+            <span class="fas fa-chevron-right right"></span>
+            <span class="fas fa-chevron-left left"></span>
         </a>
     </div>
 </div>

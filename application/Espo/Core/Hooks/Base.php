@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,18 +33,20 @@ use Espo\Core\Interfaces\Injectable;
 
 abstract class Base implements Injectable
 {
-    protected $dependencies = array(
+    protected $injections = [];
+
+    public static $order = 9;
+
+    protected $dependencyList = [
         'container',
         'entityManager',
         'config',
         'metadata',
         'aclManager',
         'user',
-    );
+    ];
 
-    protected $injections = array();
-
-    public static $order = 9;
+    protected $dependencies = []; // for backward compatibility
 
     public function __construct()
     {
@@ -57,7 +59,7 @@ abstract class Base implements Injectable
 
     public function getDependencyList()
     {
-        return $this->dependencies;
+        return array_merge($this->dependencyList, $this->dependencies);
     }
 
     protected function addDependencyList(array $list)
@@ -69,7 +71,7 @@ abstract class Base implements Injectable
 
     protected function addDependency($name)
     {
-        $this->dependencies[] = $name;
+        $this->dependencyList[] = $name;
     }
 
     protected function getInjection($name)
@@ -116,10 +118,4 @@ abstract class Base implements Injectable
     {
         return $this->getInjection('metadata');
     }
-
-    protected function getRepository()
-    {
-        return $this->getEntityManager()->getRepository($this->entityName);
-    }
 }
-

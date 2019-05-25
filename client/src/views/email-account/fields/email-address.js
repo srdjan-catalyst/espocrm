@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,13 @@ Espo.define('views/email-account/fields/email-address', 'views/fields/varchar', 
                 var emailAddress = this.model.get('emailAddress');
                 this.model.set('name', emailAddress);
             }, this);
+        },
+
+        setupOptions: function () {
+            if (this.model.get('assignedUserId') == this.getUser().id) {
+                this.params.options = this.getUser().get('userEmailAddressList');
+            }
+
         },
 
     });

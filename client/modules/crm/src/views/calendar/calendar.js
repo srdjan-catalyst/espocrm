@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -405,6 +405,15 @@ Espo.define('crm:views/calendar/calendar', ['view', 'lib!full-calendar'], functi
                 return;
             }
 
+            if (event.dateStartDate && event.dateEndDate) {
+                event.allDay = true;
+                event.allDayCopy = event.allDay;
+                if (!notInitial) {
+                    event.end.add(1, 'days')
+                }
+                return;
+            }
+
             if (!event.start || !event.end) {
                 event.allDay = true;
                 if (event.end) {
@@ -457,7 +466,7 @@ Espo.define('crm:views/calendar/calendar', ['view', 'lib!full-calendar'], functi
         },
 
         getCalculatedHeight: function () {
-            if (this.$container && this.$container.size()) {
+            if (this.$container && this.$container.length) {
                 return this.$container.height();
             }
             var height = $(window).height();
@@ -608,13 +617,6 @@ Espo.define('crm:views/calendar/calendar', ['view', 'lib!full-calendar'], functi
                     }
                     var eventCloned = Espo.Utils.clone(event);
 
-                    var dateStart = this.convertTime(event.start) || null;
-
-                    var dateEnd = null;
-                    if (event.duration) {
-                        dateEnd = this.convertTime(event.start.clone().add(event.duration, 's')) || null;
-                    }
-
                     var attributes = {};
 
                     if (event.dateStart) {
@@ -727,7 +729,7 @@ Espo.define('crm:views/calendar/calendar', ['view', 'lib!full-calendar'], functi
             setTimeout(function () {
                 $calendar.fullCalendar(options);
                 this.updateDate();
-                if (this.$container && this.$container.size()) {
+                if (this.$container && this.$container.length) {
                     this.adjustSize();
                 }
             }.bind(this), 150);

@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ use Zend\Mime\Mime;
 
 class XQueueItemId implements Header\HeaderInterface
 {
-    protected $fieldName = 'X-QueueItemId';
+    protected $fieldName = 'X-Queue-Item-Id';
 
     protected $id = null;
 
@@ -57,7 +57,7 @@ class XQueueItemId implements Header\HeaderInterface
         $value = Header\HeaderWrap::mimeDecodeValue($value);
 
         if (strtolower($name) !== 'x-queue-item-id') {
-            throw new Header\Exception\InvalidArgumentException('Invalid header line for Message-ID string');
+            throw new Header\Exception\InvalidArgumentException('Invalid header line for x-queue-item-id string');
         }
 
         $header = new static();

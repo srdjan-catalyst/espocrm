@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,11 +38,72 @@ class Event extends \Espo\Core\ORM\Repositories\RDB
 
     protected $reminderSkippingStatusList = ['Held', 'Not Held'];
 
-    protected function beforeSave(Entity $entity, array $options = array())
+    protected function init()
+    {
+        parent::init();
+        $this->addDependency('dateTime');
+    }
+
+    protected function getDateTime()
+    {
+        return $this->getInjection('dateTime');
+    }
+
+    protected function beforeSave(Entity $entity, array $options = [])
     {
         if ($entity->isAttributeChanged('status') && in_array($entity->get('status'), $this->reminderSkippingStatusList)) {
             $entity->set('reminders', []);
         }
+
+        if ($entity->has('dateStartDate')) {
+            $dateStartDate = $entity->get('dateStartDate');
+            if (!empty($dateStartDate)) {
+                $dateStart = $dateStartDate . ' 00:00:00';
+                $dateStart = $this->convertDateTimeToDefaultTimezone($dateStart);
+
+                $entity->set('dateStart', $dateStart);
+            } else {
+                $entity->set('dateStartDate', null);
+            }
+        }
+
+        if ($entity->has('dateEndDate')) {
+            $dateEndDate = $entity->get('dateEndDate');
+            if (!empty($dateEndDate)) {
+                $dateEnd = $dateEndDate . ' 00:00:00';
+                $dateEnd = $this->convertDateTimeToDefaultTimezone($dateEnd);
+
+                try {
+                    $dt = new \DateTime($dateEnd);
+                    $dt->modify('+1 day');
+                    $dateEnd = $dt->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {}
+
+                $entity->set('dateEnd', $dateEnd);
+            } else {
+                $entity->set('dateEndDate', null);
+            }
+        }
+
+        if (!$entity->isNew()) {
+            if ($entity->isAttributeChanged('dateStart') && $entity->isAttributeChanged('dateStart') && !$entity->isAttributeChanged('dateEnd')) {
+                $dateEndPrevious = $entity->getFetched('dateEnd');
+                $dateStartPrevious = $entity->getFetched('dateStart');
+                if ($dateStartPrevious && $dateEndPrevious) {
+                    $dtStart = new \DateTime($dateStartPrevious);
+                    $dtEnd = new \DateTime($dateEndPrevious);
+                    $dt = new \DateTime($entity->get('dateStart'));
+
+                    if ($dtStart && $dtEnd && $dt) {
+                        $duration = ($dtEnd->getTimestamp() - $dtStart->getTimestamp());
+                        $dt->modify('+' . $duration . ' seconds');
+                        $dateEnd = $dt->format('Y-m-d H:i:s');
+                        $entity->set('dateEnd', $dateEnd);
+                    }
+                }
+            }
+        }
+
         parent::beforeSave($entity, $options);
     }
 
@@ -61,10 +122,15 @@ class Event extends \Espo\Core\ORM\Repositories\RDB
         $pdo->query($sql);
     }
 
-    protected function afterSave(Entity $entity, array $options = array())
+    protected function afterSave(Entity $entity, array $options = [])
     {
-        parent::afterSave($entity, $options);
+        $this->processReminderAfterSave($entity, $options);
 
+        parent::afterSave($entity, $options);
+    }
+
+    protected function processReminderAfterSave(Entity $entity, array $options = [])
+    {
         if (
             $entity->isNew() ||
             $entity->isAttributeChanged('assignedUserId') ||
@@ -182,5 +248,19 @@ class Event extends \Espo\Core\ORM\Repositories\RDB
 
         return $reminderList;
     }
-}
 
+    protected function convertDateTimeToDefaultTimezone($string)
+    {
+        $dateTime = \DateTime::createFromFormat($this->getDateTime()->getInternalDateTimeFormat(), $string);
+        $timeZone = $this->getConfig()->get('timeZone');
+        if (empty($timeZone)) {
+            $timeZone = 'UTC';
+        }
+        $tz = $timezone = new \DateTimeZone($timeZone);
+
+        if ($dateTime) {
+            return $dateTime->setTimezone($tz)->format($this->getDateTime()->getInternalDateTimeFormat());
+        }
+        return null;
+    }
+}

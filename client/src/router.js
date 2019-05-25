@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,23 +25,88 @@
  * In accordance with Section 7(b) of the GNU General Public License version 3,
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
-Espo.define('router', [], function () {
+
+define('router', [], function () {
 
     var Router = Backbone.Router.extend({
 
-        routes: {
-            "logout": "logout",
-            "clearCache": "clearCache",
-            "search/:text": "search",
-            ":controller/view/:id/:options": "view",
-            ":controller/view/:id": "view",
-            ":controller/edit/:id/:options": "edit",
-            ":controller/edit/:id": "edit",
-            ":controller/create": "create",
-            ":controller/:action/:options": "action",
-            ":controller/:action": "action",
-            ":controller": "defaultAction",
-            "*actions": "home",
+        routeList: [
+            {
+                route: "clearCache",
+                resolution: "clearCache"
+            },
+            {
+                route: ":controller/view/:id/:options",
+                resolution: "view"
+            },
+            {
+                route: ":controller/view/:id",
+                resolution: "view"
+            },
+            {
+                route: ":controller/edit/:id/:options",
+                resolution: "edit"
+            },
+            {
+                route: ":controller/edit/:id",
+                resolution: "edit"
+            },
+            {
+                route: ":controller/create",
+                resolution: "create"
+            },
+            {
+                route: ":controller/:action/:options",
+                resolution: "action",
+                order: 100
+            },
+            {
+                route: ":controller/:action",
+                resolution: "action",
+                order: 200
+            },
+            {
+                route: ":controller",
+                resolution: "defaultAction",
+                order: 300
+            },
+            {
+                route: "*actions",
+                resolution: "home",
+                order: 500
+            }
+        ],
+
+        _bindRoutes: function() {},
+
+        setupRoutes: function () {
+            this.routeParams = {};
+
+            if (this.options.routes) {
+                var routeList = [];
+                Object.keys(this.options.routes).forEach(function (route) {
+                    var item = this.options.routes[route];
+                    routeList.push({
+                        route: route,
+                        resolution: item.resolution || 'defaultRoute',
+                        order: item.order || 0
+                    });
+                    this.routeParams[route] = item.params || {};
+                }, this);
+
+                this.routeList = Espo.Utils.clone(this.routeList);
+
+                routeList.forEach(function (item) {
+                    this.routeList.push(item);
+                }, this);
+
+                this.routeList = this.routeList.sort(function (v1, v2) {
+                    return (v1.order || 0) - (v2.order || 0);
+                });
+            }
+            this.routeList.reverse().forEach(function (item) {
+                this.route(item.route, item.resolution);
+            }, this);
         },
 
         _last: null,
@@ -56,7 +121,10 @@ Espo.define('router', [], function () {
 
         confirmLeaveOutCancelText: 'No',
 
-        initialize: function () {
+        initialize: function (options) {
+            this.options = options || {};
+            this.setupRoutes();
+
             this.history = [];
 
             var detectBackOrForward = function(onBack, onForward) {
@@ -91,7 +159,7 @@ Espo.define('router', [], function () {
                 }.bind(this), 50);
             }.bind(this)));
 
-            this.on('route', function () {
+            this.on('route', function (name, args) {
                 this.history.push(Backbone.history.fragment);
             });
         },
@@ -120,8 +188,45 @@ Espo.define('router', [], function () {
             }
         },
 
-        execute: function (callback, args, name) {
+        route: function (route, name, callback) {
+            var routeOriginal = route;
+
+            if (!_.isRegExp(route)) route = this._routeToRegExp(route);
+            if (_.isFunction(name)) {
+                callback = name;
+                name = '';
+            }
+            if (!callback) callback = this[name];
+            var router = this;
+            Backbone.history.route(route, function (fragment) {
+                var args = router._extractParameters(route, fragment);
+
+                var options = {};
+                if (name === 'defaultRoute') {
+                    var keyList = [];
+                    routeOriginal.split('/').forEach(function (key) {
+                        if (key && key.indexOf(':') === 0) keyList.push(key.substr(1));
+                    });
+                    keyList.forEach(function (key, i) {
+                        options[key] = args[i];
+                    });
+                }
+
+                if (router.execute(callback, args, name, routeOriginal, options) !== false) {
+                    router.trigger.apply(router, ['route:' + name].concat(args));
+                    router.trigger('route', name, args);
+                    Backbone.history.trigger('route', router, name, args);
+                }
+            });
+            return this;
+        },
+
+        execute: function (callback, args, name, routeOriginal, options) {
             this.checkConfirmLeaveOut(function () {
+                if (name === 'defaultRoute') {
+                    this.defaultRoute(this.routeParams[routeOriginal], options);
+                    return;
+                }
                 Backbone.Router.prototype.execute.call(this, callback, args, name);
             }, null, true);
         },
@@ -163,6 +268,13 @@ Espo.define('router', [], function () {
             return options;
         },
 
+        defaultRoute: function (params, options) {
+            var controller = params.controller || options.controller;
+            var action = params.action || options.action;
+
+            this.dispatch(controller, action, options);
+        },
+
         record: function (controller, action, id, options) {
             var options = this._parseOptionsParams(options);
             options.id = id;
@@ -191,10 +303,6 @@ Espo.define('router', [], function () {
 
         home: function () {
             this.dispatch('Home', null);
-        },
-
-        search: function (text) {
-            this.dispatch('Home', 'search', text);
         },
 
         logout: function () {
@@ -254,44 +362,30 @@ if (isIOS9UIWebView()) {
         });
     };
 
-    Backbone.history.navigate =
-    // Attempt to load the current URL fragment. If a route succeeds with a
-    // match, returns `true`. If no defined routes matches the fragment,
-    // returns `false`.
-    function (fragment, options) {
+    Backbone.history.navigate = function (fragment, options) {
         var pathStripper = /#.*$/;
         if (!Backbone.History.started) return false;
         if (!options || options === true) options = { trigger: !!options };
 
         var url = this.root + '#' + (fragment = this.getFragment(fragment || ''));
 
-        // Strip the hash for matching.
         fragment = fragment.replace(pathStripper, '');
 
         if (this.fragment === fragment) return;
         this.fragment = fragment;
 
-        // Don't include a trailing slash on the root.
         if (fragment === '' && url !== '/') url = url.slice(0, -1);
         var oldHash = location.hash;
-        // If pushState is available, we use it to set the fragment as a real URL.
+
         if (this._hasPushState) {
             this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
 
-            // If hash changes haven't been explicitly disabled, update the hash
-            // fragment to store history.
         } else if (this._wantsHashChange) {
             this._updateHash(this.location, fragment, options.replace);
             if (this.iframe && (fragment !== this.getFragment(this.getHash(this.iframe)))) {
-                // Opening and closing the iframe tricks IE7 and earlier to push a
-                // history entry on hash-tag change.  When replace is true, we don't
-                // want this.
                 if (!options.replace) this.iframe.document.open().close();
                 this._updateHash(this.iframe.location, fragment, options.replace);
             }
-
-            // If you've told us that you explicitly don't want fallback hashchange-
-            // based history, then `navigate` becomes a page refresh.
         } else {
             return this.location.assign(url);
         }

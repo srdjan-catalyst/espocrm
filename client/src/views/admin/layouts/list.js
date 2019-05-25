@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,11 @@ Espo.define('views/admin/layouts/list', 'views/admin/layouts/rows', function (De
 
         dataAttributesDefs: {
             link: {type: 'bool'},
-            width: {type: 'float'},
+            width: {
+                type: 'float',
+                min: 0,
+                max: 100
+            },
             notSortable: {type: 'bool'},
             align: {
                 type: 'enum',
@@ -163,6 +167,8 @@ Espo.define('views/admin/layouts/list', 'views/admin/layouts/rows', function (De
                     }
                 }, this);
                 this.rowLayout[i].label = label;
+
+                this.itemsData[this.rowLayout[i].name] = Espo.Utils.cloneDeep(this.rowLayout[i]);
             }
         },
 
@@ -178,10 +184,12 @@ Espo.define('views/admin/layouts/list', 'views/admin/layouts/rows', function (De
             if (this.ignoreTypeList.indexOf(model.getFieldParam(name, 'type')) != -1) {
                 return false;
             }
+
+            var layoutList = model.getFieldParam(name, 'layoutAvailabilityList');
+            if (layoutList && !~layoutList.indexOf(this.type)) return;
+
             return !model.getFieldParam(name, 'disabled') && !model.getFieldParam(name, 'layoutListDisabled');
         }
 
     });
 });
-
-

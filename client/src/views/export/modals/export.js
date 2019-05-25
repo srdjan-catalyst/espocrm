@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,12 @@ Espo.define('views/export/modals/export', ['views/modal', 'model'], function (De
             } else {
                 this.model.set('exportAllFields', true);
             }
-            this.model.set('format', this.getMetadata().get('app.export.formatList')[0]);
+
+            var formatList =
+                this.getMetadata().get(['scopes', this.scope, 'exportFormatList']) ||
+                this.getMetadata().get('app.export.formatList');
+
+            this.model.set('format', formatList[0]);
 
             this.createView('record', 'views/export/record/record', {
                 scope: this.scope,
@@ -109,4 +114,3 @@ Espo.define('views/export/modals/export', ['views/modal', 'model'], function (De
 
     });
 });
-

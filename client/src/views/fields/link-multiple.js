@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,8 +47,6 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
         nameHash: null,
 
         foreignScope: null,
-
-        AUTOCOMPLETE_RESULT_MAX_COUNT: 7,
 
         autocompleteDisabled: false,
 
@@ -96,12 +94,14 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
 
             var self = this;
 
-            this.ids = Espo.Utils.clone(this.model.get(this.idsName) || []);
-            this.nameHash = Espo.Utils.clone(this.model.get(this.nameHashName) || {});
-
             if (this.mode == 'search') {
-                this.nameHash = Espo.Utils.clone(this.searchParams.nameHash) || {};
-                this.ids = Espo.Utils.clone(this.searchParams.value) || [];
+                var nameHash = this.getSearchParamsData().nameHash || this.searchParams.nameHash || {};
+                var idList = this.getSearchParamsData().idList || this.searchParams.value || [];
+                this.nameHash = Espo.Utils.clone(nameHash);
+                this.ids = Espo.Utils.clone(idList);
+            } else {
+                this.ids = Espo.Utils.clone(this.model.get(this.idsName) || []);
+                this.nameHash = Espo.Utils.clone(this.model.get(this.nameHashName) || {});
             }
 
             this.listenTo(this.model, 'change:' + this.idsName, function () {
@@ -168,8 +168,22 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
             }, this.events || {});
         },
 
+        getAutocompleteMaxCount: function () {
+            if (this.autocompleteMaxCount) {
+                return this.autocompleteMaxCount;
+            }
+            return this.getConfig().get('recordsPerPage');
+        },
+
         getAutocompleteUrl: function () {
-            var url = this.foreignScope + '?sortBy=name&maxCount=' + this.AUTOCOMPLETE_RESULT_MAX_COUNT;
+            var url = this.foreignScope + '?orderBy=name&maxSize=' + this.getAutocompleteMaxCount();
+            if (!this.forceSelectAllAttributes) {
+                var select = ['id', 'name'];
+                if (this.mandatorySelectAttributeList) {
+                    select = select.concat(this.mandatorySelectAttributeList);
+                }
+                url += '&select=' + select.join(',')
+            }
             var boolList = this.getSelectBoolFilterList();
             var where = [];
             if (boolList) {
@@ -195,9 +209,11 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
                         }.bind(this),
                         minChars: 1,
                         paramName: 'q',
+                        noCache: true,
+                        triggerSelectOnValidInput: false,
                         formatResult: function (suggestion) {
-                            return suggestion.name;
-                        },
+                            return this.getHelper().escapeString(suggestion.name);
+                        }.bind(this),
                         transformResult: function (response) {
                             var response = JSON.parse(response);
                             var list = [];
@@ -218,7 +234,7 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
                             this.$element.val('');
                         }.bind(this)
                     });
-
+                    this.$element.attr('autocomplete', 'espo-' + this.name);
 
                     this.once('render', function () {
                         $element.autocomplete('dispose');
@@ -293,8 +309,8 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
         addLinkHtml: function (id, name) {
             var $container = this.$el.find('.link-container');
             var $el = $('<div />').addClass('link-' + id).addClass('list-group-item').attr('data-id', id);
-            $el.html(this.getHelper().stripTags(name || id) + '&nbsp');
-            $el.prepend('<a href="javascript:" class="pull-right" data-id="' + id + '" data-action="clearLink"><span class="glyphicon glyphicon-remove"></a>');
+            $el.html(this.getHelper().escapeString(name || id) + '&nbsp');
+            $el.prepend('<a href="javascript:" class="pull-right" data-id="' + id + '" data-action="clearLink"><span class="fas fa-times"></a>');
             $container.append($el);
 
             return $el;
@@ -313,7 +329,7 @@ Espo.define('views/fields/link-multiple', 'views/fields/base', function (Dep) {
             if (this.mode == 'detail') {
                 iconHtml = this.getIconHtml(id);
             }
-            return '<a href="#' + this.foreignScope + '/view/' + id + '">' + iconHtml + this.getHelper().stripTags(name) + '</a>';
+            return '<a href="#' + this.foreignScope + '/view/' + id + '">' + iconHtml + this.getHelper().escapeString(name) + '</a>';
         },
 
         getValueForDisplay: function () {

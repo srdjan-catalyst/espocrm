@@ -26,7 +26,8 @@
     "position": "Pozicija u timu",
     "ipAddress": "IP adresa",
     "passwordPreview": "Pregled lozinke",
-    "isSuperAdmin": "Je Super Admin"
+    "isSuperAdmin": "Je Super Admin",
+    "lastAccess": "Zadnji pristup"
   },
   "links": {
     "teams": "Timovi",
@@ -66,9 +67,6 @@
   },
   "messages": {
     "passwordWillBeSent": "Lozinka će biti poslana na adresu korisnika.",
-    "accountInfoEmailSubject": "EspoCRM Korisnik - podaci za pristup",
-    "accountInfoEmailBody": "Vaši podaci za pristup:\n\nKorisničko ime: {userName} \nLozinka: {password}\n\n{siteUrl}",
-    "passwordChangeLinkEmailSubject": "Upit za promjenu lozinke",
     "passwordChanged": "Lozinka je promijenjena",
     "userCantBeEmpty": "Korisničko ime ne može biti prazno",
     "wrongUsernamePasword": "Pogrešno korisničko ime/lozinka",
@@ -78,7 +76,6 @@
     "uniqueLinkHasBeenSent": "Jedinstvena URL adresa je poslana na određenu adresu.",
     "passwordChangedByRequest": "Lozinka je promijenjena.",
     "setupSmtpBefore": "Potrebno je da <a href=\"{url}\">SMTP postavke</a>href=\"{url}\"> budu unijete i točne kako bi lozinka bila poslana.",
-    "passwordChangeLinkEmailBody": "Možete promijeniti lozinku prateći ovaj link {link}. Ovaj jedinstveni URL traje samo kratko vrijeme.",
     "userNameExists": "Korisničko ime već postoji"
   },
   "boolFilters": {

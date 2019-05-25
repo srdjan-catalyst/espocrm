@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,27 +43,27 @@ class Import extends \Espo\Core\Controllers\Record
         }
     }
 
-    public function actionPatch($params, $data, $request)
+    public function beforePatch()
     {
         throw new BadRequest();
     }
 
-    public function actionUpdate($params, $data, $request)
+    public function beforeUpdate()
     {
         throw new BadRequest();
     }
 
-    public function actionMassUpdate($params, $data, $request)
+    public function beforeMassUpdate()
     {
         throw new BadRequest();
     }
 
-    public function actionCreateLink($params, $data, $request)
+    public function beforeCreateLink()
     {
         throw new BadRequest();
     }
 
-    public function actionRemoveLink($params, $data, $request)
+    public function beforeRemoveLink()
     {
         throw new BadRequest();
     }
@@ -93,9 +93,9 @@ class Import extends \Espo\Core\Controllers\Record
         $attachment->set('contents', $contents);
         $this->getEntityManager()->saveEntity($attachment);
 
-        return array(
+        return [
             'attachmentId' => $attachment->id
-        );
+        ];
     }
 
     public function actionRevert($params, $data, $request)
@@ -175,7 +175,7 @@ class Import extends \Espo\Core\Controllers\Record
            $timezone = $data->timezone;
         }
 
-        $importParams = array(
+        $importParams = [
             'headerRow' => !empty($data->headerRow),
             'delimiter' => $data->delimiter,
             'textQualifier' => $data->textQualifier,
@@ -188,8 +188,9 @@ class Import extends \Espo\Core\Controllers\Record
             'defaultValues' => $data->defaultValues,
             'action' => $data->action,
             'skipDuplicateChecking' => !empty($data->skipDuplicateChecking),
-            'idleMode' => !empty($data->idleMode)
-        );
+            'idleMode' => !empty($data->idleMode),
+            'silentMode' => !empty($data->silentMode),
+        ];
 
         if (property_exists($data, 'updateBy')) {
             $importParams['updateBy'] = $data->updateBy;

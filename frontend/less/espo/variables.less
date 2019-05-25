@@ -26,14 +26,16 @@
 @modal-inner-padding: @panel-padding;
 
 .container-fixed() {
-  margin-right: auto;
-  margin-left: auto;
-  padding-left: @container-padding;
-  padding-right: @container-padding;
-  .clearfix();
+    margin-right: auto;
+    margin-left: auto;
+    padding-left: @container-padding;
+    padding-right: @container-padding;
+    .clearfix();
 }
 
 @line-height-small-computed: floor((@font-size-base * @line-height-small));
+
+@font-size-smaller: 13px;
 
 @table-cell-padding: 8px;
 
@@ -49,11 +51,32 @@
 @navbar-height: 43px;
 @navbar-padding-vertical: ((@navbar-height - @line-height-computed) / 2);
 
+@tob-bar-height: @navbar-height;
+
 @brand-primary: #5184B0;
 @brand-danger: #CF605D;
-@brand-info: #8DB9E8;
+@brand-info: #a595c9;
 @brand-success: #87C956;
 @brand-warning: #EF990E;
+
+@state-info-bg: #e5ddf8;
+@state-info-text: #83779c;
+
+@state-warning-bg: #fcf8e3;
+@state-warning-text: #9E7328;
+
+@state-success-bg: lighten(spin(@brand-success, 5), 31%);
+@state-success-text: darken(spin(@brand-success, 7), 17%);
+
+@state-danger-text: #ad4846;
+@state-danger-bg: #f2dede;
+@state-danger-border: darken(spin(@state-danger-bg, -10), 5%);
+
+@state-primary-text: #5b9aca;
+
+@panel-warning-bg: #efda97;
+
+@panel-primary-border: lighten(@brand-primary, 12%);
 
 @gray-light: #999;
 @main-gray: #E8ECED;
@@ -62,6 +85,8 @@
 
 @btn-default-bg: @main-gray;
 @btn-default-border: @main-gray;
+
+@table-bg-accent: #f9f9f9;
 
 @code-bg: #f9f9f9;
 @code-color: @text-color;
@@ -75,22 +100,23 @@
 @btn-info-border: @btn-info-bg;
 @btn-warning-border: @btn-warning-bg;
 
-@state-info-bg: @brand-info;
-@state-warning-text: #9E7328;
-
-@navbar-inverse-color:                      @gray-light;
-@navbar-inverse-bg:                         #4A6492;
-@navbar-inverse-border:                     transparent;
-@navbar-inverse-link-color:                 #DFDFDF;
-@navbar-inverse-link-hover-color:           #fff;
-@navbar-inverse-link-hover-bg:              transparent;
-@navbar-inverse-link-active-color:          @navbar-inverse-link-hover-color;
-@navbar-inverse-link-active-bg:             darken(@navbar-inverse-bg, 10%);
-@navbar-inverse-link-disabled-color:        #444;
-@navbar-inverse-link-disabled-bg:           transparent;
+@navbar-inverse-color: @gray-light;
+@navbar-inverse-bg: #4A6492;
+@navbar-inverse-border: transparent;
+@navbar-inverse-link-color: #DFDFDF;
+@navbar-inverse-link-hover-color: #fff;
+@navbar-inverse-link-hover-bg: transparent;
+@navbar-inverse-link-active-color:  @navbar-inverse-link-hover-color;
+@navbar-inverse-link-active-bg: darken(@navbar-inverse-bg, 10%);
+@navbar-inverse-link-disabled-color:  #444;
+@navbar-inverse-link-disabled-bg: transparent;
 @navbar-inverse-toggle-hover-bg: darken(@navbar-inverse-bg, 10%);
 
 @white-color: #fafbfc;
+
+@panel-primary-text: @white-color;
+
+@gray-soft: lighten(@gray-base, 39.0%);
 
 @body-bg: #FEFEFE;
 @panel-bg: #FFF;
@@ -128,6 +154,9 @@
 @zindex-tooltip: 1600;
 @navbar-collapse-max-height: none;
 
+@navbar-height-xsmall: 37px;
+@navbar-logo-height-xsmall: 37px;
+
 @login-panel-heading-bg: @navbar-inverse-bg;
 
 @logo-width: 181px;
@@ -143,9 +172,15 @@
 
 @modal-title-line-height: floor(@font-size-h4 * @line-height-base);
 
-@navbar-color-border-width: 4px;
+@navbar-color-border-width: 0;
 
-@container-max-width: 1800px;
+@container-max-width: 1500px;
 
+@grid-column-width-xsmall: 190px;
 @grid-column-width-small: 252px;
 @grid-column-width-medium: 340px;
+
+@navbar-inverse-toggle-border-color: transparent;
+
+@label-padding-small: .09em .5em .2em;
+@label-padding-medium: 1px 7px 2px;

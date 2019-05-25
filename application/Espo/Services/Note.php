@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@ use Espo\ORM\Entity;
 
 class Note extends Record
 {
+    protected $noteNotificationPeriod = '1 hour';
+
     public function getEntity($id = null)
     {
         $entity = parent::getEntity($id);
@@ -46,7 +48,7 @@ class Note extends Record
         return $entity;
     }
 
-    public function createEntity($data)
+    public function create($data)
     {
         if (!empty($data->parentType) && !empty($data->parentId)) {
             $entity = $this->getEntityManager()->getEntity($data->parentType, $data->parentId);
@@ -57,7 +59,7 @@ class Note extends Record
             }
         }
 
-        return parent::createEntity($data);
+        return parent::create($data);
     }
 
     protected function afterCreateEntity(Entity $entity, $data)
@@ -69,7 +71,7 @@ class Note extends Record
             if ($preferences && $preferences->get('followEntityOnStreamPost')) {
                 if ($this->getMetadata()->get(['scopes', $entity->get('parentType'), 'stream'])) {
                     $parent = $this->getEntityManager()->getEntity($entity->get('parentType'), $entity->get('parentId'));
-                    if ($parent) {
+                    if ($parent && !$this->getUser()->isSystem() && !$this->getUser()->isApi()) {
                         $this->getServiceFactory()->create('Stream')->followEntity($parent, $this->getUser()->id);
                     }
                 }
@@ -80,6 +82,11 @@ class Note extends Record
     protected function beforeCreateEntity(Entity $entity, $data)
     {
         parent::beforeCreateEntity($entity, $data);
+
+        if ($entity->get('type') === 'Post') {
+            $this->handlePostText($entity);
+        }
+
         $targetType = $entity->get('targetType');
 
         $entity->clear('isGlobal');
@@ -117,11 +124,28 @@ class Note extends Record
     {
         parent::beforeUpdateEntity($entity, $data);
 
+        if ($entity->get('type') === 'Post') {
+            $this->handlePostText($entity);
+        }
+
         $entity->clear('targetType');
         $entity->clear('usersIds');
         $entity->clear('teamsIds');
         $entity->clear('portalsIds');
         $entity->clear('isGlobal');
+    }
+
+    protected function handlePostText(Entity $entity)
+    {
+        $post = $entity->get('post');
+        if (empty($post)) return;
+
+        $siteUrl = $this->getConfig()->getSiteUrl();
+
+        $regexp = '/' . preg_quote($siteUrl, '/') . '(\/portal|\/portal\/[a-zA-Z0-9]*)?\/#([A-Z][a-zA-Z0-9]*)\/view\/([a-zA-Z0-9]*)/';
+        $post = preg_replace($regexp, '[\2/\3](#\2/view/\3)', $post);
+
+        $entity->set('post', $post);
     }
 
     public function checkAssignment(Entity $entity)
@@ -195,19 +219,130 @@ class Note extends Record
         return true;
     }
 
-    public function linkEntity($id, $link, $foreignId)
+    public function link($id, $link, $foreignId)
     {
         if ($link === 'teams' || $link === 'users') {
             throw new Forbidden();
         }
-        return parant::linkEntity($id, $link, $foreignId);
+        return parent::link($id, $link, $foreignId);
     }
 
-    public function unlinkEntity($id, $link, $foreignId)
+    public function unlink($id, $link, $foreignId)
     {
         if ($link === 'teams' || $link === 'users') {
             throw new Forbidden();
         }
-        return parant::unlinkEntity($id, $link, $foreignId);
+        return parent::unlink($id, $link, $foreignId);
+    }
+
+    public function processNoteAclJob($data)
+    {
+        $targetType = $data->targetType;
+        $targetId = $data->targetId;
+
+        if ($targetType && $targetId && $this->getEntityManager()->hasRepository($targetType)) {
+            $entity = $this->getEntityManager()->getEntity($targetType, $targetId);
+            if ($entity) {
+                $this->processNoteAcl($entity, true);
+            }
+        }
+    }
+
+    public function processNoteAcl(Entity $entity, $forceProcessNoteNotifications = false)
+    {
+        $entityType = $entity->getEntityType();
+
+        if (in_array($entityType, ['Note', 'User', 'Team', 'Role', 'Portal', 'PortalRole'])) return;
+
+        if (!$this->getMetadata()->get(['scopes', $entityType, 'acl'])) return;
+        if (!$this->getMetadata()->get(['scopes', $entityType, 'object'])) return;
+
+        $ownerUserIdAttribute = $this->getAclManager()->getImplementation($entityType)->getOwnerUserIdAttribute($entity);
+
+        $usersAttributeIsChanged = false;
+        $teamsAttributeIsChanged = false;
+
+        if ($ownerUserIdAttribute) {
+            if ($entity->isAttributeChanged($ownerUserIdAttribute)) {
+                $usersAttributeIsChanged = true;
+            }
+
+            if ($usersAttributeIsChanged || $forceProcessNoteNotifications) {
+                if ($entity->getAttributeParam($ownerUserIdAttribute, 'isLinkMultipleIdList')) {
+                    $userLink = $entity->getAttributeParam($ownerUserIdAttribute, 'relation');
+                    $userIdList = $entity->getLinkMultipleIdList($userLink);
+                } else {
+                    $userId = $entity->get($ownerUserIdAttribute);
+                    if ($userId) {
+                        $userIdList = [$userId];
+                    } else {
+                        $userIdList = [];
+                    }
+                }
+            }
+        }
+
+        if ($entity->hasLinkMultipleField('teams')) {
+            if ($entity->isAttributeChanged('teamsIds')) {
+                $teamsAttributeIsChanged = true;
+            }
+            if ($teamsAttributeIsChanged || $forceProcessNoteNotifications) {
+                $teamIdList = $entity->getLinkMultipleIdList('teams');
+            }
+        }
+
+        if ($usersAttributeIsChanged || $teamsAttributeIsChanged || $forceProcessNoteNotifications) {
+            $noteList = $this->getEntityManager()->getRepository('Note')->where([
+                'OR' => [
+                    [
+                        'relatedId' => $entity->id,
+                        'relatedType' => $entityType
+                    ],
+                    [
+                        'parentId' => $entity->id,
+                        'parentType' => $entityType,
+                        'superParentId!=' => null,
+                        'relatedId' => null
+                    ]
+                ]
+            ])->select([
+                'id',
+                'parentType',
+                'parentId',
+                'superParentType',
+                'superParentId',
+                'isInternal',
+                'relatedType',
+                'relatedId',
+                'createdAt'
+            ])->find();
+
+            $noteOptions = [];
+            if (!empty($forceProcessNoteNotifications)) {
+                $noteOptions['forceProcessNotifications'] = true;
+            }
+
+            $period = '-' . $this->getConfig()->get('noteNotificationPeriod', $this->noteNotificationPeriod);
+            $threshold = new \DateTime();
+            $threshold->modify($period);
+
+            foreach ($noteList as $note) {
+                if (!$entity->isNew()) {
+                    try {
+                        $createdAtDt = new \DateTime($note->get('createdAt'));
+                        if ($createdAtDt->getTimestamp() < $threshold->getTimestamp()) {
+                            continue;
+                        }
+                    } catch (\Exception $e) {};
+                }
+                if ($teamsAttributeIsChanged || $forceProcessNoteNotifications) {
+                    $note->set('teamsIds', $teamIdList);
+                }
+                if ($usersAttributeIsChanged || $forceProcessNoteNotifications) {
+                    $note->set('usersIds', $userIdList);
+                }
+                $this->getEntityManager()->saveEntity($note, $noteOptions);
+            }
+        }
     }
 }

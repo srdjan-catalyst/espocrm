@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@ Espo.define('views/modals/edit', 'views/modal', function (Dep) {
     return Dep.extend({
 
         cssName: 'edit-modal',
-
-        header: false,
 
         template: 'modals/edit',
 
@@ -89,31 +87,34 @@ Espo.define('views/modals/edit', 'views/modal', function (Dep) {
             });
 
             this.scope = this.scope || this.options.scope;
+
+            this.entityType = this.options.entityType || this.scope;
+
             this.id = this.options.id;
 
             if (!this.id) {
-                this.header = this.getLanguage().translate('Create ' + this.scope, 'labels', this.scope);
+                this.headerHtml = this.getLanguage().translate('Create ' + this.scope, 'labels', this.scope);
             } else {
-                this.header = this.getLanguage().translate('Edit');
-                this.header += ': ' + this.getLanguage().translate(this.scope, 'scopeNames');
+                this.headerHtml = this.getLanguage().translate('Edit');
+                this.headerHtml += ': ' + this.getLanguage().translate(this.scope, 'scopeNames');
             }
 
             if (!this.fullFormDisabled) {
                 if (!this.id) {
-                    this.header = '<a href="#' + this.scope + '/create" class="action" title="'+this.translate('Full Form')+'" data-action="fullForm">' + this.header + '</a>';
+                    this.headerHtml = '<a href="#' + this.scope + '/create" class="action" title="'+this.translate('Full Form')+'" data-action="fullForm">' + this.headerHtml + '</a>';
                 } else {
-                    this.header = '<a href="#' + this.scope + '/edit/' + this.id+'" class="action" title="'+this.translate('Full Form')+'" data-action="fullForm">' + this.header + '</a>';
+                    this.headerHtml = '<a href="#' + this.scope + '/edit/' + this.id+'" class="action" title="'+this.translate('Full Form')+'" data-action="fullForm">' + this.headerHtml + '</a>';
                 }
             }
 
             var iconHtml = this.getHelper().getScopeColorIconHtml(this.scope);
-            this.header = iconHtml + this.header;
+            this.headerHtml = iconHtml + this.headerHtml;
 
             this.sourceModel = this.model;
 
             this.waitForView('edit');
 
-            this.getModelFactory().create(this.scope, function (model) {
+            this.getModelFactory().create(this.entityType, function (model) {
                 if (this.id) {
                     if (this.sourceModel) {
                         model = this.model = this.sourceModel.clone();

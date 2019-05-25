@@ -1,4 +1,3 @@
-<link href="{{basePath}}client/css/gridstack.min.css" rel="stylesheet">
 
 <div class="page-header dashboard-header">
     <div class="row">
@@ -10,8 +9,8 @@
         <div class="col-sm-7 clearfix">
             {{#unless layoutReadOnly}}
             <div class="btn-group pull-right dashboard-buttons">
-                <button class="btn btn-default" data-action="editTabs" title="{{translate 'Edit Dashboard'}}"><span class="glyphicon glyphicon-pencil"></span></button>
-                <button class="btn btn-default" data-action="addDashlet" title="{{translate 'Add Dashlet'}}"><span class="glyphicon glyphicon-plus"></span></button>
+                <button class="btn btn-default btn-icon" data-action="editTabs" title="{{translate 'Edit Dashboard'}}"><span class="fas fa-pencil-alt fa-sm"></span></button>
+                <button class="btn btn-default btn-icon" data-action="addDashlet" title="{{translate 'Add Dashlet'}}"><span class="fas fa-plus"></span></button>
             </div>
             {{/unless}}
             {{#ifNotEqual dashboardLayout.length 1}}

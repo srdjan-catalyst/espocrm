@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,8 +81,12 @@ class Pdf extends \Espo\Core\Services\Base
     protected function printEntity(Entity $entity, Entity $template, Htmlizer $htmlizer, \Espo\Core\Pdf\Tcpdf $pdf)
     {
         $fontFace = $this->getConfig()->get('pdfFontFace', $this->fontFace);
+        if ($template->get('fontFace')) {
+            $fontFace = $template->get('fontFace');
+        }
 
         $pdf->setFont($fontFace, '', $this->fontSize, '', true);
+
         $pdf->setPrintHeader(false);
 
         $pdf->setAutoPageBreak(true, $template->get('bottomMargin'));
@@ -104,6 +108,9 @@ class Pdf extends \Espo\Core\Services\Base
         $pageFormat = 'A4';
         if ($template->get('pageFormat')) {
             $pageFormat = $template->get('pageFormat');
+        }
+        if ($pageFormat === 'Custom') {
+            $pageFormat = [$template->get('pageWidth'), $template->get('pageHeight')];
         }
         $pageOrientationCode = 'P';
         if ($pageOrientation === 'Landscape') {
@@ -223,7 +230,8 @@ class Pdf extends \Espo\Core\Services\Base
             'data' => [
                 'id' => $attachment->id
             ],
-            'executeTime' => (new \DateTime())->modify('+' . $this->removeMassFilePeriod)->format('Y-m-d H:i:s')
+            'executeTime' => (new \DateTime())->modify('+' . $this->removeMassFilePeriod)->format('Y-m-d H:i:s'),
+            'queue' => 'q1'
         ]);
         $this->getEntityManager()->saveEntity($job);
 

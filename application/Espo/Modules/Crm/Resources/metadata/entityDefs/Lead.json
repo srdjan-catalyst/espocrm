@@ -28,7 +28,6 @@
             "type": "enum",
             "options": ["New", "Assigned", "In Process", "Converted", "Recycled", "Dead"],
             "default": "New",
-            "view": "views/fields/enum-styled",
             "style": {
                 "Converted": "success",
                 "Recycled": "danger",
@@ -138,6 +137,7 @@
             "layoutListDisabled": true,
             "layoutDetailDisabled": true,
             "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
             "exportDisabled": true,
             "view": "crm:views/lead/fields/acceptance-status",
             "link": "meetings",
@@ -149,6 +149,7 @@
             "layoutListDisabled": true,
             "layoutDetailDisabled": true,
             "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
             "exportDisabled": true,
             "view": "crm:views/lead/fields/acceptance-status",
             "link": "calls",
@@ -194,7 +195,8 @@
             "layoutListDisabled": true,
             "layoutMassUpdateDisabled": true,
             "layoutFiltersDisabled": true,
-            "entity": "TargetList"
+            "entity": "TargetList",
+            "directAccessDisabled": true
         },
         "targetListIsOptedOut": {
             "type": "bool",
@@ -318,8 +320,8 @@
         }
     },
     "collection": {
-        "sortBy": "createdAt",
-        "asc": false,
+        "orderBy": "createdAt",
+        "order": "desc",
         "textFilterFields": ["name", "accountName", "emailAddress"]
     },
     "indexes": {

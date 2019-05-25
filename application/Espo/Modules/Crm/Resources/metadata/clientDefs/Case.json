@@ -66,6 +66,20 @@
         "filter": "open"
     },
     "allowInternalNotes": true,
+    "dynamicLogic": {
+        "fields": {
+            "number": {
+                "visible": {
+                    "conditionGroup": [
+                        {
+                            "type": "isNotEmpty",
+                            "attribute": "id"
+                        }
+                    ]
+                }
+            }
+        }
+    },
     "additionalLayouts": {
         "detailPortal": {
             "type": "detail"
@@ -77,5 +91,5 @@
             "type": "list"
         }
     },
-    "iconClass": "fas fa-wrench"
+    "iconClass": "fas fa-briefcase"
 }

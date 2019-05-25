@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ use \Espo\Core\Exceptions\Error;
 
 class AttributeFetcher
 {
-    private $relatedEntitiesCacheMap = array();
+    private $relatedEntitiesCacheMap = [];
 
     public function __construct()
     {
@@ -82,7 +82,7 @@ class AttributeFetcher
 
     public function resetRuntimeCache()
     {
-        $this->relatedEntitiesCacheMap = array();
+        $this->relatedEntitiesCacheMap = [];
     }
 
     protected function buildKey(Entity $entity, $link)

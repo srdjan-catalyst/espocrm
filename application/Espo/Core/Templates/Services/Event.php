@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,10 @@ use \Espo\ORM\Entity;
 
 class Event extends \Espo\Services\Record
 {
+    protected $validateRequiredSkipFieldList = [
+        'dateEnd'
+    ];
+
     public function loadAdditionalFields(Entity $entity)
     {
         parent::loadAdditionalFields($entity);
@@ -43,5 +47,24 @@ class Event extends \Espo\Services\Record
     {
         $reminders = $this->getRepository()->getEntityReminderList($entity);
         $entity->set('reminders', $reminders);
+    }
+
+    public function getSelectAttributeList($params)
+    {
+        $attributeList = parent::getSelectAttributeList($params);
+        if (is_array($attributeList)) {
+            if (array_key_exists('select', $params)) {
+                $passedAttributeList = $params['select'];
+                if (in_array('duration', $passedAttributeList)) {
+                    if (!in_array('dateStart', $attributeList)) {
+                        $attributeList[] = 'dateStart';
+                    }
+                    if (!in_array('dateEnd', $attributeList)) {
+                        $attributeList[] = 'dateEnd';
+                    }
+                }
+            }
+        }
+        return $attributeList;
     }
 }

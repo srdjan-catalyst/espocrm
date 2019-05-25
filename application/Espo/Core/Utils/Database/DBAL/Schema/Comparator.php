@@ -3,8 +3,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,11 @@
  ************************************************************************/
 
 namespace Espo\Core\Utils\Database\DBAL\Schema;
-use Doctrine\DBAL\Schema\Column;
 
+use Doctrine\DBAL\Schema\Column;
 
 class Comparator extends \Doctrine\DBAL\Schema\Comparator
 {
-
     public function diffColumn(Column $column1, Column $column2)
     {
         $changedProperties = array();
@@ -80,6 +79,15 @@ class Comparator extends \Doctrine\DBAL\Schema\Comparator
             }
         }
 
+        if ($column1->getType() instanceof \Doctrine\DBAL\Types\TextType) {
+            $length1 = $column1->getLength() ?: 16777215/* mediumtext length*/;
+            $length2 = $column2->getLength() ?: 16777215;
+
+            if ($length2 > $length1) {
+                $changedProperties[] = 'length';
+            }
+        }
+
         if ($column1->getType() instanceof \Doctrine\DBAL\Types\DecimalType) {
             if (($column1->getPrecision()?:10) != ($column2->getPrecision()?:10)) {
                 $changedProperties[] = 'precision';
@@ -112,6 +120,18 @@ class Comparator extends \Doctrine\DBAL\Schema\Comparator
         $diffKeys = array_keys(array_diff_key($options1, $options2) + array_diff_key($options2, $options1));
 
         $changedProperties = array_merge($changedProperties, $diffKeys);
+
+        /** Espo: do not change a field length while changing other parameters */
+        if (!empty($changedProperties) && !in_array('length', $changedProperties) && $column1->getType() instanceof \Doctrine\DBAL\Types\StringType) {
+            $length1 = $column1->getLength() ?: 255;
+            $length2 = $column2->getLength() ?: 255;
+
+            if ($length1 > $length2) {
+                $changedProperties[] = 'length';
+                $column2->setLength($length1);
+            }
+        }
+        /** Espo: end */
 
         return $changedProperties;
     }

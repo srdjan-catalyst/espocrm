@@ -2,8 +2,8 @@
  * This file is part of EspoCRM.
  *
  * EspoCRM - Open Source CRM application.
- * Copyright (C) 2014-2018 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
- * Website: http://www.espocrm.com
+ * Copyright (C) 2014-2019 Yuri Kuznetsov, Taras Machyshyn, Oleksiy Avramenko
+ * Website: https://www.espocrm.com
  *
  * EspoCRM is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  * these Appropriate Legal Notices must retain the display of the "EspoCRM" word.
  ************************************************************************/
 
-Espo.define('views/record/merge', 'view', function (Dep) {
+define('views/record/merge', 'view', function (Dep) {
 
     return Dep.extend({
 
@@ -143,6 +143,9 @@ Espo.define('views/record/merge', 'view', function (Dep) {
             for (var field in fieldsDefs) {
                 var type = fieldsDefs[field].type;
                 if (type === 'linkMultiple') continue;
+                if (fieldsDefs[field].disabled) continue
+                if (fieldsDefs[field].mergeDisabled) continue
+
                 if (fieldManager.isMergeable(type) && !this.models[0].isFieldReadOnly(field)) {
                     var actualAttributeList = fieldManager.getActualAttributeList(type, field);
 

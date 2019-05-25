@@ -24,6 +24,7 @@
         "Attachment": "Attachment",
         "EmailFolder": "Email Folder",
         "PortalUser": "Portal User",
+        "ApiUser": "API User",
         "ScheduledJobLogRecord": "Scheduled Job Log Record",
         "PasswordChangeRequest": "Password Change Request",
         "ActionHistoryRecord": "Action History Record",
@@ -47,7 +48,8 @@
         "AuthFailLogRecord": "Auth Fail Log Record",
         "LeadCapture": "Lead Capture Entry Point",
         "LeadCaptureLogRecord": "Lead Capture Log Record",
-        "ArrayValue": "Array Value"
+        "ArrayValue": "Array Value",
+        "Webhook": "Webhook"
     },
     "scopeNamesPlural": {
         "Email": "Emails",
@@ -74,6 +76,7 @@
         "Attachment": "Attachments",
         "EmailFolder": "Email Folders",
         "PortalUser": "Portal Users",
+        "ApiUser": "API Users",
         "ScheduledJobLogRecord": "Scheduled Job Log Records",
         "PasswordChangeRequest": "Password Change Requests",
         "ActionHistoryRecord": "Action History",
@@ -84,7 +87,8 @@
         "AuthFailLogRecord": "Auth Fail Log",
         "LeadCapture": "Lead Capture",
         "LeadCaptureLogRecord": "Lead Capture Log",
-        "ArrayValue": "Array Values"
+        "ArrayValue": "Array Values",
+        "Webhook": "Webhooks"
     },
     "labels": {
         "Misc": "Misc",
@@ -146,6 +150,7 @@
         "About": "About",
         "Refresh": "Refresh",
         "Remove": "Remove",
+        "Restore": "Restore",
         "Options": "Options",
         "Username": "Username",
         "Password": "Password",
@@ -238,7 +243,9 @@
         "Convert to": "Convert to",
         "View Personal Data": "View Personal Data",
         "Personal Data": "Personal Data",
-        "Erase": "Erase"
+        "Erase": "Erase",
+        "View Followers": "View Followers",
+        "Move Over": "Move Over"
     },
     "messages": {
         "pleaseWait": "Please wait...",
@@ -262,7 +269,9 @@
         "fieldShouldBeGreater": "{field} shouldn't be less then {value}",
         "fieldBadPasswordConfirm": "{field} not confirmed properly",
         "fieldMaxFileSizeError": "File should not exceed {max} Mb",
+        "fieldValueDuplicate": "Duplicate value",
         "fieldIsUploading": "Uploading in progress",
+        "fieldExceedsMaxCount": "Count exceeds max allowed {maxCount}",
         "resetPreferencesDone": "Preferences has been reset to defaults",
         "confirmation": "Are you sure?",
         "unlinkAllConfirmation": "Are you sure you want to unlink all related records?",
@@ -270,8 +279,10 @@
         "removeRecordConfirmation": "Are you sure you want to remove the record?",
         "unlinkRecordConfirmation": "Are you sure you want to unlink the related record?",
         "removeSelectedRecordsConfirmation": "Are you sure you want to remove selected records?",
+        "unlinkSelectedRecordsConfirmation": "Are you sure you want to unlink selected records?",
         "massUpdateResult": "{count} records have been updated",
         "massUpdateResultSingle": "{count} record has been updated",
+        "recalculateFormulaConfirmation": "Are you sure you want to recalculate formula for selected records?",
         "noRecordsUpdated": "No records were updated",
         "massRemoveResult": "{count} records have been removed",
         "massRemoveResultSingle": "{count} record has been removed",
@@ -310,10 +321,12 @@
         "remove": "Remove",
         "merge": "Merge",
         "massUpdate": "Mass Update",
+        "unlink": "Unlink",
         "export": "Export",
         "follow": "Follow",
         "unfollow": "Unfollow",
         "convertCurrency": "Convert Currency",
+        "recalculateFormula": "Recalculate Formula",
         "printPdf": "Print to PDF"
     },
     "fields": {
@@ -341,6 +354,7 @@
         "phoneNumberOffice": "Phone (Office)",
         "phoneNumberOther": "Phone (Other)",
         "phoneNumberData": "Phone Number Data",
+        "phoneNumberIsOptedOut": "Phone Number is Opted-Out",
         "order": "Order",
         "parent": "Parent",
         "children": "Children",
@@ -348,6 +362,7 @@
         "ids": "IDs",
         "type": "Type",
         "names": "Names",
+        "types": "Types",
         "targetListIsOptedOut": "Is Opted Out (Target List)"
     },
     "links": {
@@ -573,7 +588,11 @@
             "ever": "Ever",
             "isEmpty": "Is Empty",
             "olderThanXDays": "Older Than X Days",
-            "afterXDays": "After X Days"
+            "afterXDays": "After X Days",
+            "currentFiscalYear": "Current Fiscal Year",
+            "lastFiscalYear": "Last Fiscal Year",
+            "currentFiscalQuarter": "Current Fiscal Quarter",
+            "lastFiscalQuarter": "Last Fiscal Quarter"
         },
         "searchRanges": {
             "is": "Is",
